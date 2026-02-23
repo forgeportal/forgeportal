@@ -17,7 +17,7 @@ export default function AdminScanPage() {
   const queryClient = useQueryClient();
   const [org, setOrg] = useState('');
 
-  const { data: statusData, isLoading: statusLoading } = useQuery({
+  const { isLoading: statusLoading } = useQuery({
     queryKey: ['admin-scan-status'],
     queryFn: () => api.get<{ job: ScanJob | null }>('/admin/scan/status'),
   });
