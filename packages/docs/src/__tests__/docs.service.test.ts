@@ -27,7 +27,7 @@ function makeScmProviders(provider: Partial<SCMProvider> | null): SCMProviders {
     github: null,
     gitlab: null,
     all: () => (provider ? [provider as SCMProvider] : []),
-    get: (_name: string) => (provider as SCMProvider) ?? null,
+    get: (_: string) => (provider as SCMProvider) ?? null,
   };
 }
 
