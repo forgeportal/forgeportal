@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Pool } from 'pg';
 import crypto from 'node:crypto';
 import { requirePermission } from './require-permission.js';
-import { ROLES, ROLE_PERMISSIONS, type Role } from './rbac.js';
+import { ROLES, ROLE_PERMISSIONS } from './rbac.js';
 
 export interface PermissionsRoutesOptions {
   pool: Pool;

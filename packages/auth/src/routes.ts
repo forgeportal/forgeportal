@@ -11,7 +11,7 @@ import {
   randomPKCECodeVerifier,
   randomState,
 } from './oidc.js';
-import { SESSION_MAX_AGE, DEV_USER, type UserInfo } from './session.js';
+import { SESSION_MAX_AGE, type UserInfo } from './session.js';
 
 declare module '@fastify/secure-session' {
   interface SessionData {

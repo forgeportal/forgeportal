@@ -1,4 +1,3 @@
-/// <reference types="@fastify/secure-session" />
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
@@ -7,7 +6,7 @@ import crypto from 'node:crypto';
 import type { AppConfig } from '@forgeportal/core';
 import { authGuard } from '../middleware.js';
 import { authRoutes } from '../routes.js';
-import { SESSION_MAX_AGE, DEV_USER } from '../session.js';
+import { SESSION_MAX_AGE } from '../session.js';
 
 function devConfig(): AppConfig {
   return {

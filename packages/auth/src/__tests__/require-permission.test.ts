@@ -1,4 +1,3 @@
-/// <reference types="@fastify/secure-session" />
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
