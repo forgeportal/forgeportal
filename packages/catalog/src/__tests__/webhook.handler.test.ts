@@ -67,6 +67,7 @@ function mockPool() {
       }
       if (sql.includes('INSERT INTO entity_sources')) return { rows: [{ id: 'src-1' }], rowCount: 1 };
       if (sql.includes('UPDATE entity_sources')) return { rows: [], rowCount: 1 };
+      if (sql.includes('FROM entity_sources WHERE repo_url')) return { rows: [{ entity_id: 'entity-1' }], rowCount: 1 };
       if (sql.includes('INSERT INTO jobs')) {
         return { rows: [{ id: 'job-1', type: params?.[0], payload: JSON.parse((params?.[1] as string) ?? '{}'), status: 'queued', locked_by: null, locked_at: null, created_at: new Date(), finished_at: null }], rowCount: 1 };
       }
