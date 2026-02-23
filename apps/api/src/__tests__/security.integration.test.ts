@@ -72,7 +72,7 @@ describe('security headers', () => {
 describe('CSRF 403 on mutating request without token (OIDC mode)', () => {
   it('POST with session but without X-CSRF-Token returns 403', async () => {
     const poolWithPerms = {
-      query: async (sql: string, params?: unknown[]) => {
+      query: async (sql: string, _params?: unknown[]) => {
         if (sql.includes('permissions')) {
           return { rows: [{ permission: 'entity:create' }], rowCount: 1 };
         }

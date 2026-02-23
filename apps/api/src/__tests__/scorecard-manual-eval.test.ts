@@ -70,7 +70,7 @@ function makeMockPool(opts: {
 }
 
 // Admin session helper — dev mode bypasses OIDC, uses email as identifier
-async function adminSession(app: FastifyInstance) {
+async function _adminSession(_app: FastifyInstance) {
   // In dev mode (no OIDC issuer), forgeportal allows any session by authGuard
   // We simulate an admin by injecting with X-Forwarded-User: platform-admin
   // Looking at the auth middleware pattern in the codebase, dev mode uses email from session

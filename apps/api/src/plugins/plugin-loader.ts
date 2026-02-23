@@ -97,7 +97,7 @@ export async function loadPlugins(opts: PluginLoaderOptions): Promise<LoadedPlug
 
       // 3 — Check enabled flag: DB override (plugin_overrides) wins over forgeportal.yaml
       const pluginEntry = config.plugins[pluginId];
-      let enabledByConfig = pluginEntry?.enabled !== false;
+      const enabledByConfig = pluginEntry?.enabled !== false;
       const overrideRow = await pool.query(
         `SELECT enabled FROM plugin_overrides WHERE plugin_id = $1`,
         [pluginId],

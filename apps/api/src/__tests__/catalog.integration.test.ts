@@ -5,7 +5,6 @@ import type { AppConfig } from '@forgeportal/core';
 import { buildApp } from '../app.js';
 
 const entityStore: Record<string, Record<string, unknown>> = {};
-let entityCounter = 0;
 
 function mockPool(): unknown {
   return {

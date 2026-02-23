@@ -3,7 +3,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '@forgeportal/core';
-import { DEV_USER } from '@forgeportal/auth';
 import { buildApp } from '../app.js';
 
 function mockPool(): unknown {

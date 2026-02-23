@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Pool } from 'pg';
 import { z } from 'zod';
 import { requirePermission } from '@forgeportal/auth';
-import { encrypt, decrypt } from '@forgeportal/core';
+import { encrypt } from '@forgeportal/core';
 import type { AppConfig } from '@forgeportal/core';
 
 export interface IntegrationsRoutesOptions {
@@ -41,7 +41,7 @@ interface IntegrationRow {
   updated_at: Date;
 }
 
-function safeRow(row: IntegrationRow, encryptionKey: string) {
+function safeRow(row: IntegrationRow, _encryptionKey: string) {
   const secretFields = SECRET_FIELDS[row.provider] ?? [];
   const secretConfig = row.secret_config ?? {};
   const encryptedSecrets: Record<string, boolean> = {};
