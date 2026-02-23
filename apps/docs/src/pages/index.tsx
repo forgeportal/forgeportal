@@ -86,7 +86,7 @@ function Hero() {
           </Link>
           <Link
             className="button button--secondary button--lg"
-            href="https://github.com/your-org/forgeportal"
+            href="https://github.com/forgeportal/forgeportal"
           >
             GitHub ↗
           </Link>
@@ -131,7 +131,7 @@ export default function Home(): React.ReactElement {
           <div className="container">
             <Heading as="h2">Up and running in 60 seconds</Heading>
             <pre className={styles.codeBlock}>
-              <code>{`git clone https://github.com/your-org/forgeportal
+              <code>{`git clone https://github.com/forgeportal/forgeportal
 cd forgeportal
 cp deployments/docker-compose/.env.example deployments/docker-compose/.env
 docker compose -f deployments/docker-compose/docker-compose.yml up`}</code>

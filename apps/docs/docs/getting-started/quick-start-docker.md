@@ -24,7 +24,7 @@ docker compose version
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/forgeportal.git
+git clone https://github.com/forgeportal/forgeportal.git
 cd forgeportal
 ```
 

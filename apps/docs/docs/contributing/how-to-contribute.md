@@ -22,7 +22,7 @@ ForgePortal is an open-source project and contributions are welcome — from bug
 Follow the [Local Dev Setup](/docs/getting-started/local-dev-setup) guide to get the full stack running locally. The short version:
 
 ```bash
-git clone https://github.com/your-org/forgeportal.git
+git clone https://github.com/forgeportal/forgeportal.git
 cd forgeportal
 pnpm install
 pnpm --filter @forgeportal/db run migrate    # run migrations

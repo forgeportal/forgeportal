@@ -35,7 +35,7 @@ services:
       - forgeportal
 
   api:
-    image: ghcr.io/your-org/forgeportal:1.0.0
+    image: ghcr.io/forgeportal/forgeportal:1.0.0
     restart: unless-stopped
     env_file: .env.production
     environment:
@@ -54,7 +54,7 @@ services:
       - forgeportal
 
   worker:
-    image: ghcr.io/your-org/forgeportal:1.0.0
+    image: ghcr.io/forgeportal/forgeportal:1.0.0
     restart: unless-stopped
     env_file: .env.production
     depends_on:
@@ -65,7 +65,7 @@ services:
       - forgeportal
 
   ui:
-    image: ghcr.io/your-org/forgeportal-ui:1.0.0
+    image: ghcr.io/forgeportal/forgeportal-ui:1.0.0
     restart: unless-stopped
     env_file: .env.production
     depends_on:

@@ -27,7 +27,7 @@ psql --version   # 16.x (if using local Postgres)
 ## Clone and install
 
 ```bash
-git clone https://github.com/your-org/forgeportal.git
+git clone https://github.com/forgeportal/forgeportal.git
 cd forgeportal
 pnpm install
 ```
