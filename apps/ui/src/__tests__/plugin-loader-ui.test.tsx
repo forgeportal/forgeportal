@@ -243,12 +243,8 @@ describe('registerPluginById', () => {
   });
 
   it('tracks tab ownership via registerPluginById', async () => {
-    const { registry: testReg, tabOwnership: testTabOwn, registerPluginById } =
+    const { registry: _testReg, tabOwnership: testTabOwn, registerPluginById } =
       await import('../plugins/plugin-registry-ui.js');
-
-    // Fresh registry for this test
-    const localReg = new PluginRegistry();
-    const localOwnership = new Map<string, string>();
 
     registerPluginById('my-plugin', (sdk) => {
       sdk.registerEntityTab({

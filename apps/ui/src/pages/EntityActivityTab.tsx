@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api.js';
-import Spinner from '../components/Spinner.js';
 import { formatRelativeTime } from '../lib/utils.js';
 
 interface AuditLogEntry {

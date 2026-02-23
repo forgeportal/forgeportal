@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api.js';
 import type { ActionRunsResponse } from '../lib/types.js';
 import RunStatusBadge from '../components/RunStatusBadge.js';
-import Spinner from '../components/Spinner.js';
 import { formatRelativeTime, formatDuration } from '../lib/utils.js';
 
 interface EntityActionsTabProps {

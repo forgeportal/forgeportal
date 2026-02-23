@@ -35,7 +35,6 @@ export default function AdminScanPage() {
     },
   });
 
-  const job = statusData?.job ?? null;
   const jobs = jobsData?.data ?? [];
 
   const handleTrigger = (e: React.FormEvent) => {
