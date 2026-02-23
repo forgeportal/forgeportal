@@ -1,0 +1,152 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+jobs:
+  # ── Guard: run full CI on the tagged commit ────────────────────────────────
+  ci-guard:
+    name: CI Guard
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  # ── Docker images → GHCR ──────────────────────────────────────────────────
+  docker:
+    name: Docker Build & Push
+    needs: ci-guard
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version
+        id: meta
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          # Only tag :latest for stable releases (no prerelease label)
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "IS_STABLE=true" >> $GITHUB_OUTPUT
+          else
+            echo "IS_STABLE=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build & push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target:  api
+          push:    true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/forgeportal-api:${{ steps.meta.outputs.VERSION }}
+            ${{ steps.meta.outputs.IS_STABLE == 'true' && format('ghcr.io/{0}/forgeportal-api:latest', github.repository_owner) || '' }}
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+
+      - name: Build & push Worker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target:  worker
+          push:    true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/forgeportal-worker:${{ steps.meta.outputs.VERSION }}
+            ${{ steps.meta.outputs.IS_STABLE == 'true' && format('ghcr.io/{0}/forgeportal-worker:latest', github.repository_owner) || '' }}
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+
+      - name: Build & push UI image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target:  ui
+          push:    true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/forgeportal-ui:${{ steps.meta.outputs.VERSION }}
+            ${{ steps.meta.outputs.IS_STABLE == 'true' && format('ghcr.io/{0}/forgeportal-ui:latest', github.repository_owner) || '' }}
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+
+  # ── npm publish ───────────────────────────────────────────────────────────
+  npm-publish:
+    name: Publish to npm
+    needs: ci-guard
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Publish @forgeportal/plugin-sdk
+        run: pnpm --filter @forgeportal/plugin-sdk publish --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish create-forge-plugin
+        run: pnpm --filter create-forge-plugin publish --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ── GitHub Release + Helm chart attachment ────────────────────────────────
+  github-release:
+    name: GitHub Release
+    needs: [docker, npm-publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Package Helm chart
+        run: helm package deployments/helm -d /tmp/helm-pkg
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: /tmp/helm-pkg/*.tgz
+          body: |
+            ## Docker Images
+
+            ```bash
+            docker pull ghcr.io/${{ github.repository_owner }}/forgeportal-api:${{ github.ref_name }}
+            docker pull ghcr.io/${{ github.repository_owner }}/forgeportal-worker:${{ github.ref_name }}
+            docker pull ghcr.io/${{ github.repository_owner }}/forgeportal-ui:${{ github.ref_name }}
+            ```
+
+            ## npm Packages
+
+            - [`@forgeportal/plugin-sdk`](https://www.npmjs.com/package/@forgeportal/plugin-sdk)
+            - [`create-forge-plugin`](https://www.npmjs.com/package/create-forge-plugin)

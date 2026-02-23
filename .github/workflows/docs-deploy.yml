@@ -2,7 +2,7 @@ name: Deploy Docs to VPS
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths:    ['apps/docs/**', '.github/workflows/docs-deploy.yml']
   workflow_dispatch:
 
@@ -11,7 +11,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  ci:
+    name: Wait for CI
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
   build-and-deploy:
+    needs: ci
     name: Build & Deploy Docs
     runs-on: ubuntu-latest
     steps:

@@ -6,6 +6,7 @@
 
 Open-source · Self-hosted · Ships in days, not months.
 
+[![CI](https://github.com/forgeportal/forgeportal/actions/workflows/ci.yml/badge.svg)](https://github.com/forgeportal/forgeportal/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-indigo.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20.19-brightgreen)](package.json)
 [![pnpm](https://img.shields.io/badge/pnpm-10-orange)](pnpm-workspace.yaml)

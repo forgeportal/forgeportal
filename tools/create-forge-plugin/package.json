@@ -10,11 +10,15 @@
   "types": "dist/index.d.ts",
   "files": ["dist", "README.md"],
   "scripts": {
-    "build":  "tsc",
-    "dev":    "tsx src/index.ts",
-    "test":   "vitest run",
-    "lint":   "eslint src/",
-    "clean":  "rm -rf dist"
+    "build":          "tsc",
+    "prepublishOnly": "pnpm build",
+    "dev":            "tsx src/index.ts",
+    "test":           "vitest run",
+    "lint":           "eslint src/",
+    "clean":          "rm -rf dist"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@clack/prompts": "^0.9.0"

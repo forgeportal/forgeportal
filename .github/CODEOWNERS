@@ -1,0 +1,8 @@
+# Default reviewer for all files
+* @bendaamerahmed
+
+# Workflows — require extra care
+.github/workflows/ @bendaamerahmed
+
+# Helm chart
+deployments/helm/ @bendaamerahmed

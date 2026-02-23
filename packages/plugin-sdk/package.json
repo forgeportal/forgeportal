@@ -1,7 +1,6 @@
 {
   "name": "@forgeportal/plugin-sdk",
   "version": "1.0.0",
-  "private": true,
   "type": "module",
   "exports": {
     ".": {
@@ -16,10 +15,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "test": "vitest run",
-    "lint": "eslint src/",
-    "clean": "rm -rf dist"
+    "build":          "tsc",
+    "prepublishOnly": "pnpm build",
+    "test":           "vitest run",
+    "lint":           "eslint src/",
+    "clean":          "rm -rf dist"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@forgeportal/core": "workspace:*"

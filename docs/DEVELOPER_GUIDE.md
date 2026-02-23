@@ -376,6 +376,46 @@ pnpm install
 
 ---
 
+## CI/CD & GitHub Secrets
+
+### GitHub Actions workflows
+
+| Workflow | Trigger | What it does |
+|----------|---------|-------------|
+| `ci.yml` | PR + push to `master` | Install, lint, build, test (with PostgreSQL service) |
+| `release.yml` | `v*.*.*` tag | CI guard → Docker → npm publish → GitHub Release |
+| `docs-deploy.yml` | push to `master` (docs paths) | Waits for CI, then rsync to VPS |
+| `codeql.yml` | PR + push + weekly | CodeQL static analysis (JS/TS) |
+
+### Required GitHub Secrets
+
+Go to **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret | Purpose | How to obtain |
+|--------|---------|---------------|
+| `NPM_TOKEN` | Publish `@forgeportal/plugin-sdk` and `create-forge-plugin` to npm | npmjs.com → Access Tokens → Automation token |
+| `VPS_HOST` | IP of the docs VPS | `161.97.75.44` |
+| `VPS_SSH_KEY` | Private SSH key for rsync deploy | Generated on VPS, see deployment setup |
+| `TURBO_TOKEN` | Vercel Remote Cache token *(optional)* | vercel.com → Account Settings → Tokens |
+| `TURBO_TEAM` | Vercel team slug *(optional)* | Your Vercel team URL slug |
+
+`GITHUB_TOKEN` is provided automatically by GitHub Actions — no setup needed (used for GHCR push and GitHub Release creation).
+
+### Creating a release
+
+```bash
+git tag -a v1.0.0 -m "ForgePortal v1.0.0"
+git push origin v1.0.0
+```
+
+This triggers `release.yml` which:
+1. Re-runs full CI as a guard
+2. Builds and pushes Docker images to `ghcr.io/forgeportal/forgeportal-{api,worker,ui}:1.0.0`
+3. Publishes `@forgeportal/plugin-sdk` and `create-forge-plugin` to npm with provenance
+4. Creates a GitHub Release with auto-generated notes and the Helm chart `.tgz`
+
+---
+
 ## Further Reading
 
 - [Configuration Reference](../apps/docs/docs/configuration/forgeportal-yaml.md)
