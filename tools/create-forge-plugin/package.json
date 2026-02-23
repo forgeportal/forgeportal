@@ -1,0 +1,31 @@
+{
+  "name": "create-forge-plugin",
+  "version": "1.0.0",
+  "description": "Scaffolder CLI for ForgePortal plugins — generate a new plugin in under 2 minutes.",
+  "type": "module",
+  "bin": {
+    "create-forge-plugin": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build":  "tsc",
+    "dev":    "tsx src/index.ts",
+    "test":   "vitest run",
+    "lint":   "eslint src/",
+    "clean":  "rm -rf dist"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx":         "*",
+    "vitest":      "*"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": ["forgeportal", "plugin", "scaffolder", "cli", "idp"]
+}

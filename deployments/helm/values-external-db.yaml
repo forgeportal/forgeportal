@@ -1,0 +1,45 @@
+# Example: deploy ForgePortal with an external PostgreSQL database.
+# Use with: helm install forgeportal ./deployments/helm -f deployments/helm/values-external-db.yaml
+#
+# Prerequisites:
+# - Create a Kubernetes Secret containing your DB password (key: db-password).
+# - Set externalDatabase.existingSecret to that secret's name.
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Disable in-cluster Postgres
+postgres:
+  enabled: false
+
+externalDatabase:
+  enabled: true
+  host: "my-postgres.example.svc.cluster.local"   # or external host
+  port: 5432
+  database: forgeportal
+  username: forge
+  existingSecret: "forgeportal-db-credentials"    # Secret with key "db-password"
+
+# Application secrets (OIDC, encryption, etc.) — use your own Secret
+secrets:
+  createDefaultSecret: false
+  existingSecret: "forgeportal-app-secrets"       # keys: oidc-client-secret, encryption-key, session-secret, etc.
+
+# Optional: enable Ingress
+# ingress:
+#   enabled: true
+#   className: nginx
+#   hosts:
+#     - host: forgeportal.example.com
+#       paths:
+#         - path: /
+#           pathType: Prefix
+#           service: ui
+#           port: 3000
+#         - path: /api
+#           pathType: Prefix
+#           service: api
+#           port: 4000
+#   tls:
+#     - secretName: forgeportal-tls
+#       hosts: [forgeportal.example.com]

@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "forgeportal.fullname" . }}-worker
+  labels:
+    {{- include "forgeportal.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "forgeportal.name" . }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "forgeportal.labels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+    spec:
+      containers:
+        - name: worker
+          image: {{ include "forgeportal.image" (dict "root" . "component" .Values.worker) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["node", "worker/dist/worker.js"]
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: DB_HOST
+              value: {{ include "forgeportal.dbHost" . | quote }}
+            - name: DB_PORT
+              value: {{ include "forgeportal.dbPort" . | quote }}
+            - name: DB_NAME
+              value: {{ include "forgeportal.dbName" . | quote }}
+            - name: DB_USER
+              value: {{ include "forgeportal.dbUser" . | quote }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "forgeportal.dbSecretName" . }}
+                  key: {{ include "forgeportal.dbPasswordKey" . }}
+            {{- if .Values.secrets.existingSecret }}
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret | quote }}
+                  key: oidc-client-secret
+                  optional: true
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret | quote }}
+                  key: encryption-key
+                  optional: true
+            {{- else if .Values.secrets.createDefaultSecret }}
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "forgeportal.fullname" . }}-secret
+                  key: oidc-client-secret
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "forgeportal.fullname" . }}-secret
+                  key: encryption-key
+            {{- end }}
+            {{- range .Values.worker.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+          {{- with .Values.worker.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+      {{- with .Values.worker.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

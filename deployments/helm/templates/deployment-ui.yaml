@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "forgeportal.fullname" . }}-ui
+  labels:
+    {{- include "forgeportal.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ui
+spec:
+  replicas: {{ .Values.ui.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "forgeportal.name" . }}
+      app.kubernetes.io/component: ui
+  template:
+    metadata:
+      labels:
+        {{- include "forgeportal.labels" . | nindent 8 }}
+        app.kubernetes.io/component: ui
+    spec:
+      containers:
+        - name: ui
+          image: {{ include "forgeportal.image" (dict "root" . "component" .Values.ui) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          {{- if or .Values.ui.env .Values.ui.envFrom }}
+          {{- if .Values.ui.env }}
+          env:
+            {{- range .Values.ui.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+          {{- end }}
+          {{- with .Values.ui.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.ui.resources | nindent 12 }}
+      {{- with .Values.ui.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

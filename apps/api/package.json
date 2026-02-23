@@ -1,0 +1,40 @@
+{
+  "name": "@forgeportal/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/server.ts",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "clean": "rm -rf dist",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.0",
+    "@fastify/csrf-protection": "^7.0.0",
+    "@fastify/secure-session": "^8.0.0",
+    "@forgeportal/auth": "workspace:*",
+    "@forgeportal/catalog": "workspace:*",
+    "@forgeportal/core": "workspace:*",
+    "@forgeportal/db": "workspace:*",
+    "@forgeportal/docs": "workspace:*",
+    "@forgeportal/plugin-sdk": "workspace:*",
+    "@forgeportal/scaffolder": "workspace:*",
+    "@forgeportal/scm": "workspace:*",
+    "@forgeportal/scorecards": "workspace:*",
+    "@forgeportal/search": "workspace:*",
+    "fastify": "^5.3.3",
+    "pg": "^8.16.0",
+    "semver": "^7.7.4",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/pg": "^8.15.0",
+    "@types/semver": "^7.7.1",
+    "vitest": "^3.2.1"
+  }
+}

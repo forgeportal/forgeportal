@@ -1,0 +1,9 @@
+{
+  "name": "@forgeportal-test/forge-plugin-mock",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  }
+}

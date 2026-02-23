@@ -1,0 +1,13 @@
+FROM node:20-alpine
+RUN corepack enable && corepack prepare pnpm@10.6.2 --activate
+WORKDIR /app
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY apps/ui/ apps/ui/
+COPY packages/plugin-sdk/ packages/plugin-sdk/
+COPY packages/core/ packages/core/
+COPY tsconfig.base.json tsconfig.ui.json ./
+RUN pnpm install --filter @forgeportal/ui...
+WORKDIR /app/apps/ui
+ENV VITE_API_URL=http://api:4000
+EXPOSE 3000
+CMD ["pnpm", "dev", "--host", "0.0.0.0", "--port", "3000"]

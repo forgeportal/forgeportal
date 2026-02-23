@@ -1,0 +1,23 @@
+{
+  "name": "@forgeportal/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@forgeportal/core": "workspace:*",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.15.0",
+    "@types/node": "^22.15.0",
+    "vitest": "^3.2.1"
+  }
+}

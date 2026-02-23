@@ -1,0 +1,13 @@
+apiVersion: v2
+name: forgeportal
+description: ForgePortal — Internal Developer Portal (API, Worker, UI, optional Postgres)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - idp
+  - developer-portal
+  - backstage
+maintainers:
+  - name: ForgePortal Team
+    url: https://github.com/your-org/forgeportal

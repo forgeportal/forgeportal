@@ -1,0 +1,63 @@
+/* ForgePortal brand colors — Indigo/Violet palette (matches the UI) */
+:root {
+  --ifm-color-primary:         #4f46e5; /* indigo-600 */
+  --ifm-color-primary-dark:    #4338ca; /* indigo-700 */
+  --ifm-color-primary-darker:  #3730a3; /* indigo-800 */
+  --ifm-color-primary-darkest: #312e81; /* indigo-900 */
+  --ifm-color-primary-light:   #6366f1; /* indigo-500 */
+  --ifm-color-primary-lighter: #818cf8; /* indigo-400 */
+  --ifm-color-primary-lightest:#a5b4fc; /* indigo-300 */
+
+  --ifm-code-font-size: 93%;
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --docusaurus-highlighted-code-line-bg: rgba(79, 70, 229, 0.08);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary:         #818cf8; /* indigo-400 — brighter for dark bg */
+  --ifm-color-primary-dark:    #6366f1;
+  --ifm-color-primary-darker:  #4f46e5;
+  --ifm-color-primary-darkest: #4338ca;
+  --ifm-color-primary-light:   #a5b4fc;
+  --ifm-color-primary-lighter: #c7d2fe;
+  --ifm-color-primary-lightest:#e0e7ff;
+
+  --docusaurus-highlighted-code-line-bg: rgba(129, 140, 248, 0.12);
+}
+
+/* Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Hero button overrides */
+.button--primary {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border-color: transparent;
+  font-weight: 600;
+}
+.button--primary:hover {
+  background: linear-gradient(135deg, #4338ca, #6d28d9);
+  border-color: transparent;
+}
+
+/* Sidebar active item */
+.menu__link--active {
+  font-weight: 600;
+}
+
+/* Code block language badge */
+.prism-code {
+  border-radius: 8px;
+}
+
+/* Admonition styling */
+.alert--info {
+  border-left: 4px solid var(--ifm-color-primary);
+}
+
+/* API endpoint badges */
+.badge--get    { background: #10b981; color: white; }
+.badge--post   { background: #3b82f6; color: white; }
+.badge--put    { background: #f59e0b; color: white; }
+.badge--delete { background: #ef4444; color: white; }
+.badge--patch  { background: #8b5cf6; color: white; }

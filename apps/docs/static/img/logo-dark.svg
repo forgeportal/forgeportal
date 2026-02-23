@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" role="img" aria-label="ForgePortal logo">
+  <defs>
+    <linearGradient id="grad-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <!-- Lightning bolt path  brighter for dark backgrounds -->
+  <polygon
+    points="22,4 12,22 20,22 18,36 28,18 20,18"
+    fill="url(#grad-dark)"
+  />
+</svg>

@@ -1,0 +1,140 @@
+.heroBanner {
+  padding: 4rem 0 3rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+}
+[data-theme='dark'] .heroBanner {
+  background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%);
+}
+
+.heroTitle {
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 1rem;
+}
+
+.heroSubtitle {
+  font-size: 1.25rem;
+  color: var(--ifm-color-emphasis-700);
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.heroCta {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.heroNote {
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-600);
+  margin-top: 0.5rem;
+}
+
+/* Features section */
+.features {
+  padding: 4rem 0 3rem;
+}
+.sectionTitle {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 3rem;
+}
+
+.featureCard {
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-background-color);
+  transition: box-shadow 0.2s, transform 0.2s;
+  margin-bottom: 1.5rem;
+}
+.featureCard:hover {
+  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.12);
+  transform: translateY(-2px);
+}
+.featureIcon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Quick install */
+.quickInstall {
+  background: var(--ifm-color-emphasis-100);
+  padding: 3rem 0;
+  text-align: center;
+}
+[data-theme='dark'] .quickInstall {
+  background: var(--ifm-background-surface-color);
+}
+.codeBlock {
+  text-align: left;
+  display: inline-block;
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin: 1.5rem 0;
+  max-width: 700px;
+  width: 100%;
+}
+
+/* Comparison */
+.comparison {
+  padding: 3rem 0 4rem;
+  text-align: center;
+}
+.comparisonSubtitle {
+  color: var(--ifm-color-emphasis-600);
+  margin-bottom: 2rem;
+}
+.tableWrapper {
+  overflow-x: auto;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: left;
+}
+.tableWrapper table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tableWrapper th,
+.tableWrapper td {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+}
+.tableWrapper th {
+  background: var(--ifm-color-primary);
+  color: white;
+  font-weight: 600;
+}
+.tableWrapper tr:nth-child(even) td {
+  background: var(--ifm-color-emphasis-100);
+}
+
+/* Final CTA */
+.finalCta {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  padding: 4rem 0;
+  text-align: center;
+}
+.finalCta h2,
+.finalCta p {
+  color: white;
+}
+.finalCta p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@forgeportal/search",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@forgeportal/core": "workspace:*",
+    "@forgeportal/db": "workspace:*",
+    "@forgeportal/auth": "workspace:*",
+    "zod": "^3.25.28"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.11",
+    "fastify": "^5.3.3",
+    "vitest": "^3.2.1"
+  }
+}

@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "${DB_PORT_HOST:-5433}:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-forgeportal}
+      POSTGRES_USER: ${DB_USER:-forge}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-forge_local_dev}
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-forge} -d ${DB_NAME:-forgeportal}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:4000/livez').then(r=>{if(!r.ok)throw r.status;process.exit(0)}).catch(()=>process.exit(1))\""]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: ["node", "api/dist/server.js"]
+
+  worker:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    env_file: .env
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["node", "worker/dist/worker.js"]
+
+  ui:
+    build:
+      context: ../../
+      dockerfile: deployments/docker-compose/Dockerfile.ui.dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:

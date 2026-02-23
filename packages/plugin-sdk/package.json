@@ -1,0 +1,46 @@
+{
+  "name": "@forgeportal/plugin-sdk",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
+    }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@forgeportal/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": ">=5",
+    "react": ">=19"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "@tanstack/react-query": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "*",
+    "@types/react": "*",
+    "fastify": "^5.3.3",
+    "react": "*",
+    "vitest": "*"
+  }
+}

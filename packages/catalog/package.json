@@ -1,0 +1,30 @@
+{
+  "name": "@forgeportal/catalog",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@forgeportal/core": "workspace:*",
+    "@forgeportal/db": "workspace:*",
+    "@forgeportal/auth": "workspace:*",
+    "@forgeportal/scm": "workspace:*",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.15.0",
+    "@types/pg": "^8.15.0",
+    "fastify": "^5.3.3",
+    "pg": "^8.16.0",
+    "vitest": "^3.2.1"
+  }
+}

@@ -1,0 +1,61 @@
+# ForgePortal Configuration
+# Copy to forgeportal.yaml and customize.
+# All values shown are defaults.
+# Env vars override: FORGEPORTAL_<SECTION>__<KEY>=value (double underscore for nesting)
+# Legacy env vars (DB_HOST, PORT, etc.) also work for backward compatibility.
+
+db:
+  host: localhost
+  port: 5432
+  database: forgeportal
+  user: forge
+  password: forge_local_dev  # Use K8s Secret or Docker secret in production!
+  maxPoolSize: 20
+
+server:
+  port: 4000
+  host: 0.0.0.0
+  logLevel: info  # debug | info | warn | error
+
+auth:
+  oidc:
+    # issuer: https://keycloak.example.com/realms/forgeportal
+    # clientId: forgeportal
+    # clientSecret: <from-secret>
+  sessionSecret: change-me-forgeportal-session-secret  # min 16 chars
+
+scm:
+  github:
+    # Mode 1: GitHub App (recommended)
+    # appId: "12345"
+    # privateKeyPath: /secrets/github-app.pem
+    # Mode 2: PAT fallback
+    # token: ghp_xxxx
+    # webhookSecret: <from-secret>
+  gitlab:
+    # token: <from-secret>
+    baseUrl: https://gitlab.com
+    # webhookSecret: <from-secret>
+
+discovery:
+  orgs: []
+    # - provider: github
+    #   org: my-github-org
+    #   topic: forgeportal        # optional: only repos with this topic
+    # - provider: gitlab
+    #   org: my-gitlab-group
+  entityFilePath: entity.yaml      # path to entity descriptor in each repo
+  intervalMinutes: 0               # 0 = manual only, >0 = periodic (minutes)
+
+migrations:
+  dir: tools/migration
+  runSeed: false
+  seedFile: tools/seed/seed_v1.sql
+
+plugins: {}
+  # example-plugin:
+  #   enabled: true
+  #   config:
+  #     apiKey: <from-secret>
+
+encryptionKey: local-dev-key-change-in-prod-32chars!  # min 16 chars

@@ -1,0 +1,29 @@
+{
+  "name": "@forgeportal/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/worker.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/worker.ts",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist",
+    "start": "node dist/worker.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@forgeportal/core": "workspace:*",
+    "@forgeportal/db": "workspace:*",
+    "@forgeportal/scm": "workspace:*",
+    "@forgeportal/catalog": "workspace:*",
+    "@forgeportal/scaffolder": "workspace:*",
+    "@forgeportal/scorecards": "workspace:*",
+    "@forgeportal/docs": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/pg": "^8.11.11",
+    "vitest": "^3.2.1"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@forgeportal/scorecards",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test":  "vitest run",
+    "lint":  "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.11",
+    "fastify": "^5.3.3",
+    "vitest": "^3.2.1"
+  },
+  "dependencies": {
+    "@forgeportal/core": "workspace:*",
+    "@forgeportal/db": "workspace:*",
+    "@forgeportal/auth": "workspace:*",
+    "@forgeportal/scm": "workspace:*",
+    "@forgeportal/catalog": "workspace:*"
+  }
+}

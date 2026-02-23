@@ -1,0 +1,58 @@
+name: Deploy Docs to VPS
+
+on:
+  push:
+    branches: [main]
+    paths:    ['apps/docs/**', '.github/workflows/docs-deploy.yml']
+  workflow_dispatch:
+
+concurrency:
+  group:              ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for git log (last update date/author)
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build docs
+        run: pnpm --filter @forgeportal/docs-site build
+
+      - name: Deploy to VPS via rsync
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avz --delete --exclude='__server'
+          path: apps/docs/build/
+          remote_path: /var/www/forgeportal-docs/
+          remote_host: ${{ secrets.VPS_HOST }}
+          remote_port: 22
+          remote_user: root
+          remote_key:  ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Fix permissions on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:     ${{ secrets.VPS_HOST }}
+          username: root
+          key:      ${{ secrets.VPS_SSH_KEY }}
+          port:     22
+          script: |
+            chown -R www-data:www-data /var/www/forgeportal-docs
+            chmod -R 755 /var/www/forgeportal-docs
+            echo "Deploy OK: $(date)"

@@ -1,0 +1,56 @@
+{{- if .Values.cronjob.repoScan.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "forgeportal.fullname" . }}-repo-scan
+  labels:
+    {{- include "forgeportal.labels" . | nindent 4 }}
+    app.kubernetes.io/component: repo-scan
+spec:
+  schedule: {{ .Values.cronjob.repoScan.schedule | quote }}
+  concurrencyPolicy: {{ .Values.cronjob.repoScan.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.cronjob.repoScan.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.cronjob.repoScan.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "forgeportal.labels" . | nindent 12 }}
+            app.kubernetes.io/component: repo-scan
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: repo-scan
+              image: {{ include "forgeportal.image" (dict "root" . "component" .Values.cronjob.repoScan) }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: {{ .Values.cronjob.repoScan.command | toJson }}
+              env:
+                - name: NODE_ENV
+                  value: "production"
+                - name: DB_HOST
+                  value: {{ include "forgeportal.dbHost" . | quote }}
+                - name: DB_PORT
+                  value: {{ include "forgeportal.dbPort" . | quote }}
+                - name: DB_NAME
+                  value: {{ include "forgeportal.dbName" . | quote }}
+                - name: DB_USER
+                  value: {{ include "forgeportal.dbUser" . | quote }}
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "forgeportal.dbSecretName" . }}
+                      key: {{ include "forgeportal.dbPasswordKey" . }}
+                {{- range .Values.cronjob.repoScan.env }}
+                - name: {{ .name }}
+                  value: {{ .value | quote }}
+                {{- end }}
+              resources:
+                limits:   { cpu: 200m, memory: 256Mi }
+                requests: { cpu: 50m, memory: 128Mi }
+          {{- with .Values.cronjob.repoScan.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ . | quote }}
+          {{- end }}
+{{- end }}

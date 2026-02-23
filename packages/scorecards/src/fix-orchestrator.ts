@@ -1,0 +1,185 @@
+import type { Pool } from 'pg';
+import type { EntityRow } from '@forgeportal/catalog';
+import type { RuleDefinition, ITemplateRunner } from './types.js';
+import { resolveFixAction } from './fix-action-resolver.js';
+
+/** Maps fixAction.actionId to the fix template name seeded in the DB */
+const FIX_TEMPLATE_NAMES: Record<string, string> = {
+  'scm.createOrUpdateFile@v1': 'forge-fix-file',
+  'ci.bootstrap@v1':           'forge-fix-file',
+  'docs.bootstrap@v1':         'forge-fix-file',
+};
+
+export interface StartFixResult {
+  templateRunId: string;
+  statusUrl:     string;
+  branch:        string;
+  prTitle:       string;
+}
+
+export class FixOrchestrator {
+  constructor(
+    private readonly pool:           Pool,
+    private readonly templateRunner: ITemplateRunner,
+  ) {}
+
+  async startFix(
+    entity:      EntityRow,
+    rule:        RuleDefinition,
+    requestedBy: string,
+  ): Promise<StartFixResult> {
+    // 1. Resolve fix action
+    const fixAction = resolveFixAction(rule, entity);
+    if (!fixAction) {
+      throw new FixNotAvailableError(`No automated fix available for rule type: ${rule.type}`);
+    }
+
+    // 2. Map to fix template
+    const templateName = FIX_TEMPLATE_NAMES[fixAction.actionId];
+    if (!templateName) {
+      throw new FixNotAvailableError(`Unsupported fix action: ${fixAction.actionId}`);
+    }
+
+    // 3. Look up template ID by name
+    const templateRes = await this.pool.query<{ id: string }>(
+      `SELECT id FROM templates WHERE name = $1 ORDER BY created_at DESC LIMIT 1`,
+      [templateName],
+    );
+    if (templateRes.rows.length === 0) {
+      throw new Error(
+        `Fix template "${templateName}" not found in DB. Has the seed SQL been run?`,
+      );
+    }
+    const templateId = templateRes.rows[0]!.id;
+
+    // 4. Resolve final file content (override for CI/docs types)
+    const fileInputs = this.resolveFileInputs(fixAction, entity, rule);
+
+    // 5. Build branch name (short, URL-safe, collision-resistant)
+    const branch = `forge/fix-${rule.id.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${Date.now().toString(36)}`;
+
+    // 6. Build PR title and body (AC: 4)
+    const prTitle = `[ForgePortal] Fix: ${rule.title}`;
+    const prBody  = [
+      `## Automated Fix by ForgePortal`,
+      ``,
+      `This PR resolves a failing scorecard rule:`,
+      ``,
+      `- **Rule:** ${rule.title}`,
+      `- **Level:** ${rule.level}`,
+      `- **Entity:** ${entity.name} (${entity.kind})`,
+      ``,
+      `> Triggered by ${requestedBy} via ForgePortal Scorecards.`,
+    ].join('\n');
+
+    // 7. Merge all inputs for the template
+    const scm = entity.scm as Record<string, unknown>;
+    const mergedInputs: Record<string, unknown> = {
+      provider:      (scm['provider'] as string | undefined)       ?? 'github',
+      owner:         (scm['owner']    as string | undefined)       ?? '',
+      repo:          (scm['repo']     as string | undefined)       ?? '',
+      defaultBranch: (scm['defaultBranch'] as string | undefined)  ?? 'main',
+      ...fileInputs,
+      branch,
+      prTitle,
+      prBody,
+    };
+
+    // 8. Start template run
+    const run = await this.templateRunner.startTemplateRun(templateId, requestedBy, mergedInputs);
+
+    return {
+      templateRunId: run.id,
+      statusUrl:     `/api/v1/templates/runs/${run.id}`,
+      branch,
+      prTitle,
+    };
+  }
+
+  /**
+   * Normalises fix inputs to always use scm.createOrUpdateFile@v1.
+   * Resolves file content inline for CI and docs fixes.
+   */
+  private resolveFileInputs(
+    fixAction:  { actionId: string; suggestedInputs: Record<string, unknown> },
+    entity:     EntityRow,
+    rule:       RuleDefinition,
+  ): Record<string, unknown> {
+    const scm      = entity.scm as Record<string, unknown>;
+    const provider = (scm['provider'] as string | undefined) ?? 'github';
+
+    // Already resolved to a file write — use as-is
+    if (fixAction.actionId === 'scm.createOrUpdateFile@v1') {
+      return {
+        path:          fixAction.suggestedInputs['path'] as string,
+        contentBase64: fixAction.suggestedInputs['contentBase64'] as string,
+        commitMessage: (fixAction.suggestedInputs['message'] as string | undefined)
+          ?? `[ForgePortal] Fix: ${rule.title}`,
+      };
+    }
+
+    // CI bootstrap — generate inline CI stub
+    if (fixAction.actionId === 'ci.bootstrap@v1') {
+      const isGitLab  = provider === 'gitlab';
+      const ciPath    = isGitLab ? '.gitlab-ci.yml' : '.github/workflows/ci.yml';
+      const ciContent = isGitLab ? GITLAB_CI_STUB : GITHUB_CI_STUB;
+      return {
+        path:          ciPath,
+        contentBase64: Buffer.from(ciContent).toString('base64'),
+        commitMessage: `[ForgePortal] Add CI configuration`,
+      };
+    }
+
+    // Docs bootstrap — generate docs/index.md stub
+    if (fixAction.actionId === 'docs.bootstrap@v1') {
+      const docsContent = `# ${entity.name} Docs\n\n> Auto-generated by ForgePortal.\n\nAdd your service documentation here.\n`;
+      return {
+        path:          'docs/index.md',
+        contentBase64: Buffer.from(docsContent).toString('base64'),
+        commitMessage: `[ForgePortal] Add docs/index.md`,
+      };
+    }
+
+    throw new FixNotAvailableError(`Cannot resolve file inputs for: ${fixAction.actionId}`);
+  }
+}
+
+export class FixNotAvailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FixNotAvailableError';
+  }
+}
+
+// ── CI stubs ──────────────────────────────────────────────────────────────────
+
+const GITHUB_CI_STUB = `name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm test
+`;
+
+const GITLAB_CI_STUB = `stages:
+  - test
+
+test:
+  stage: test
+  image: node:20
+  script:
+    - npm ci
+    - npm test
+`;

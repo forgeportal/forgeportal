@@ -1,0 +1,25 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-brand: #6366f1;
+  --color-brand-dark: #4f46e5;
+}
+
+@layer components {
+  .prose a {
+    @apply text-indigo-600 hover:text-indigo-800 no-underline hover:underline;
+  }
+  .prose code:not(pre code) {
+    @apply rounded bg-gray-100 px-1 py-0.5 text-sm font-mono text-gray-800;
+  }
+  .prose pre {
+    @apply rounded-lg border border-gray-200 bg-gray-900 p-4 text-sm;
+  }
+  .prose pre code {
+    @apply bg-transparent text-gray-100;
+  }
+  .prose blockquote {
+    @apply border-l-indigo-300 bg-indigo-50 py-1;
+  }
+}

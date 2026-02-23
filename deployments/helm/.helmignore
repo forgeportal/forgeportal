@@ -1,0 +1,5 @@
+# Helm ignore — exclude from package
+*.md
+*.yaml.bak
+*.yml.bak
+values-*.yaml.bak

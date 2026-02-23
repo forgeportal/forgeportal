@@ -1,0 +1,150 @@
+# ============================================================
+#  ForgePortal — Main Configuration File
+#  Works like app-config.yaml in Backstage.
+#
+#  All values here can be overridden by environment variables:
+#    - FORGEPORTAL_<SECTION>__<KEY>  (generic)
+#    - Legacy shorthands: OIDC_ISSUER, DB_HOST, SESSION_SECRET, etc.
+#
+#  Secret values (clientSecret, passwords) should be set via
+#  env vars or a secrets manager — not committed to source control.
+# ============================================================
+
+# ── Database ──────────────────────────────────────────────
+db:
+  host: postgres        # override: DB_HOST
+  port: 5432            # override: DB_PORT
+  database: forgeportal # override: DB_NAME
+  user: forge           # override: DB_USER
+  # password: set via DB_PASSWORD env var
+
+# ── API Server ────────────────────────────────────────────
+server:
+  port: 4000
+  host: 0.0.0.0
+  logLevel: info        # debug | info | warn | error
+
+# ── Authentication ────────────────────────────────────────
+#
+#  OIDC works with ANY compliant identity provider:
+#    Keycloak, Okta, Auth0, Azure AD, Ping Identity, Cognito...
+#
+#  To activate: set OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET
+#  in environment variables (or below — except the secret).
+#  Leaving OIDC_ISSUER empty runs the server in dev-mode bypass.
+#
+auth:
+  # Session encryption key — set via SESSION_SECRET env var in production
+  sessionSecret: change-me-forgeportal-session-secret
+
+  oidc:
+    # Issuer URL from your IDP's discovery document.
+    # Examples:
+    #   Keycloak:  http://keycloak:8080/realms/myrealm
+    #   Okta:      https://dev-xxx.okta.com/oauth2/default
+    #   Azure AD:  https://login.microsoftonline.com/{tenant}/v2.0
+    #   Auth0:     https://your-tenant.auth0.com/
+    #   Cognito:   https://cognito-idp.{region}.amazonaws.com/{userPoolId}
+    #
+    # issuer: ""   # set via OIDC_ISSUER env var
+
+    # clientId: ""   # set via OIDC_CLIENT_ID env var
+    # clientSecret is always set via OIDC_CLIENT_SECRET env var (never in file)
+
+    # Override the redirect URI if the API is behind a reverse proxy or Vite dev server.
+    # Must be registered in your IDP as a valid redirect URI.
+    # redirectUri: http://localhost:3000/api/v1/auth/callback
+
+    # OIDC scopes to request.
+    # Add "groups" for Keycloak/Okta, "offline_access" for refresh tokens.
+    # Azure AD app roles: use "openid email profile" (roles come via id_token claims)
+    scopes: openid email profile
+
+    # Which JWT claim contains the user's groups/roles.
+    # Leave unset for auto-detection (tries: groups, roles, realm_access.roles).
+    # Common overrides:
+    #   Cognito:   cognito:groups
+    #   Azure AD:  roles
+    #   Okta:      groups  (requires groups claim in the IDP app settings)
+    # groupsClaim: groups
+
+  # Map IDP group/role names to ForgePortal roles.
+  # This lets you use whatever naming convention your IDP uses.
+  # ForgePortal roles: platform-admin, template-admin, team-admin, developer, viewer
+  #
+  # If not set: IDP groups must be named exactly like ForgePortal roles (zero-config).
+  #
+  # roleMapping:
+  #   platform-admin:  ["forge-admins", "platform-admins", "SRE"]
+  #   template-admin:  ["template-managers"]
+  #   team-admin:      ["team-leads"]
+  #   developer:       ["engineers", "developers"]
+  #   viewer:          ["all-staff", "readonly"]
+
+# ── SCM Providers ─────────────────────────────────────────
+scm:
+  github:
+    # token: set via SCM_GITHUB_TOKEN env var
+    # appId: set via SCM_GITHUB_APP_ID env var
+    # webhookSecret: set via SCM_GITHUB_WEBHOOK_SECRET env var
+  gitlab:
+    # token: set via SCM_GITLAB_TOKEN env var
+    # baseUrl: https://gitlab.com  # change for self-hosted
+    # webhookSecret: set via SCM_GITLAB_WEBHOOK_SECRET env var
+
+# ── Catalog Discovery ─────────────────────────────────────
+discovery:
+  entityFilePath: entity.yaml
+  intervalMinutes: 60
+  orgs: []
+  # Example:
+  # orgs:
+  #   - provider: github
+  #     org: my-org
+  #   - provider: gitlab
+  #     org: my-group
+
+# ── Migrations ────────────────────────────────────────────
+migrations:
+  dir: tools/migration
+  runSeed: false
+  seedFile: tools/seed/seed_v1.sql
+
+# ── Scorecards ────────────────────────────────────────────
+scorecards:
+  # Interval in hours between nightly bulk scorecard evaluations.
+  # Set to 0 to disable the scheduled sweep.
+  evalIntervalHours: 24
+
+# ── Encryption ────────────────────────────────────────────
+# encryptionKey: set via ENCRYPTION_KEY env var — never hardcode in production
+encryptionKey: local-dev-key-change-in-prod-32chars!
+
+# ── Plugins ───────────────────────────────────────────────
+#
+# Manage installed plugins and their configuration.
+# Plugin IDs are derived from the npm package name:
+#   "@myorg/forge-plugin-pagerduty" → "pagerduty"
+#   "forge-plugin-slack-notify"     → "slack-notify"
+#
+# Plugin packages to load at startup (runs resolvePluginConfig + validatePluginConfig):
+pluginPackages:
+  packages: []
+  # packages:
+  #   - "@myorg/forge-plugin-pagerduty"
+  #   - "@myorg/forge-plugin-slack-notify"
+
+# Per-plugin configuration (enabled flag + non-secret config values):
+plugins: {}
+  # pagerduty:
+  #   enabled: true
+  #   config:
+  #     apiEndpoint: "https://api.pagerduty.com"
+  #     # ⚠ NEVER put secret values here — use env vars instead:
+  #     # Set via: FORGEPORTAL_PLUGIN_PAGERDUTY_APITOKEN=<value>
+  #
+  # slack-notify:
+  #   enabled: false   # ← plugin installed but inactive
+  #   config:
+  #     defaultChannel: "#platform-alerts"
+  #     # webhookUrl: set via FORGEPORTAL_PLUGIN_SLACK_NOTIFY_WEBHOOKURL

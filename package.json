@@ -1,0 +1,33 @@
+{
+  "name": "forgeportal",
+  "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "packageManager": "pnpm@10.6.2",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "clean": "turbo clean"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.27.0",
+    "eslint": "^9.27.0",
+    "eslint-config-prettier": "^10.1.5",
+    "jiti": "^2.6.1",
+    "pino-pretty": "^13.0.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.32.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@esbuild/*",
+      "sodium-native"
+    ]
+  }
+}

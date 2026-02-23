@@ -1,0 +1,120 @@
+# ── Global / Release ─────────────────────────────────────────────────────────
+nameOverride: ""
+fullnameOverride: ""
+
+# ── Images ───────────────────────────────────────────────────────────────────
+image:
+  registry: ""
+  repository: your-org/forgeportal   # or ghcr.io/your-org/forgeportal
+  tag: ""                            # override; default = Chart appVersion
+  pullPolicy: IfNotPresent
+
+# ── API ──────────────────────────────────────────────────────────────────────
+api:
+  replicaCount: 1
+  image: {}                          # override image for api
+  resources:
+    limits:   { cpu: 500m, memory: 512Mi }
+    requests: { cpu: 100m, memory: 256Mi }
+  env: []                             # extra env vars
+  envFrom: []                         # optional ConfigMap/Secret refs
+  livenessProbe:
+    httpGet: { path: /livez, port: 4000 }
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  readinessProbe:
+    httpGet: { path: /livez, port: 4000 }   # API has /livez only
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+# ── Worker ───────────────────────────────────────────────────────────────────
+worker:
+  replicaCount: 1
+  image: {}
+  resources:
+    limits:   { cpu: 500m, memory: 512Mi }
+    requests: { cpu: 100m, memory: 256Mi }
+  env: []
+  envFrom: []
+
+# ── UI ───────────────────────────────────────────────────────────────────────
+ui:
+  replicaCount: 1
+  image: {}                           # can be UI-only image if multi-stage
+  resources:
+    limits:   { cpu: 256m, memory: 256Mi }
+    requests: { cpu: 50m, memory: 128Mi }
+  env: []                             # e.g. VITE_API_URL for build-time
+  envFrom: []
+
+# ── Database (internal by default) ───────────────────────────────────────────
+postgres:
+  enabled: true                       # false = use external DB
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+  auth:
+    username: forge
+    database: forgeportal
+    existingSecret: ""                # if set, password from secret
+    password: ""                      # else direct value (dev only)
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""   # optional; use default StorageClass if empty
+  resources:
+    limits:   { cpu: 500m, memory: 1Gi }
+    requests: { cpu: 100m, memory: 256Mi }
+
+externalDatabase:
+  enabled: false
+  host: ""
+  port: 5432
+  database: forgeportal
+  username: forge
+  existingSecret: ""                  # secret containing password (required if enabled)
+
+# ── Ingress ──────────────────────────────────────────────────────────────────
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: forgeportal.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: ui
+          port: 3000
+        - path: /api
+          pathType: Prefix
+          service: api
+          port: 4000
+  tls:
+    - secretName: forgeportal-tls
+      hosts: [forgeportal.example.com]
+
+# ── CronJob repo-scan ────────────────────────────────────────────────────────
+cronjob:
+  repoScan:
+    enabled: true
+    schedule: "0 * * * *"             # every hour
+    image: {}
+    # command: override to run actual repo scan (e.g. trigger API or run script)
+    command: ["node", "-e", "console.log('Repo scan placeholder'); process.exit(0)"]
+    env: []
+    existingSecret: ""
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 3
+
+# ── Secrets (references only) ───────────────────────────────────────────────
+# When createDefaultSecret: true, a generic Secret is created (placeholder).
+# In prod, use existingSecret + keys for OIDC/SCM/DB/encryption.
+# Expected keys in existingSecret (documentation):
+#   db-password, oidc-client-secret, encryption-key, session-secret,
+#   scm-github-app-private-key, scm-github-token, etc.
+secrets:
+  createDefaultSecret: false
+  existingSecret: ""

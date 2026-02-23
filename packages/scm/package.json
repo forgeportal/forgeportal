@@ -1,0 +1,24 @@
+{
+  "name": "@forgeportal/scm",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@forgeportal/core": "workspace:*",
+    "@octokit/rest": "^22.0.0",
+    "@octokit/auth-app": "^8.2.0",
+    "@gitbeaker/rest": "^43.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "vitest": "^3.2.1"
+  }
+}
