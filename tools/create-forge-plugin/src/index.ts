@@ -173,7 +173,7 @@ function buildNextSteps(names: PluginNames, type: PluginType, targetDir: string)
     lines.push('');
   }
 
-  lines.push(`Docs: https://github.com/your-org/forgeportal/tree/main/docs/plugin-development.md`);
+  lines.push(`Docs: https://docs.forgeportal.dev/docs/plugin-development/`);
 
   return lines.join('\n');
 }
