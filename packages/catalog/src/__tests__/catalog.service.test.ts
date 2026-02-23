@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CatalogService } from '../catalog.service.js';
 import { NotFoundError } from '@forgeportal/core';
-import type { EntityRow, EntityRelationRow, EntitySourceRow } from '../entity.types.js';
+import type { EntityRow, EntitySourceRow } from '../entity.types.js';
 
 function makeEntityRow(overrides: Partial<EntityRow> = {}): EntityRow {
   return {

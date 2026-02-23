@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { EntityRepository } from '../entity.repository.js';
 import { ConflictError, NotFoundError } from '@forgeportal/core';
 
