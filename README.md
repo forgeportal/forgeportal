@@ -41,7 +41,7 @@ ForgePortal is an open-source Internal Developer Portal (IDP) built on **Postgre
 ## Quick Start
 
 ```bash
-git clone https://github.com/your-org/forgeportal
+git clone https://github.com/forgeportal/forgeportal
 cd forgeportal
 cp deployments/docker-compose/.env.example deployments/docker-compose/.env
 docker compose -f deployments/docker-compose/docker-compose.yml up
@@ -223,11 +223,17 @@ pnpm --filter @forgeportal/docs-site dev
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) (coming soon) before opening a PR.
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md) before opening a PR.
+
+For monorepo setup, scripts, migrations, and testing conventions, see [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md).
 
 Internal design specs (PRD, architecture, threat model) are in [`docs/`](docs/).
 
 ---
+
+## Security
+
+Please report security issues privately — see [SECURITY.md](SECURITY.md).
 
 ## License
 

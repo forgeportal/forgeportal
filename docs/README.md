@@ -1,25 +1,18 @@
-# ForgePortal — Internal Design Specs
+# ForgePortal — Internal Docs
 
-This folder contains the **V1 design specifications** for ForgePortal: product requirements, architecture decisions, security threat model, SCM action contracts, and provider capability mapping.
-
-These documents are the source of truth used during V1 development. They are kept for reference but should not be confused with the end-user documentation site (`apps/docs/`).
+This folder contains the **developer guide** and references to the V1 design specifications for ForgePortal.
 
 ---
 
-## Spec Index
+## Developer Guide
 
-| Document | Purpose |
-|----------|---------|
-| [`prd.md`](prd.md) | Product Requirements Document — goals, non-functional requirements, milestones, key differentiators vs Backstage |
-| [`architecture.md`](architecture.md) | Full architecture specification — components, modules, data model, plugin system, repo layout, DX flows |
-| [`security-considerations.md`](security-considerations.md) | Threat model (T1–T9), mitigations, RBAC, secret handling, webhook verification |
-| [`actions_v1.md`](actions_v1.md) | Action contracts — every built-in action: inputs, outputs, idempotency keys, error codes |
-| [`provider_capability_matrix.md`](provider_capability_matrix.md) | GitHub vs GitLab capability mapping for each action |
-| [`provider-token-strategy.md`](provider-token-strategy.md) | SCM authentication strategy — GitHub PAT, GitHub App, GitLab token, permission scopes |
+**→ [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)**
+
+Covers monorepo setup, Turborepo scripts, running services locally, environment variables, code conventions, database migrations, and testing.
 
 ---
 
-## Key Decisions (from architecture.md)
+## Key Architecture Decisions
 
 | Topic | Decision |
 |-------|----------|
@@ -39,4 +32,6 @@ These documents are the source of truth used during V1 development. They are kep
 
 ## Relationship to User Documentation
 
-The end-user documentation site lives in [`apps/docs/`](../apps/docs/) (Docusaurus 3) and is deployed to `docs.forgeportal.dev`. The files in this `docs/` folder are internal engineering references, not published.
+The end-user documentation site lives in [`apps/docs/`](../apps/docs/) (Docusaurus 3) and is deployed to [docs.forgeportal.dev](https://docs.forgeportal.dev). The files in this `docs/` folder are internal engineering references — they are not published.
+
+> **Note:** The original V1 design specs (PRD, architecture, threat model, action contracts) were produced during the planning phase and are not tracked in git.
