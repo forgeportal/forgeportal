@@ -24,9 +24,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "@forgeportal/core": "workspace:*"
-  },
   "peerDependencies": {
     "@tanstack/react-query": ">=5",
     "react": ">=19"
