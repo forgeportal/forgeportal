@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { FixOrchestrator, FixNotAvailableError } from '../fix-orchestrator.js';
 import type { ITemplateRunner } from '../types.js';
 import type { EntityRow } from '@forgeportal/catalog';
