@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import type { Pool } from 'pg';
 import { requirePermission } from '@forgeportal/auth';
 import { redactSecrets, RateLimiter } from '@forgeportal/core';

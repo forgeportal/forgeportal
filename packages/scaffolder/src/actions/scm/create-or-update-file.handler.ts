@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ActionHandler, ActionContext, ActionResult } from '../../types.js';
 import { ActionError } from '../../types.js';
-import type { SCMProvider, SCMProviders } from '@forgeportal/scm';
+import type { SCMProviders } from '@forgeportal/scm';
 import { mapScmError, buildRepoUrl } from './scm-error-mapper.js';
 
 const inputSchema = z.object({

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CreateRepoHandler } from '../../../actions/scm/create-repo.handler.js';
-import { ActionError } from '../../../types.js';
 import type { ActionContext } from '../../../types.js';
 import type { SCMProvider, SCMProviders } from '@forgeportal/scm';
 
