@@ -1,15 +1,14 @@
 {
-  "name": "@forgeportal-test/forge-plugin-mock",
-  "version": "1.0.0",
+  "name": "forge-plugin-mock",
+  "version": "0.0.1",
   "forgeportal": {
     "engineVersion": "^1.0.0",
     "type": "backend",
     "capabilities": {
       "backend": {
-        "routes": ["/status"],
-        "actionProviders": ["mock.echo@v1"]
+        "actionProviders": ["mock.echo@v1"],
+        "routes": ["/status"]
       }
-    },
-    "permissions": ["action:read"]
+    }
   }
 }
