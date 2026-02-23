@@ -403,10 +403,6 @@ importers:
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)
 
   packages/plugin-sdk:
-    dependencies:
-      '@forgeportal/core':
-        specifier: workspace:*
-        version: link:../core
     devDependencies:
       '@tanstack/react-query':
         specifier: '*'
