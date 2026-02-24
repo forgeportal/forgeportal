@@ -52,10 +52,20 @@ migrations:
   runSeed: false
   seedFile: tools/seed/seed_v1.sql
 
+pluginPackages:
+  packages: []
+    # List npm packages to load as plugins at startup.
+    # Each must have a valid forgeportal-plugin.json manifest.
+    # - "@myorg/forge-plugin-pagerduty"
+    # - "@myorg/forge-plugin-costview"
+
 plugins: {}
+  # Per-plugin runtime configuration (enabled flag + non-secret config).
+  # Key = plugin ID (package name without scope and "forge-plugin-" prefix).
   # example-plugin:
   #   enabled: true
   #   config:
-  #     apiKey: <from-secret>
+  #     apiEndpoint: https://api.example.com
+  #     # apiKey: set via FORGEPORTAL_PLUGIN_EXAMPLEPLUGIN_APIKEY
 
 encryptionKey: local-dev-key-change-in-prod-32chars!  # min 16 chars

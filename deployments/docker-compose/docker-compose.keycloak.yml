@@ -1,0 +1,47 @@
+# Optional Keycloak overlay for ForgePortal
+#
+# Usage:
+#   docker compose \
+#     -f deployments/docker-compose/docker-compose.yml \
+#     -f deployments/docker-compose/docker-compose.keycloak.yml \
+#     up
+#
+# Then uncomment the OIDC block in your .env file:
+#   OIDC_ISSUER=http://keycloak:8080/realms/forgeportal
+#   OIDC_CLIENT_ID=forgeportal
+#   OIDC_CLIENT_SECRET=<copy from Keycloak → Clients → forgeportal → Credentials>
+#
+# Pre-configured test user: alex@acmecorp.com / demo1234  (role: platform-admin)
+# Keycloak admin console:    http://localhost:8080  (admin / admin)
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24
+    command:
+      - start-dev
+      - --import-realm
+    ports:
+      - "8080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      # Use H2 in-memory DB for dev — no persistence across restarts
+      KC_DB: dev-mem
+    volumes:
+      - ./keycloak-realm-export.json:/opt/keycloak/data/import/forgeportal-realm.json:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >
+          curl -sf http://localhost:8080/realms/forgeportal/.well-known/openid-configuration
+          || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # Override api to wait for Keycloak before starting
+  api:
+    depends_on:
+      keycloak:
+        condition: service_healthy

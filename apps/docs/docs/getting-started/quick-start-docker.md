@@ -61,16 +61,23 @@ PORT=4000
 NODE_ENV=development
 LOG_LEVEL=debug
 
-# === OIDC (optional — leave as-is for dev without login) ===
-OIDC_ISSUER=http://localhost:8080/realms/forgeportal
-OIDC_CLIENT_ID=forgeportal
-OIDC_CLIENT_SECRET=change-me-in-production
+# === OIDC ===
+# Leave all OIDC_* commented out for local dev (dev-bypass mode — no login required).
+# Set these to connect a real identity provider (Keycloak, Okta, Auth0, Azure AD, Cognito).
+# OIDC_ISSUER=http://localhost:8080/realms/forgeportal
+# OIDC_CLIENT_ID=forgeportal
+# OIDC_CLIENT_SECRET=change-me-in-production
 
 # === Encryption ===
 ENCRYPTION_KEY=local-dev-key-change-in-prod-32chars!
 ```
 
-For a **quick local run**, you don't need to change anything. The API runs in dev mode when `OIDC_ISSUER` is not configured with a reachable IdP.
+:::tip No OIDC required for local dev
+Leave all `OIDC_*` variables commented out (the defaults in `.env.example`).
+The portal starts in **dev-bypass mode**: you are automatically logged in as an admin user. No Keycloak or external IdP needed.
+
+To connect a real identity provider, see [OIDC Setup](/docs/configuration/oidc-setup).
+:::
 
 ### 4. Start the stack
 
@@ -95,7 +102,7 @@ Containers wait for Postgres to be healthy, then the API, then the UI.
 - **API health:** [http://localhost:4000/healthz](http://localhost:4000/healthz)
 - **API liveness:** [http://localhost:4000/livez](http://localhost:4000/livez)
 
-You should see the ForgePortal UI. Without OIDC configured, the app may allow access in dev mode (check your setup).
+You should see the ForgePortal UI. In dev-bypass mode (no `OIDC_ISSUER` set) you are automatically logged in as a platform admin — no credentials required.
 
 ### 6. Optional: view logs
 
@@ -170,3 +177,13 @@ All app services use the same root `Dockerfile` and read `.env` for configuratio
 | **UI blank or connection refused** | Ensure the API is up (`curl http://localhost:4000/livez`) and that the UI is configured to call `http://localhost:4000` (or the correct API URL in your setup). |
 
 Next: [Local dev setup](/docs/getting-started/local-dev-setup) to run the stack with `pnpm dev` for development.
+
+---
+
+## Docs site
+
+Browse the full documentation at **[docs.forgeportal.dev](https://docs.forgeportal.dev)**, or run it locally alongside the stack:
+
+```bash
+pnpm --filter @forgeportal/docs-site dev   # → http://localhost:3001
+```

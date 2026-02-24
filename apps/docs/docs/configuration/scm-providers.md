@@ -1,4 +1,4 @@
----
+﻿---
 title: SCM Providers
 sidebar_position: 3
 ---
@@ -139,14 +139,50 @@ Enable the needed checkboxes in the GitLab webhook form.
 
 ---
 
+
+## Environment variable overrides
+
+Every SCM secret can (and should) be passed as an environment variable instead of writing it in `forgeportal.yaml`. The pattern is `FORGEPORTAL_<SECTION>__<KEY>` (double underscore for nesting).
+
+| What to set | YAML key | Environment variable |
+|-------------|----------|----------------------|
+| GitHub PAT | `scm.github.token` | `FORGEPORTAL_SCM__GITHUB__TOKEN` |
+| GitHub App ID | `scm.github.appId` | `FORGEPORTAL_SCM__GITHUB__APPID` |
+| GitHub App private key path | `scm.github.privateKeyPath` | `FORGEPORTAL_SCM__GITHUB__PRIVATEKEYPATH` |
+| GitHub webhook secret | `scm.github.webhookSecret` | `FORGEPORTAL_SCM__GITHUB__WEBHOOK_SECRET` |
+| GitLab token | `scm.gitlab.token` | `FORGEPORTAL_SCM__GITLAB__TOKEN` |
+| GitLab base URL | `scm.gitlab.baseUrl` | `FORGEPORTAL_SCM__GITLAB__BASEURL` |
+| GitLab webhook secret | `scm.gitlab.webhookSecret` | `FORGEPORTAL_SCM__GITLAB__WEBHOOK_SECRET` |
+
+**Docker Compose** -- add to your `.env` file:
+
+```bash
+FORGEPORTAL_SCM__GITHUB__TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
+# FORGEPORTAL_SCM__GITHUB__WEBHOOK_SECRET=my-webhook-secret
+```
+
+**Kubernetes / Helm** -- reference a secret in the pod environment:
+
+```yaml
+env:
+  - name: FORGEPORTAL_SCM__GITHUB__TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: forgeportal-scm-secrets
+        key: github-token
+```
+
+---
+
 ## Summary
 
-| Provider | Auth | Config keys | Env override (example) |
-|----------|------|-------------|--------------------------|
-| GitHub (PAT) | Token | `scm.github.token` | `FORGEPORTAL_SCM__GITHUB__TOKEN` |
-| GitHub (App) | App ID + PEM path | `scm.github.appId`, `scm.github.privateKeyPath` | — |
-| GitHub webhook | Secret | `scm.github.webhookSecret` | `FORGEPORTAL_SCM__GITHUB__WEBHOOK_SECRET` |
-| GitLab | Token | `scm.gitlab.token`, `scm.gitlab.baseUrl` | `FORGEPORTAL_SCM__GITLAB__TOKEN` |
-| GitLab webhook | Secret | `scm.gitlab.webhookSecret` | `FORGEPORTAL_SCM__GITLAB__WEBHOOK_SECRET` |
+| Provider | Auth mode | YAML keys | Env override |
+|----------|-----------|-----------|--------------|
+| GitHub | PAT | `scm.github.token` | `FORGEPORTAL_SCM__GITHUB__TOKEN` |
+| GitHub | App | `scm.github.appId`, `scm.github.privateKeyPath` | -- (file path) |
+| GitHub | Webhook | `scm.github.webhookSecret` | `FORGEPORTAL_SCM__GITHUB__WEBHOOK_SECRET` |
+| GitLab | Token | `scm.gitlab.token` | `FORGEPORTAL_SCM__GITLAB__TOKEN` |
+| GitLab | Base URL | `scm.gitlab.baseUrl` | `FORGEPORTAL_SCM__GITLAB__BASEURL` |
+| GitLab | Webhook | `scm.gitlab.webhookSecret` | `FORGEPORTAL_SCM__GITLAB__WEBHOOK_SECRET` |
 
-For all config keys and types, see [forgeportal.yaml — scm](/docs/configuration/forgeportal-yaml#scm). For legacy or generic env var names, see [Environment Variables](/docs/configuration/env-vars).
+For all config keys and types, see [forgeportal.yaml -- scm](/docs/configuration/forgeportal-yaml#scm). For all environment variable names, see [Environment Variables](/docs/configuration/env-vars).

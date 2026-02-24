@@ -1,6 +1,6 @@
 {
   "name": "create-forge-plugin",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Scaffolder CLI for ForgePortal plugins — generate a new plugin in under 2 minutes.",
   "type": "module",
   "bin": {

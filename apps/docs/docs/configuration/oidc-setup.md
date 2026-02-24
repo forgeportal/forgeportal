@@ -7,6 +7,80 @@ sidebar_position: 2
 
 ForgePortal uses **OpenID Connect (OIDC)** for single sign-on. You configure one IdP and map its groups/roles to ForgePortal roles via `auth.oidc` and `auth.roleMapping` in [forgeportal.yaml](/docs/configuration/forgeportal-yaml#auth). This page gives step-by-step guides for five common providers.
 
+:::tip No OIDC required for local dev
+Leave all `OIDC_*` variables unset (or commented out). The portal starts in **dev-bypass mode**: you are automatically logged in as a platform admin. No IdP needed.
+
+Set `OIDC_ISSUER` (+ client ID and secret) only when you want real SSO login.
+:::
+
+---
+
+## Local Keycloak (Docker Compose)
+
+The fastest way to get a working OIDC setup locally is the **bundled Keycloak overlay**. It spins up a pre-configured Keycloak instance alongside ForgePortal in one command — no manual realm creation needed.
+
+### What's included
+
+| | Value |
+|---|---|
+| Keycloak admin console | `http://localhost:8080` — `admin` / `admin` |
+| Realm | `forgeportal` |
+| Client ID | `forgeportal` |
+| Client secret | `forgeportal-dev-secret` |
+| Test user | `alex@acmecorp.com` / `demo1234` |
+| Test user role | `platform-admin` (via group `forge-admins`) |
+
+### Start the stack with Keycloak
+
+```bash
+docker compose \
+  -f deployments/docker-compose/docker-compose.yml \
+  -f deployments/docker-compose/docker-compose.keycloak.yml \
+  up
+```
+
+### Configure ForgePortal
+
+In `deployments/docker-compose/.env`, uncomment the Keycloak block:
+
+```bash
+OIDC_ISSUER=http://keycloak:8080/realms/forgeportal
+OIDC_CLIENT_ID=forgeportal
+OIDC_CLIENT_SECRET=forgeportal-dev-secret
+```
+
+:::caution Inter-container hostname
+Use `http://keycloak:8080` (the Docker service name), **not** `http://localhost:8080`. The API container resolves `keycloak` inside the Docker network; `localhost` would point to the API container itself.
+
+When accessing Keycloak from your **browser** (e.g. for the admin console or to debug tokens), use `http://localhost:8080`.
+:::
+
+### Configure ForgePortal YAML
+
+In `forgeportal.yaml` (or the file you mount into the container):
+
+```yaml
+auth:
+  sessionSecret: "change-me-in-production"
+  oidc:
+    issuer: "http://keycloak:8080/realms/forgeportal"
+    clientId: "forgeportal"
+    # clientSecret: set via OIDC_CLIENT_SECRET env var
+    scopes: openid email profile groups
+    groupsClaim: groups
+  roleMapping:
+    platform-admin: ["forge-admins"]
+    developer: ["developers"]
+```
+
+### Add more users
+
+1. Open `http://localhost:8080` → log in as `admin` / `admin`.
+2. Select realm **forgeportal** → **Users** → **Add user**.
+3. Fill email, set a password under **Credentials**, and assign to group `forge-admins` or `developers`.
+
+---
+
 ## Common steps (all IdPs)
 
 1. **Create an OAuth2 / OIDC application** in your IdP (confidential client).

@@ -50,7 +50,7 @@ docker compose -f deployments/docker-compose/docker-compose.yml up
 
 Open **http://localhost:3000** — your portal is live.
 
-> The `.env` file ships with safe defaults for local development. Edit `OIDC_*` variables to connect your identity provider.
+> By default the portal runs in **dev mode** (no login required — you are automatically logged in as admin). Add `OIDC_*` variables to enable SSO. See [OIDC Setup](apps/docs/docs/configuration/oidc-setup.md).
 
 ---
 
@@ -177,8 +177,8 @@ Full reference: [`forgeportal.yaml`](forgeportal.yaml) and the [Configuration do
 ## Creating a Plugin
 
 ```bash
-npx create-forge-plugin --type ui my-plugin
-# → generates packages/my-plugin/ with manifest, component stubs, and tsconfig
+npx create-forge-plugin my-plugin --type ui
+# → generates forge-plugin-my-plugin/ in the current directory
 ```
 
 Then register it in `forgeportal.yaml`:

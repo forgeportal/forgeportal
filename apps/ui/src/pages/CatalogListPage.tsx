@@ -6,6 +6,7 @@ import Badge from '../components/Badge.js';
 import SkeletonRow from '../components/SkeletonRow.js';
 import ErrorMessage from '../components/ErrorMessage.js';
 import Spinner from '../components/Spinner.js';
+import SetupChecklist from '../components/SetupChecklist.js';
 import type { Entity, SearchResultItem } from '../lib/types.js';
 
 const KINDS = [
@@ -283,6 +284,8 @@ export default function CatalogListPage() {
 
   return (
     <div>
+      <SetupChecklist />
+
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Catalog</h1>
         <p className="mt-1 text-sm text-gray-500">

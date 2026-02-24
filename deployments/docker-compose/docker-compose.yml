@@ -21,6 +21,7 @@ services:
     build:
       context: ../../
       dockerfile: Dockerfile
+      target: api
     ports:
       - "4000:4000"
     env_file: .env
@@ -32,17 +33,18 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-    command: ["node", "api/dist/server.js"]
+    command: ["node", "dist/server.js"]
 
   worker:
     build:
       context: ../../
       dockerfile: Dockerfile
+      target: worker
     env_file: .env
     depends_on:
       api:
         condition: service_healthy
-    command: ["node", "worker/dist/worker.js"]
+    command: ["node", "dist/worker.js"]
 
   ui:
     build:
