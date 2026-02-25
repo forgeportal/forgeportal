@@ -148,6 +148,9 @@ importers:
 
   apps/ui:
     dependencies:
+      '@forgeportal/plugin-kubernetes':
+        specifier: workspace:*
+        version: link:../../packages/plugin-kubernetes
       '@forgeportal/plugin-sdk':
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
@@ -312,6 +315,22 @@ importers:
         specifier: ^3.2.1
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)
 
+  packages/cli:
+    dependencies:
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.1.1
+    devDependencies:
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
+      '@types/node':
+        specifier: '*'
+        version: 22.19.11
+      vitest:
+        specifier: '*'
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@22.19.11)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)
+
   packages/core:
     dependencies:
       js-yaml:
@@ -404,6 +423,28 @@ importers:
       vitest:
         specifier: ^3.2.1
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.11)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)
+
+  packages/plugin-kubernetes:
+    dependencies:
+      '@forgeportal/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
+    devDependencies:
+      '@tanstack/react-query':
+        specifier: '*'
+        version: 5.90.21(react@19.2.4)
+      '@types/react':
+        specifier: '*'
+        version: 19.2.14
+      fastify:
+        specifier: ^5.3.3
+        version: 5.7.4
+      react:
+        specifier: '*'
+        version: 19.2.4
+      vitest:
+        specifier: '*'
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@22.19.11)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)
 
   packages/plugin-sdk:
     devDependencies:

@@ -12,6 +12,7 @@ Practical reference for contributors and maintainers working inside the monorepo
 - [Turborepo & Scripts](#turborepo--scripts)
 - [Running Services Locally](#running-services-locally)
 - [Environment Variables](#environment-variables)
+- [Managing Plugins](#managing-plugins)
 - [Code Conventions](#code-conventions)
 - [Database Migrations](#database-migrations)
 - [Testing](#testing)
@@ -485,6 +486,86 @@ This triggers `release.yml` which:
 2. Builds and pushes Docker images to `ghcr.io/forgeportal/forgeportal-{api,worker,ui}:1.0.0`
 3. Publishes `@forgeportal/plugin-sdk` and `create-forge-plugin` to npm with provenance
 4. Creates a GitHub Release with auto-generated notes and the Helm chart `.tgz`
+
+---
+
+## Managing Plugins
+
+ForgePortal's plugin system is designed so that **editing `forgeportal.yaml` is the only action required** to add or remove a plugin — no source code changes needed.
+
+### How it works
+
+Plugins configured in `forgeportal.yaml` under `pluginPackages.packages` must also be listed as npm dependencies in `apps/api/package.json` (backend/fullstack) and/or `apps/ui/package.json` (ui/fullstack). The `forge sync` CLI command automates this sync.
+
+### `forge sync` — the one command
+
+```bash
+# Add a plugin to forgeportal.yaml, then:
+pnpm forge:sync
+
+# This will:
+# 1. Read pluginPackages.packages from forgeportal.yaml
+# 2. Resolve each plugin's type (ui / backend / fullstack) from its manifest
+# 3. Update apps/api/package.json and/or apps/ui/package.json accordingly
+# 4. Remove plugins no longer configured
+# 5. Run pnpm install to update the lockfile
+```
+
+| Command | Effect |
+|---------|--------|
+| `pnpm forge:sync` | Sync + run `pnpm install` |
+| `pnpm forge:sync:dry` | Show planned changes, write nothing |
+| `pnpm forge:sync:check` | Exit 1 if out of sync (pre-commit / CI gate) |
+
+### Full developer workflow
+
+```bash
+# 1. Add plugin config to forgeportal.yaml
+#    pluginPackages:
+#      packages:
+#        - "@forgeportal/plugin-kubernetes"
+#    plugins:
+#      kubernetes:
+#        enabled: true
+#        config:
+#          clusters: '[{"name":"local","url":"https://kubernetes.docker.internal:6443"}]'
+
+# 2. Sync dependencies (one command)
+pnpm forge:sync
+
+# 3. Restart
+pnpm dev              # native dev
+# or
+docker compose restart api worker   # Docker stack
+```
+
+### Docker / production builds
+
+The `Dockerfile` automatically runs `forge sync --ci` before `pnpm deploy` in the `api-pruned` stage. This means any plugins declared in `forgeportal.yaml` at build time are automatically included in the production image — no manual `package.json` edits needed.
+
+```dockerfile
+# Handled automatically in the Dockerfile:
+RUN node packages/cli/dist/bin.js sync --ci
+RUN pnpm install --no-frozen-lockfile
+RUN pnpm --filter @forgeportal/api deploy --legacy --prod /pruned/api
+```
+
+To include a `forgeportal.yaml` in your Docker build:
+
+```bash
+# Place forgeportal.yaml in the repo root, then build:
+docker build -t my-forgeportal .
+```
+
+### CI gate
+
+Add `pnpm forge:sync:check` to your CI pipeline to prevent accidental drift between `forgeportal.yaml` and `package.json`:
+
+```yaml
+# .github/workflows/ci.yml
+- name: Check plugin deps in sync
+  run: pnpm forge:sync:check
+```
 
 ---
 

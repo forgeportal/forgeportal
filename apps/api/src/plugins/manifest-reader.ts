@@ -81,7 +81,8 @@ export async function readPluginManifest(
     pkgJsonPath = require.resolve(`${packageName}/package.json`);
   } catch {
     throw new Error(
-      `Plugin package "${packageName}" not found in node_modules. Run: pnpm add ${packageName}`,
+      `Plugin package "${packageName}" not found in node_modules. ` +
+      `Run "pnpm forge sync" and restart the server.`,
     );
   }
 

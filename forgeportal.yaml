@@ -135,7 +135,9 @@ pluginPackages:
   #   - "@myorg/forge-plugin-slack-notify"
 
 # Per-plugin configuration (enabled flag + non-secret config values):
-plugins: {}
+plugins: {
+}
+    
   # pagerduty:
   #   enabled: true
   #   config:

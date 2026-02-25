@@ -4,6 +4,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 make g+
 RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json turbo.json tsconfig.base.json tsconfig.ui.json ./
+# forgeportal.yaml is optional — present when users build with a custom plugin config
+COPY forgeportal.yam[l] ./
 COPY apps/ apps/
 COPY packages/ packages/
 COPY tools/ tools/
@@ -12,6 +14,11 @@ RUN pnpm build
 
 # ── Stage 2: Prune node_modules for api ──────────────────────────────────────
 FROM builder AS api-pruned
+# Sync plugin deps from forgeportal.yaml → apps/api/package.json before pruning.
+# --ci writes package.json only (no pnpm install); the subsequent install updates the lockfile.
+# Fallback to true so the Dockerfile works without a forgeportal.yaml (no plugins).
+RUN node packages/cli/dist/bin.js sync --ci || true
+RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter @forgeportal/api deploy --legacy --prod /pruned/api
 
 # ── Stage 3: Prune node_modules for worker ───────────────────────────────────

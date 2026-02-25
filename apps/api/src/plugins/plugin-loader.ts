@@ -242,14 +242,29 @@ export async function loadPlugins(opts: PluginLoaderOptions): Promise<LoadedPlug
       );
 
     } catch (err) {
-      logger.error({ plugin: packageName, err }, `Failed to load plugin "${packageName}" — disabling`);
+      const errMsg   = err instanceof Error ? err.message : String(err);
+      const notFound = errMsg.includes('not found in node_modules');
+
+      if (notFound) {
+        // Warn without crashing — other plugins continue to load normally.
+        logger.warn(
+          { plugin: packageName },
+          `Plugin "${packageName}" is configured in forgeportal.yaml but is not installed. ` +
+          `Run "pnpm forge sync" and restart the server.`,
+        );
+      } else {
+        logger.error({ plugin: packageName, err }, `Failed to load plugin "${packageName}" — disabling`);
+      }
+
       loaded.push({
         id:           pluginId,
         name:         packageName,
         version:      'unknown',
         type:         'backend',
         status:       'error',
-        errorMessage: err instanceof Error ? err.message : String(err),
+        errorMessage: notFound
+          ? `Plugin package "${packageName}" not found in node_modules. Run "pnpm forge sync" and restart the server.`
+          : errMsg,
         capabilities: {},
         permissions:  [],
         publicConfig: {},
