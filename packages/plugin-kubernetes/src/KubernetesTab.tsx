@@ -42,8 +42,12 @@ interface KubernetesTabProps {
   entity: Entity;
 }
 
+interface ClustersResponse {
+  data: { name: string; url: string; skipTLSVerify: boolean }[];
+}
+
 export function KubernetesTab({ entity }: KubernetesTabProps): React.ReactElement {
-  const [selectedCluster, _setSelectedCluster] = useState<string | undefined>(undefined);
+  const [selectedCluster, setSelectedCluster] = useState<string | undefined>(undefined);
   const [logsTarget, setLogsTarget] = useState<{ podName: string; namespace: string } | null>(null);
 
   // Fetch full entity to read annotations (SDK Entity type doesn't include them)
@@ -52,11 +56,21 @@ export function KubernetesTab({ entity }: KubernetesTabProps): React.ReactElemen
     isPending: entityLoading,
   } = useApi<EntityDetailResponse>(`/api/v1/catalog/entities/${entity.id}`);
 
-  const annotations  = entityDetail?.data.entity.annotations ?? {};
-  const labelSelector = annotations['forgeportal.dev/k8s-label-selector'];
+  // Fetch available clusters from plugin backend
+  const { data: clustersData } = useApi<ClustersResponse>(
+    '/api/v1/plugins/kubernetes/clusters',
+  );
+  const availableClusters = clustersData?.data ?? [];
+
+  const annotations       = entityDetail?.data.entity.annotations ?? {};
+  const labelSelector     = annotations['forgeportal.dev/k8s-label-selector'];
   const clusterAnnotation = annotations['forgeportal.dev/k8s-cluster'];
 
-  const activeCluster = selectedCluster ?? clusterAnnotation;
+  // Active cluster: user pick > entity annotation > first cluster
+  const activeCluster =
+    selectedCluster ??
+    clusterAnnotation ??
+    (availableClusters.length > 0 ? availableClusters[0]?.name : undefined);
 
   // Build workloads URL — only when label selector is known
   const workloadsParams = labelSelector
@@ -112,8 +126,19 @@ export function KubernetesTab({ entity }: KubernetesTabProps): React.ReactElemen
           )}
         </div>
         <div className="flex items-center gap-2">
-          {/* Multi-cluster dropdown — rendered only when multiple clusters exist */}
-          <div id="cluster-select-portal" />
+          {/* Multi-cluster dropdown — only shown when 2+ clusters are configured */}
+          {availableClusters.length > 1 && (
+            <select
+              value={activeCluster ?? ''}
+              onChange={(e) => setSelectedCluster(e.target.value)}
+              className="rounded border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+              aria-label="Select cluster"
+            >
+              {availableClusters.map((c) => (
+                <option key={c.name} value={c.name}>{c.name}</option>
+              ))}
+            </select>
+          )}
           <button
             type="button"
             onClick={() => void refetch()}

@@ -16,6 +16,7 @@ interface RestartBody   { namespace?: string; cluster?: string }
  * All routes are mounted under /api/v1/plugins/kubernetes/ by the plugin loader.
  *
  * Routes:
+ *   GET  clusters
  *   GET  entities/:entityId/workloads
  *   GET  entities/:entityId/pods/:podName/logs
  *   POST entities/:entityId/deployments/:deploymentName/restart
@@ -25,6 +26,21 @@ export function createRoutes(
   defaultNamespace: string,
 ) {
   return async function handler(fastify: FastifyInstance): Promise<void> {
+    /**
+     * GET /clusters
+     *
+     * Returns the list of configured cluster names and URLs (no tokens).
+     */
+    fastify.get('clusters', async (_request: FastifyRequest, reply: FastifyReply) => {
+      return reply.send({
+        data: clusters.map((c) => ({
+          name:          c.name,
+          url:           c.url,
+          skipTLSVerify: c.skipTLSVerify,
+        })),
+      });
+    });
+
     /**
      * GET /entities/:entityId/workloads
      *
