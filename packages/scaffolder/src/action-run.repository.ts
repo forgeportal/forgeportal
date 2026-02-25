@@ -37,6 +37,22 @@ export interface CreateRunInput {
   idempotency_key?: string;
 }
 
+function buildWhereClause(filter: {
+  status?: string;
+  entityId?: string;
+  templateId?: string;
+}): { clauses: string; params: unknown[] } {
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  if (filter.status)     { conditions.push(`ar.status = $${params.push(filter.status)}`); }
+  if (filter.entityId)   { conditions.push(`ar.entity_id = $${params.push(filter.entityId)}`); }
+  if (filter.templateId) { conditions.push(`ar.template_id = $${params.push(filter.templateId)}`); }
+  return {
+    clauses: conditions.length ? 'WHERE ' + conditions.join(' AND ') : '',
+    params,
+  };
+}
+
 function mapRun(row: Record<string, unknown>): ActionRun {
   return {
     id: row['id'] as string,
@@ -217,6 +233,40 @@ export class ActionRunRepository {
        WHERE requested_by = $1
          AND created_at > now() - interval '1 minute'`,
       [requestedBy],
+    );
+    return parseInt(result.rows[0]?.count ?? '0', 10);
+  }
+
+  async list(filter: {
+    status?: string;
+    entityId?: string;
+    templateId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ActionRun[]> {
+    const { clauses, params } = buildWhereClause(filter);
+    const idx = params.length;
+    const result = await this.pool.query(
+      `SELECT ar.*, t.name AS template_name
+       FROM action_runs ar
+       LEFT JOIN templates t ON t.id = ar.template_id
+       ${clauses}
+       ORDER BY ar.created_at DESC
+       LIMIT $${idx + 1} OFFSET $${idx + 2}`,
+      [...params, filter.limit ?? 20, filter.offset ?? 0],
+    );
+    return result.rows.map((r) => mapRun(r as Record<string, unknown>));
+  }
+
+  async count(filter: {
+    status?: string;
+    entityId?: string;
+    templateId?: string;
+  }): Promise<number> {
+    const { clauses, params } = buildWhereClause(filter);
+    const result = await this.pool.query<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM action_runs ar ${clauses}`,
+      params,
     );
     return parseInt(result.rows[0]?.count ?? '0', 10);
   }

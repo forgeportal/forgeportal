@@ -110,6 +110,10 @@ function makeMockPool(opts: {
           ? { rows: [effectiveRunRow], rowCount: 1 }
           : { rows: [], rowCount: 0 };
       }
+      // list() — paginated query with LEFT JOIN templates
+      if (sql.includes('FROM action_runs ar') && !sql.includes('COUNT(*)')) {
+        return runExists ? { rows: [effectiveRunRow], rowCount: 1 } : { rows: [], rowCount: 0 };
+      }
       if (sql.includes('FROM action_run_logs')) {
         return { rows: [{ ts: new Date().toISOString(), level: 'info', message: 'started' }], rowCount: 1 };
       }
@@ -351,6 +355,36 @@ describe('action routes (dev mode)', () => {
     expect(parsedInput['repoName']).toBe('my-repo');
 
     await captureApp.close();
+  });
+
+  it('GET /api/v1/action-runs → 200 with paginated list', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/action-runs' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toHaveProperty('data');
+    expect(body).toHaveProperty('pagination');
+    expect(body.pagination).toMatchObject({ limit: 20, offset: 0 });
+    expect(Array.isArray(body.data)).toBe(true);
+  });
+
+  it('GET /api/v1/action-runs with ?status=queued → 200', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/action-runs?status=queued' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().pagination).toMatchObject({ limit: 20, offset: 0 });
+  });
+
+  it('GET /api/v1/action-runs/:runId → 200 with run detail', async () => {
+    const res = await app.inject({ method: 'GET', url: `/api/v1/action-runs/${RUN_ID}` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.id).toBe(RUN_ID);
+  });
+
+  it('GET /api/v1/action-runs/:runId (not found) → 404', async () => {
+    const notFoundApp = buildApp(makeMockPool({ runExists: false }) as never, devConfig(), null);
+    await notFoundApp.ready();
+    const res = await notFoundApp.inject({ method: 'GET', url: '/api/v1/action-runs/missing-id' });
+    expect(res.statusCode).toBe(404);
+    await notFoundApp.close();
   });
 
   it('GET /api/v1/audit-logs by platform-admin → 200 with entries (AC: 6)', async () => {

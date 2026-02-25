@@ -208,6 +208,41 @@ export async function actionRoutes(
     },
   );
 
+  // GET /api/v1/action-runs  — paginated listing with filters
+  app.get(
+    '/api/v1/action-runs',
+    { preHandler: [requirePermission('action:read')] },
+    async (request, reply) => {
+      const q = request.query as {
+        status?: string;
+        entityId?: string;
+        templateId?: string;
+        limit?: string;
+        offset?: string;
+      };
+      const limit  = Math.min(parseInt(q.limit  ?? '20', 10), 200);
+      const offset = Math.max(parseInt(q.offset ?? '0',  10), 0);
+      const filter = { status: q.status, entityId: q.entityId, templateId: q.templateId };
+      const [runs, total] = await Promise.all([
+        runRepo.list({ ...filter, limit, offset }),
+        runRepo.count(filter),
+      ]);
+      return reply.send({ data: runs, pagination: { limit, offset, total } });
+    },
+  );
+
+  // GET /api/v1/action-runs/:runId  — full run detail
+  app.get(
+    '/api/v1/action-runs/:runId',
+    { preHandler: [requirePermission('action:read')] },
+    async (request, reply) => {
+      const { runId } = request.params as { runId: string };
+      const run = await runRepo.getById(runId);
+      if (!run) return reply.code(404).send({ error: 'Not Found' });
+      return reply.send({ data: run });
+    },
+  );
+
   // POST /api/v1/actions/runs/:runId/cancel
   app.post(
     '/api/v1/actions/runs/:runId/cancel',
