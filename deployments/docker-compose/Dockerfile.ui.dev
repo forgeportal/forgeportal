@@ -7,6 +7,9 @@ COPY packages/plugin-sdk/ packages/plugin-sdk/
 COPY packages/core/ packages/core/
 COPY tsconfig.base.json tsconfig.ui.json ./
 RUN pnpm install --filter @forgeportal/ui...
+# Build plugin-sdk so its dist/ subpath exports (e.g. /react) are resolvable by Vite.
+# The root .dockerignore excludes dist/, so we must compile inside the image.
+RUN pnpm --filter @forgeportal/plugin-sdk build
 WORKDIR /app/apps/ui
 ENV VITE_API_URL=http://api:4000
 EXPOSE 3000
