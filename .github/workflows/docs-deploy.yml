@@ -1,9 +1,14 @@
 name: Deploy Docs to VPS
 
 on:
-  push:
-    branches: [master]
-    paths:    ['apps/docs/**', '.github/workflows/docs-deploy.yml']
+  # Trigger after CI passes on master — avoids the workflow_call concurrency
+  # deadlock that occurs when both ci.yml and docs-deploy.yml share the same
+  # concurrency group.
+  workflow_run:
+    workflows: ["CI"]
+    branches:  [master]
+    types:     [completed]
+  # Allow manual redeploy from the Actions tab
   workflow_dispatch:
 
 concurrency:
@@ -11,38 +16,63 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci:
-    name: Wait for CI
-    uses: ./.github/workflows/ci.yml
-    secrets: inherit
-
   build-and-deploy:
-    needs: ci
     name: Build & Deploy Docs
     runs-on: ubuntu-latest
+
+    # Skip if CI failed (only relevant for workflow_run trigger)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed for git log (last update date/author)
+          # Use the commit that triggered the CI run (not necessarily HEAD)
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
 
+      # ── Check whether docs files actually changed ─────────────────────────
+      - name: Check for docs changes
+        id: docs-changed
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch origin master --depth=2
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- apps/docs/ .github/workflows/docs-deploy.yml || true)
+          if [ -n "$CHANGED" ]; then
+            echo "changed=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Install & build (only if docs changed) ───────────────────────────
       - uses: pnpm/action-setup@v4
+        if: steps.docs-changed.outputs.changed == 'true'
 
       - uses: actions/setup-node@v4
+        if: steps.docs-changed.outputs.changed == 'true'
         with:
-          node-version: 20
+          node-version-file: .node-version
           cache: pnpm
 
       - name: Install dependencies
+        if: steps.docs-changed.outputs.changed == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build docs
-        run: pnpm --filter @forgeportal/docs-site build
+        if: steps.docs-changed.outputs.changed == 'true'
+        run: pnpm --filter @forgeportal/docs build
 
+      # ── Deploy ────────────────────────────────────────────────────────────
       - name: Deploy to VPS via rsync
+        if: steps.docs-changed.outputs.changed == 'true'
         uses: burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avz --delete --exclude='__server'
-          path: apps/docs/build/
+          switches:    -avz --delete --exclude='__server'
+          path:        apps/docs/build/
           remote_path: /var/www/forgeportal-docs/
           remote_host: ${{ secrets.VPS_HOST }}
           remote_port: 22
@@ -50,6 +80,7 @@ jobs:
           remote_key:  ${{ secrets.VPS_SSH_KEY }}
 
       - name: Fix permissions on VPS
+        if: steps.docs-changed.outputs.changed == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host:     ${{ secrets.VPS_HOST }}
@@ -60,3 +91,7 @@ jobs:
             chown -R www-data:www-data /var/www/forgeportal-docs
             chmod -R 755 /var/www/forgeportal-docs
             echo "Deploy OK: $(date)"
+
+      - name: Skip notice
+        if: steps.docs-changed.outputs.changed != 'true'
+        run: echo "No docs files changed — skipping deploy."
