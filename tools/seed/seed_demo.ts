@@ -19,7 +19,7 @@ const pool = new pg.Pool({
   port:     Number(process.env['DB_PORT'] ?? 5433),
   database: process.env['DB_NAME']     ?? 'forgeportal',
   user:     process.env['DB_USER']     ?? 'forge',
-  password: process.env['DB_PASSWORD'] ?? 'forge',
+  password: process.env['DB_PASSWORD'] ?? 'forge_local_dev',
 });
 
 // ── Demo entities ──────────────────────────────────────────────────────────
