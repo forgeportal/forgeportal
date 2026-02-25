@@ -69,6 +69,7 @@ export class RegisterEntityHandler implements ActionHandler {
       lifecycle: entity.lifecycle,
       tags: entity.tags,
       links: entity.links,
+      annotations: {},
       scm: entity.scm,
       spec: entity.spec,
       relations: entity.relations,
