@@ -21,6 +21,10 @@ If the file does not exist, containers start with schema defaults only.
 
 The file has **11 top-level sections**: `db`, `server`, `auth`, `scm`, `discovery`, `migrations`, `docs`, `plugins`, `pluginPackages`, `scorecards`, `encryptionKey`. Omitted sections use schema defaults. Secrets (passwords, client secrets, tokens) should be set via env vars, not committed in the file.
 
+:::tip Plugin dependency sync
+After adding or removing packages in `pluginPackages.packages`, run **`pnpm forge:sync`** to automatically update `apps/api/package.json` and `apps/ui/package.json`. See the [forge sync reference](/docs/configuration/forge-sync).
+:::
+
 ---
 
 ## `db`
@@ -187,7 +191,7 @@ Documentation indexing.
 
 ## `pluginPackages`
 
-List of npm packages to load as plugins at startup.
+List of npm packages to load as plugins at startup. Use [`forge sync`](/docs/configuration/forge-sync) to keep `apps/api/package.json` and `apps/ui/package.json` in sync with this list automatically.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -198,21 +202,28 @@ List of npm packages to load as plugins at startup.
 ```yaml
 pluginPackages:
   packages:
+    - "@forgeportal/plugin-kubernetes"
     - "@myorg/forge-plugin-pagerduty"
+```
+
+After editing this list, run:
+
+```bash
+pnpm forge:sync
 ```
 
 ---
 
 ## `plugins`
 
-Per-plugin configuration (enabled flag and non-secret config). Keys are **plugin IDs** (derived from package name, e.g. `pagerduty`, `slack-notify`).
+Per-plugin configuration (enabled flag and non-secret config). Keys are **plugin IDs** (derived from package name, e.g. `pagerduty`, `kubernetes`).
 
 | Field (per plugin) | Type | Default | Description |
 |--------------------|------|---------|-------------|
 | `enabled` | boolean | `true` | Whether the plugin is active. Can be overridden in DB (`plugin_overrides`). |
-| `config` | object | `{}` | Non-secret config key-value. **Secrets** must be set via env: `FORGEPORTAL_PLUGIN_<ID>_<KEY>` (e.g. `FORGEPORTAL_PLUGIN_PAGERDUTY_APITOKEN`). |
+| `config` | object | `{}` | Non-secret config key-value. **Secrets** must be set via env: `FORGEPORTAL_PLUGIN_<ID>_<KEY>`. |
 
-**Example:**
+**Example — generic:**
 
 ```yaml
 plugins:
@@ -226,6 +237,28 @@ plugins:
     config:
       defaultChannel: "#alerts"
 ```
+
+**Example — Kubernetes plugin:**
+
+```yaml
+plugins:
+  kubernetes:
+    enabled: true
+    config:
+      # JSON array of cluster objects (no tokens — use env vars)
+      clusters: '[{"name":"local","url":"https://kubernetes.docker.internal:6443","skipTLSVerify":true}]'
+      defaultNamespace: "default"
+```
+
+Cluster tokens are injected via environment variables:
+
+```bash
+# Pattern: FORGEPORTAL_PLUGIN_KUBERNETES_<CLUSTER_NAME_UPPERCASE>_TOKEN
+FORGEPORTAL_PLUGIN_KUBERNETES_LOCAL_TOKEN=eyJhbGciOiJSUzI1NiIs...
+FORGEPORTAL_PLUGIN_KUBERNETES_PRODUCTION_TOKEN=eyJhbGciOiJSUzI1NiIs...
+```
+
+See the [Kubernetes Plugin docs](/docs/plugins/kubernetes) for the full reference.
 
 ---
 

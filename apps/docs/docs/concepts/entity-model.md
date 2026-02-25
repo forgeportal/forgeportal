@@ -31,6 +31,7 @@ Entities are the core records in the ForgePortal catalog. Each entity is describ
 | `metadata.description` | string | No | Free-text description. |
 | `metadata.tags` | string[] | No | Default `[]`. Used for filtering and display. |
 | `metadata.links` | array | No | Each item: `{ title: string, url: string }` (url must be valid). Default `[]`. |
+| `metadata.annotations` | object | No | Key-value string pairs. Default `{}`. Used by plugins (e.g. Kubernetes plugin). |
 | `spec.owner` | string | No | Owner reference (e.g. team or user id). |
 | `spec.lifecycle` | string | No | One of: `experimental`, `production`, `deprecated`. |
 | `spec.dependsOn` | string[] | No | List of entity refs or identifiers. Default `[]`. |
@@ -38,6 +39,26 @@ Entities are the core records in the ForgePortal catalog. Each entity is describ
 | `spec.consumesApi` | string[] | No | Default `[]`. |
 
 The catalog stores additional **SCM-derived** data (e.g. repo URL, default branch) in the entity row; that is filled during ingestion, not from the YAML.
+
+### Annotations
+
+`metadata.annotations` is a free-form `Record<string, string>` map that plugins use to configure their behaviour on a per-entity basis. Annotations are persisted in the database as a `JSONB` column and are available to both the backend API and the UI.
+
+**Convention:** Use reverse-DNS keys to avoid collisions (e.g. `forgeportal.dev/k8s-label-selector`).
+
+```yaml
+metadata:
+  name: payments-api
+  annotations:
+    # Kubernetes plugin — which workloads to show
+    forgeportal.dev/k8s-label-selector: "app=payments-api,env=production"
+    forgeportal.dev/k8s-cluster: "production"
+    forgeportal.dev/k8s-namespace: "apps"
+    # Custom org-specific annotation
+    myorg.com/pagerduty-service-id: "P1234AB"
+```
+
+Annotations are **merged on upsert**: if a discovery scan re-ingests the entity, the annotations from the latest `entity.yaml` replace the stored ones.
 
 ### Example
 

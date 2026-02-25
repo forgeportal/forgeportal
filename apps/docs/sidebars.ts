@@ -48,6 +48,16 @@ const sidebars: SidebarsConfig = {
       ],
     },
 
+    // ── Official Plugins ──────────────────────────────────────────────────────
+    {
+      type:      'category',
+      label:     '🧩 Official Plugins',
+      collapsed: false,
+      items: [
+        'plugins/kubernetes',
+      ],
+    },
+
     // ── Plugin Development ────────────────────────────────────────────────────
     {
       type:  'category',
@@ -68,6 +78,7 @@ const sidebars: SidebarsConfig = {
       label: '⚙️ Configuration',
       items: [
         'configuration/forgeportal-yaml',
+        'configuration/forge-sync',
         'configuration/oidc-setup',
         'configuration/scm-providers',
         'configuration/env-vars',
