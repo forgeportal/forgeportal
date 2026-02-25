@@ -50,7 +50,7 @@ export function KubernetesTab({ entity }: KubernetesTabProps): React.ReactElemen
   const {
     data: entityDetail,
     isPending: entityLoading,
-  } = useApi<EntityDetailResponse>(`/api/v1/entities/${entity.id}`);
+  } = useApi<EntityDetailResponse>(`/api/v1/catalog/entities/${entity.id}`);
 
   const annotations  = entityDetail?.data.entity.annotations ?? {};
   const labelSelector = annotations['forgeportal.dev/k8s-label-selector'];
