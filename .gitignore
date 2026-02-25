@@ -40,3 +40,5 @@ do_commit.py
 *.py
 _commit_msg.txt
 _tmp_commit.txt
+_c.txt
+_*.txt
