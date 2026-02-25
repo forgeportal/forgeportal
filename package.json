@@ -20,16 +20,16 @@
     "seed:all": "pnpm seed:demo && pnpm seed:docs"
   },
   "devDependencies": {
-    "@eslint/js": "^9.27.0",
-    "eslint": "^9.27.0",
+    "@eslint/js": "^9.39.3",
+    "eslint": "^9.39.3",
     "eslint-config-prettier": "^10.1.5",
     "jiti": "^2.6.1",
     "pino-pretty": "^13.0.0",
     "prettier": "^3.5.3",
     "tsx": "*",
-    "turbo": "^2.5.4",
+    "turbo": "^2.8.11",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.32.1"
+    "typescript-eslint": "^8.56.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
