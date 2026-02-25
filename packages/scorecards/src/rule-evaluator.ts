@@ -99,7 +99,7 @@ export class RuleEvaluator {
     entity: EntityRow,
   ): Promise<Pick<RuleResult, 'pass' | 'details'>> {
     const ctx = this.resolveScmContext(entity);
-    if (!ctx) return { pass: false, details: { reason: 'no SCM source for entity' } };
+    if (!ctx) return { pass: null, details: { reason: 'scm-not-configured' } };
 
     const { provider, ref } = ctx;
     const cached = this.cache.get(ref.owner, ref.repo, params.path);
@@ -120,7 +120,7 @@ export class RuleEvaluator {
     entity: EntityRow,
   ): Promise<Pick<RuleResult, 'pass' | 'details'>> {
     const ctx = this.resolveScmContext(entity);
-    if (!ctx) return { pass: false, details: { reason: 'no SCM source for entity' } };
+    if (!ctx) return { pass: null, details: { reason: 'scm-not-configured' } };
 
     const { provider, ref } = ctx;
 

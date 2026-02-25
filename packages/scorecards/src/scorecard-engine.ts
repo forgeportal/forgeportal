@@ -71,13 +71,12 @@ export class ScorecardEngine {
     );
 
     // ── 5. Determine evaluation status ───────────────────────────────────────
-    const hasErrors   = results.some((r) => r.error !== undefined);
-    const hasFailures = results.some((r) => !r.pass && !r.error);
-    const status = hasErrors
-      ? 'partial'
-      : hasFailures
-      ? 'failed'
-      : 'success';
+    // 'success' = all rules evaluated (pass or fail), no skipped rules
+    // 'partial' = some rules returned null (SCM not configured) or errors
+    // 'failed'  = evaluation threw unexpected errors
+    const hasErrors = results.some((r) => r.error !== undefined);
+    const hasNulls  = results.some((r) => r.pass === null && !r.error);
+    const status = hasErrors ? 'failed' : hasNulls ? 'partial' : 'success';
 
     // ── 6. Calculate level (AC: 5) ────────────────────────────────────────────
     const level = calculateLevel(definition.levels, definition.rules, results);

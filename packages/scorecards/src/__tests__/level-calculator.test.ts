@@ -8,7 +8,7 @@ function makeRule(id: string, level: string): RuleDefinition {
   return { id, title: id, level, type: 'entity.field.exists', params: { field: id } };
 }
 
-function makeResult(ruleId: string, pass: boolean): RuleResult {
+function makeResult(ruleId: string, pass: boolean | null): RuleResult {
   return { ruleId, ruleTitle: ruleId, level: '', pass, details: {} };
 }
 
@@ -51,6 +51,35 @@ describe('calculateLevel', () => {
     ];
     const results = [makeResult('owner', true), makeResult('runbook', false)];
     expect(calculateLevel(LEVELS, rules, results)).toBe('Bronze');
+  });
+
+  it('null rules are neutral — Bronze rule pass + Gold null = Gold achieved', () => {
+    const rules = [
+      makeRule('owner',  'Bronze'),
+      makeRule('readme', 'Gold'),
+    ];
+    // null = SCM not configured; should be treated as neutral auto-pass
+    const results = [makeResult('owner', true), makeResult('readme', null)];
+    expect(calculateLevel(LEVELS, rules, results)).toBe('Gold');
+  });
+
+  it('mixed null and false — false blocks level', () => {
+    const rules = [
+      makeRule('owner',  'Bronze'),
+      makeRule('readme', 'Bronze'),
+    ];
+    const results = [makeResult('owner', true), makeResult('readme', false)];
+    expect(calculateLevel(LEVELS, rules, results)).toBeNull();
+  });
+
+  it('all Bronze null = neutral auto-pass → Silver considered next', () => {
+    const rules = [
+      makeRule('scm-file', 'Bronze'),
+      makeRule('runbook',  'Silver'),
+    ];
+    const results = [makeResult('scm-file', null), makeResult('runbook', true)];
+    // Bronze auto-passes (all null = neutral), Silver passes → Gold auto-passes (no rules) → Gold
+    expect(calculateLevel(LEVELS, rules, results)).toBe('Gold');
   });
 
   it('returns original-cased level string from levels array', () => {

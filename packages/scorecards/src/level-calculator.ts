@@ -1,5 +1,8 @@
 import type { RuleDefinition, RuleResult } from './types.js';
 
+// Allow null pass values from the Map (RuleResult.pass is boolean | null)
+type PassValue = boolean | null | undefined;
+
 /**
  * Returns the highest level where ALL rules for that level AND all lower
  * levels pass (cumulative Bronze ≤ Silver ≤ Gold).
@@ -19,7 +22,7 @@ export function calculateLevel(
   rules:   RuleDefinition[],
   results: RuleResult[],
 ): string | null {
-  const resultMap       = new Map(results.map((r) => [r.ruleId, r.pass]));
+  const resultMap       = new Map<string, PassValue>(results.map((r) => [r.ruleId, r.pass]));
   const normalizedLevels = levels.map((l) => l.toLowerCase());
 
   let highestAchieved: string | null = null;
@@ -37,7 +40,19 @@ export function calculateLevel(
       continue;
     }
 
-    const allPass = rulesForLevel.every((r) => resultMap.get(r.id) === true);
+    // Null results are neutral — only non-null results count toward the level threshold.
+    // A level passes when: all explicitly evaluated (non-null) rules pass, and
+    // at least one rule was actually evaluated (or all were null → treat as auto-pass).
+    const nonNullRules = rulesForLevel.filter((r) => {
+      const v = resultMap.get(r.id);
+      return v !== null && v !== undefined;
+    });
+
+    const allPass = nonNullRules.length === 0
+      // All rules skipped (null) → neutral auto-pass for this level
+      ? true
+      : nonNullRules.every((r) => resultMap.get(r.id) === true);
+
     if (allPass) {
       highestAchieved = level;
     } else {

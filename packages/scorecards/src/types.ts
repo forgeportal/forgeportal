@@ -56,7 +56,13 @@ export interface RuleResult {
   ruleId:    string;
   ruleTitle: string;
   level:     string;
-  pass:      boolean;
+  /**
+   * `true`  = rule passed
+   * `false` = rule failed
+   * `null`  = rule skipped (SCM not configured for this entity) — treated as
+   *           neutral by the level calculator (neither pass nor fail)
+   */
+  pass:      boolean | null;
   details:   Record<string, unknown>;
   error?:    string;          // set if rule evaluation threw
 }

@@ -144,14 +144,31 @@ describe('ScorecardEngine', () => {
       .rejects.toThrow('Scorecard not found');
   });
 
-  it('SCM rule errors → status=partial (AC: 8)', async () => {
+  it('SCM rule throws error → status=failed (AC: 8)', async () => {
     mockScRepo.findLatestEvaluation = vi.fn().mockResolvedValue(null);
     mockScRepo.findById             = vi.fn().mockResolvedValue(SCORECARD);
     mockEntityRepo.findById         = vi.fn().mockResolvedValue(ENTITY);
     mockEvaluator.evaluate          = vi.fn()
       .mockResolvedValueOnce({ ...PASS_RESULTS[0]! })
       .mockResolvedValueOnce({ ...PASS_RESULTS[1]!, pass: false, error: 'GitHub 503' });
-    mockScRepo.insertEvaluation     = vi.fn().mockResolvedValue(makeStoredEval({ status: 'partial', level: 'Bronze' }));
+    mockScRepo.insertEvaluation     = vi.fn().mockResolvedValue(makeStoredEval({ status: 'failed', level: 'Bronze' }));
+
+    const result = await engine.evaluate({ scorecardId: 'sc-1', entityId: 'ent-1' });
+    // Rules with error field → status 'failed' (evaluation error, not a rule miss)
+    expect(mockScRepo.insertEvaluation).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'failed' }),
+    );
+    expect(result).toBeDefined();
+  });
+
+  it('SCM rules return null (not configured) → status=partial', async () => {
+    mockScRepo.findLatestEvaluation = vi.fn().mockResolvedValue(null);
+    mockScRepo.findById             = vi.fn().mockResolvedValue(SCORECARD);
+    mockEntityRepo.findById         = vi.fn().mockResolvedValue(ENTITY);
+    mockEvaluator.evaluate          = vi.fn()
+      .mockResolvedValueOnce({ ...PASS_RESULTS[0]! })
+      .mockResolvedValueOnce({ ...PASS_RESULTS[1]!, pass: null, details: { reason: 'scm-not-configured' } });
+    mockScRepo.insertEvaluation = vi.fn().mockResolvedValue(makeStoredEval({ status: 'partial', level: 'Bronze' }));
 
     const result = await engine.evaluate({ scorecardId: 'sc-1', entityId: 'ent-1' });
     expect(mockScRepo.insertEvaluation).toHaveBeenCalledWith(

@@ -169,14 +169,15 @@ describe('scm.file.exists', () => {
     expect(mockGetFile).toHaveBeenCalledTimes(1); // cached on 2nd call
   });
 
-  it('no SCM data on entity → fail with reason', async () => {
+  it('no SCM data on entity → pass: null with reason scm-not-configured', async () => {
     const { evaluator } = makeEvaluator();
     const result = await evaluator.evaluate(
       rule({ type: 'scm.file.exists', params: { path: 'README.md' } }),
       makeEntity({ scm: {} }),
     );
-    expect(result.pass).toBe(false);
-    expect(result.details['reason']).toContain('no SCM source');
+    // null = skipped/neutral when SCM is not configured for this entity
+    expect(result.pass).toBe(null);
+    expect(result.details['reason']).toBe('scm-not-configured');
   });
 
   it('provider throws → pass: false, error set (AC: 8)', async () => {
