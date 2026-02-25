@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@source "../../../packages/plugin-kubernetes/src/**/*.{ts,tsx}";
 
 @theme {
   --color-brand: #6366f1;

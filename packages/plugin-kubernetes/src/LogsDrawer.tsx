@@ -70,7 +70,8 @@ export function LogsDrawer({
           {logsResponse !== undefined && (
             <pre
               ref={preRef}
-              className="h-full overflow-y-auto p-4 text-xs text-green-300 font-mono whitespace-pre-wrap break-all leading-relaxed"
+              className="h-full overflow-y-auto p-4 text-xs font-mono whitespace-pre-wrap break-all leading-relaxed"
+              style={{ backgroundColor: '#111827', color: '#86efac' }}
             >
               {logs || '(no log output)'}
             </pre>
