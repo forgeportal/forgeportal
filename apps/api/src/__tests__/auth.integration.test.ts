@@ -75,6 +75,39 @@ describe('auth integration (dev mode)', () => {
   });
 });
 
+describe('auth integration (OIDC discovery failure → dev-mode fallback)', () => {
+  let app: FastifyInstance;
+
+  // Simulate what server.ts does when configureOIDC throws:
+  // it clears config.auth.oidc.issuer so buildApp enters dev-mode.
+  function fallbackConfig(): AppConfig {
+    const cfg = devConfig();
+    // issuer was set but discovery failed → server.ts clears it
+    (cfg.auth.oidc as Record<string, unknown>).issuer = undefined;
+    return cfg;
+  }
+
+  beforeAll(async () => {
+    app = buildApp(mockPool() as never, fallbackConfig(), null);
+    await app.ready();
+  });
+
+  afterAll(async () => { await app.close(); });
+
+  it('catalog is accessible after OIDC discovery failure (dev-bypass fallback)', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/auth/me' });
+    expect(res.statusCode).toBe(200);
+    const { user } = res.json();
+    expect(user.sub).toBe('dev-user');
+    expect(user.role).toBe('platform-admin');
+  });
+
+  it('healthz still passes', async () => {
+    const res = await app.inject({ method: 'GET', url: '/healthz' });
+    expect(res.statusCode).toBe(200);
+  });
+});
+
 describe('auth integration (OIDC configured - no session)', () => {
   let app: FastifyInstance;
 

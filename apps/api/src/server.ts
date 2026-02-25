@@ -27,10 +27,17 @@ if (config.auth.oidc.issuer) {
     oidcConfig = await configureOIDC(config.auth);
     logger.info('OIDC discovery completed');
   } catch (err) {
-    logger.error({ err }, 'OIDC discovery failed — starting without OIDC');
+    // Clear the issuer so authGuard/middleware enter devMode (bypass auth).
+    // Without this, a broken OIDC_ISSUER blocks all authenticated endpoints with 401.
+    (config.auth.oidc as Record<string, unknown>).issuer = undefined;
+    logger.warn(
+      { err },
+      '⚠  OIDC discovery failed — falling back to dev-mode bypass.\n' +
+      '   Authentication is disabled. Set OIDC_ISSUER to a reachable provider to enable login.',
+    );
   }
 } else {
-  logger.warn('OIDC not configured — running in dev mode with bypass auth');
+  logger.warn('OIDC not configured — running in dev-bypass mode (no login required)');
 }
 
 const scmProviders = await createSCMProviders(config, logger);
@@ -65,6 +72,17 @@ app.listen(
       app.log.error(err);
       process.exit(1);
     }
-    app.log.info(`Server listening at ${address}`);
+    const authMode = oidcConfig
+      ? `OIDC  (${config.auth.oidc.issuer ?? 'configured'})`
+      : 'dev-bypass  (no login required)';
+    const scmCount = scmProviders.all().length;
+    app.log.info(
+      `\n╔══════════════════════════════════════════╗\n` +
+      `║  ForgePortal API ready                   ║\n` +
+      `║  Listening : ${address.padEnd(26)}║\n` +
+      `║  Auth      : ${authMode.padEnd(26)}║\n` +
+      `║  SCM       : ${String(scmCount + ' provider(s) configured').padEnd(26)}║\n` +
+      `╚══════════════════════════════════════════╝`,
+    );
   },
 );
