@@ -90,9 +90,7 @@ export function createRoutes(
           const clusterCfg = resolveCluster(clusters, clusterName);
           const client     = new KubernetesApiClient(clusterCfg);
           const logs       = await client.getPodLogs(namespace, podName, tailLines);
-          return reply
-            .header('Content-Type', 'text/plain; charset=utf-8')
-            .send(logs);
+          return reply.send({ data: { logs } });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           request.log.error({ err }, 'kubernetes plugin: getPodLogs failed');

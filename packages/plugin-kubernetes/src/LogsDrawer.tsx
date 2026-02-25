@@ -19,10 +19,11 @@ export function LogsDrawer({
   const params = new URLSearchParams({ namespace, ...(cluster ? { cluster } : {}) });
   const url    = `/api/v1/plugins/kubernetes/entities/${entityId}/pods/${encodeURIComponent(podName)}/logs?${params.toString()}`;
 
-  const { data: logs, isPending, isError, error } = useApi<string>(url, {
+  const { data: logsResponse, isPending, isError, error } = useApi<{ data: { logs: string } }>(url, {
     refetchInterval: 10_000,
     retry:           1,
   });
+  const logs = logsResponse?.data.logs;
 
   const preRef = useRef<HTMLPreElement>(null);
 
@@ -66,7 +67,7 @@ export function LogsDrawer({
               {error?.message ?? 'Failed to load logs'}
             </div>
           )}
-          {logs !== undefined && (
+          {logsResponse !== undefined && (
             <pre
               ref={preRef}
               className="h-full overflow-y-auto p-4 text-xs text-green-300 font-mono whitespace-pre-wrap break-all leading-relaxed"
