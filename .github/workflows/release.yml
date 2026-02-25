@@ -6,6 +6,8 @@ on:
 
 jobs:
   # ── Guard: run full CI on the tagged commit ────────────────────────────────
+  # Uses workflow_call — on a tag push there is no concurrent ci.yml run
+  # (ci.yml only triggers on branch push/PR, not tags), so no deadlock here.
   ci-guard:
     name: CI Guard
     uses: ./.github/workflows/ci.yml
@@ -106,6 +108,16 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Publish @forgeportal/cli
+        run: pnpm --filter @forgeportal/cli publish --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @forgeportal/plugin-kubernetes
+        run: pnpm --filter @forgeportal/plugin-kubernetes publish --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish create-forge-plugin
         run: pnpm --filter create-forge-plugin publish --provenance --no-git-checks
         env:
@@ -146,5 +158,7 @@ jobs:
 
             ## npm Packages
 
-            - [`@forgeportal/plugin-sdk`](https://www.npmjs.com/package/@forgeportal/plugin-sdk)
-            - [`create-forge-plugin`](https://www.npmjs.com/package/create-forge-plugin)
+            - [`@forgeportal/plugin-sdk`](https://www.npmjs.com/package/@forgeportal/plugin-sdk) — Plugin SDK for building ForgePortal plugins
+            - [`@forgeportal/cli`](https://www.npmjs.com/package/@forgeportal/cli) — `forge sync` CLI (auto-sync plugin dependencies)
+            - [`@forgeportal/plugin-kubernetes`](https://www.npmjs.com/package/@forgeportal/plugin-kubernetes) — Official Kubernetes plugin
+            - [`create-forge-plugin`](https://www.npmjs.com/package/create-forge-plugin) — Plugin scaffolding CLI
