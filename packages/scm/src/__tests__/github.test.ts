@@ -282,8 +282,8 @@ describe('GitHubProvider', () => {
       mockPaginate.iterator.mockReturnValueOnce(throwingAsyncIterable({ status: 403 }));
 
       const provider = makeProvider();
-      const gen = provider.listRepos({ org: 'org1' });
-      await expect(gen.next()).rejects.toMatchObject({ status: 403 });
+      const iter = provider.listRepos({ org: 'org1' })[Symbol.asyncIterator]();
+      await expect(iter.next()).rejects.toMatchObject({ status: 403 });
     });
 
     it('createRepo falls back to createForAuthenticatedUser when createInOrg returns 404', async () => {
