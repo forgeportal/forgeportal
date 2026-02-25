@@ -252,6 +252,44 @@ Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `ci`.
 
 ---
 
+## Seed Data
+
+The monorepo ships several seed scripts for local development and demos.
+All scripts read DB credentials from environment variables (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`) with sensible defaults matching the `docker-compose` dev setup.
+
+| Script | Description |
+|---|---|
+| `pnpm seed:demo` | Insert 12 realistic demo entities (idempotent) |
+| `pnpm seed:docs` | Insert `docs_bindings` + 3 `docs_pages` per entity — enables the Docs tab without a live SCM connection (idempotent) |
+| `pnpm seed:all` | Run `seed:demo` then `seed:docs` in sequence |
+| `pnpm seed:reset` | `TRUNCATE entities CASCADE` then re-run `seed:demo` (dev only) |
+
+**Quick start for local development:**
+
+```bash
+# 1. Start Postgres (docker-compose dev stack)
+docker compose -f deployments/docker-compose/docker-compose.yml up -d postgres
+
+# 2. Populate catalog + docs
+pnpm seed:all
+# → Seeded 12 entities.
+# → Seeded 12 docs bindings, 36 pages (3 per entity).
+
+# 3. Full reset
+pnpm seed:reset && pnpm seed:docs
+```
+
+Scripts live in `tools/seed/`:
+
+```
+tools/seed/
+├── seed_v1.sql      # Core reference data (templates, actions) — runs on API boot
+├── seed_demo.ts     # Demo catalog entities (pnpm seed:demo)
+└── seed_docs.ts     # Demo docs pages (pnpm seed:docs)
+```
+
+---
+
 ## Database Migrations
 
 Migrations live in `tools/migration/` as numbered SQL files:

@@ -12,7 +12,9 @@
     "test": "turbo test",
     "clean": "turbo clean",
     "seed:demo": "tsx tools/seed/seed_demo.ts",
-    "seed:reset": "tsx tools/seed/seed_demo.ts --reset"
+    "seed:reset": "tsx tools/seed/seed_demo.ts --reset",
+    "seed:docs": "tsx tools/seed/seed_docs.ts",
+    "seed:all": "pnpm seed:demo && pnpm seed:docs"
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
