@@ -13,9 +13,14 @@
 //
 
 import { registerPluginById } from './plugin-registry-ui.js';
+import { registerPlugin as registerKubernetes } from '@forgeportal/plugin-kubernetes/ui';
 
 // ── Installed plugins ─────────────────────────────────────────────────────────
-// (none installed in the base image — add imports here when plugins are added)
+
+// Kubernetes plugin — shows live Deployments, Pods, Services, and Ingresses
+// for entities that have the annotation forgeportal.dev/k8s-label-selector.
+// Configure clusters in forgeportal.yaml → plugins.kubernetes.config.clusters.
+registerPluginById('kubernetes', registerKubernetes);
 
 // Example (uncomment when @myorg/forge-plugin-pagerduty is installed):
 // import { registerPlugin as registerPagerDuty } from '@myorg/forge-plugin-pagerduty';

@@ -1,0 +1,32 @@
+{
+  "name": "@forgeportal/plugin-kubernetes",
+  "version": "1.0.0",
+  "forgeportal": {
+    "engineVersion": "^1.0.0",
+    "type": "fullstack",
+    "capabilities": {
+      "ui": {
+        "entityTabs": ["kubernetes-tab"]
+      },
+      "backend": {
+        "routes": ["/api/v1/plugins/kubernetes"],
+        "actionProviders": [
+          "kubernetes.restartDeployment@v1",
+          "kubernetes.scaleDeployment@v1"
+        ]
+      }
+    },
+    "config": {
+      "clusters": {
+        "type": "string",
+        "description": "JSON array of cluster configs: [{name,url,skipTLSVerify?}]. Token per cluster via FORGEPORTAL_PLUGIN_KUBERNETES_<CLUSTER_NAME>_TOKEN env var.",
+        "required": true
+      },
+      "defaultNamespace": {
+        "type": "string",
+        "description": "Default Kubernetes namespace when not specified by entity annotation.",
+        "required": false
+      }
+    }
+  }
+}
