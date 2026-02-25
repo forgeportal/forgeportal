@@ -58,6 +58,10 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    # Worker serves Prometheus metrics on port 9090 (METRICS_PORT env var).
+    # Port 9090 is intentionally NOT published to the host — keep it internal
+    # so only your Prometheus instance (same Docker network) can scrape it.
+    # To expose for local debugging only: add `ports: ["9090:9090"]` here.
     command: ["node", "dist/worker.js"]
 
   ui:

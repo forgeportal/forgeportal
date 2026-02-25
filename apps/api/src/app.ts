@@ -241,7 +241,12 @@ export function buildApp(
     await pool.end();
   });
 
-  // --- Prometheus metrics route (no auth — internal access only) ---
+  // --- Prometheus metrics route ---
+  // Intentionally unauthenticated: the Prometheus pull model does not support
+  // request-level auth in the default scrape configuration.
+  // ⚠ Restrict this path to your internal network (security group, NetworkPolicy,
+  //   or nginx `allow` directive) — do not expose it publicly in production.
+  // See docs/deployment/docker-compose.md#observability--metrics for details.
   app.get('/metrics', async (_request, reply) => {
     reply.header('Content-Type', metricsRegistry.contentType);
     return metricsRegistry.metrics();

@@ -199,6 +199,64 @@ Ensure `X-Forwarded-Proto` is set to `https` so the API generates correct callba
 
 ---
 
+## Observability & Metrics
+
+ForgePortal exposes Prometheus metrics on two endpoints:
+
+| Service | Default port | Path | Auth required |
+|---------|-------------|------|---------------|
+| API | 4000 | `/metrics` | **No** (intentional) |
+| Worker | 9090 | `/metrics` | **No** (intentional) |
+
+Both endpoints are **unauthenticated by design** — the Prometheus pull model does not support request-level auth in the default scrape configuration. The Worker metrics port (9090) is **not** published to the host in the default `docker-compose.yml`; it is accessible only within the Docker network.
+
+> **⚠ Production security:** Restrict both endpoints to your internal network. Do **not** expose them publicly. Use a Kubernetes `NetworkPolicy`, an nginx `allow` directive, or a firewall/security group rule to limit access to your Prometheus instance.
+
+**Prometheus scrape config example:**
+
+```yaml
+scrape_configs:
+  - job_name: forgeportal-api
+    static_configs:
+      - targets: ['forgeportal-api:4000']
+  - job_name: forgeportal-worker
+    static_configs:
+      - targets: ['forgeportal-worker:9090']
+```
+
+**Kubernetes NetworkPolicy example** (restrict API metrics to the `monitoring` namespace):
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrict-metrics
+spec:
+  podSelector:
+    matchLabels:
+      app: forgeportal-api
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+      ports:
+        - port: 4000
+```
+
+**nginx `allow` example** (block `/metrics` except from localhost/internal):
+
+```nginx
+location /metrics {
+    allow 10.0.0.0/8;   # your Prometheus server CIDR
+    allow 127.0.0.1;
+    deny  all;
+    proxy_pass http://forgeportal_api;
+}
+```
+
+---
+
 ## Health checks
 
 - **Postgres**: `pg_isready` in the compose healthcheck ensures the DB is up before the API starts.
