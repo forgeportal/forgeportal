@@ -291,7 +291,13 @@ function sortKeys(obj: Record<string, string>): Record<string, string> {
   return Object.fromEntries(Object.entries(obj).sort(([a], [b]) => a.localeCompare(b)));
 }
 
+/**
+ * Returns true if the package is a user-installable ForgePortal plugin
+ * managed by `forge sync`. Excludes framework packages like @forgeportal/plugin-sdk.
+ */
 function isPluginPackage(name: string): boolean {
+  // plugin-sdk is a framework/SDK package — never remove it automatically.
+  if (name === '@forgeportal/plugin-sdk') return false;
   return name.startsWith('@forgeportal/plugin-') || /^forge-plugin-/.test(name) || /^@[^/]+\/forge-plugin-/.test(name);
 }
 
