@@ -109,4 +109,26 @@ describe('CreateRepoHandler', () => {
     const ctx = makeCtx(validInput);
     await expect(handler.execute(ctx)).rejects.toMatchObject({ code: 'RATE_LIMITED' });
   });
+
+  it('personal account — createRepo succeeds (user endpoint fallback handled by SCM layer)', async () => {
+    // The handler itself is agnostic: it delegates to scm.createRepo().
+    // GitHubProvider.createRepo() handles the org→user fallback internally.
+    // We verify the handler correctly passes owner as org and returns the result.
+    scm = makeScm({
+      createRepo: vi.fn().mockResolvedValue({
+        url: 'https://github.com/john/personal-repo',
+        defaultBranch: 'main',
+      }),
+    });
+    handler = new CreateRepoHandler(makeProviders(scm));
+
+    const ctx = makeCtx({ provider: 'github', owner: 'john', repo: 'personal-repo' });
+    const result = await handler.execute(ctx);
+
+    expect(result.status).toBe('success');
+    expect(result.outputs.repoUrl).toBe('https://github.com/john/personal-repo');
+    expect(scm.createRepo).toHaveBeenCalledWith(
+      expect.objectContaining({ org: 'john', name: 'personal-repo' }),
+    );
+  });
 });

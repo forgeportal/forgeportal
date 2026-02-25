@@ -87,16 +87,40 @@ export class GitHubProvider implements SCMProvider {
 
   async *listRepos(scope: OrgScope): AsyncIterable<RepoSummary> {
     await this.resolveInstallation(scope.org);
-    const iterator = this.octokit.paginate.iterator(
-      this.octokit.rest.repos.listForOrg,
-      { org: scope.org, per_page: 100 },
-    );
 
-    for await (const { data: repos } of iterator) {
-      for (const repo of repos) {
-        const summary = mapRepoSummary(repo);
-        if (scope.topic && !summary.topics.includes(scope.topic)) continue;
-        yield summary;
+    let useUserEndpoint = false;
+
+    // Try org endpoint first; fall back to user endpoint on 404.
+    // Personal GitHub accounts return 404 from /orgs/{target}/repos.
+    try {
+      const iterator = this.octokit.paginate.iterator(
+        this.octokit.rest.repos.listForOrg,
+        { org: scope.org, per_page: 100 },
+      );
+      for await (const { data: repos } of iterator) {
+        for (const repo of repos) {
+          const summary = mapRepoSummary(repo);
+          if (scope.topic && !summary.topics.includes(scope.topic)) continue;
+          yield summary;
+        }
+      }
+      return;
+    } catch (err: unknown) {
+      if (!isHttpError(err) || err.status !== 404) throw err;
+      useUserEndpoint = true;
+    }
+
+    if (useUserEndpoint) {
+      const iterator = this.octokit.paginate.iterator(
+        this.octokit.rest.repos.listForUser,
+        { username: scope.org, per_page: 100 },
+      );
+      for await (const { data: repos } of iterator) {
+        for (const repo of repos) {
+          const summary = mapRepoSummary(repo);
+          if (scope.topic && !summary.topics.includes(scope.topic)) continue;
+          yield summary;
+        }
       }
     }
   }
@@ -141,14 +165,28 @@ export class GitHubProvider implements SCMProvider {
 
   async createRepo(input: CreateRepoInput): Promise<RepoDetail> {
     await this.resolveInstallation(input.org);
-    const { data } = await this.octokit.rest.repos.createInOrg({
-      org: input.org,
-      name: input.name,
-      description: input.description,
-      private: input.private ?? true,
-      auto_init: input.autoInit ?? false,
-    });
-    return mapRepoDetail(data);
+
+    try {
+      // Try org endpoint first (works for organisations).
+      const { data } = await this.octokit.rest.repos.createInOrg({
+        org: input.org,
+        name: input.name,
+        description: input.description,
+        private: input.private ?? true,
+        auto_init: input.autoInit ?? false,
+      });
+      return mapRepoDetail(data);
+    } catch (err: unknown) {
+      if (!isHttpError(err) || err.status !== 404) throw err;
+      // Personal accounts return 404 from /orgs — use authenticated user endpoint.
+      const { data } = await this.octokit.rest.repos.createForAuthenticatedUser({
+        name: input.name,
+        description: input.description,
+        private: input.private ?? true,
+        auto_init: input.autoInit ?? false,
+      });
+      return mapRepoDetail(data);
+    }
   }
 
   async createOrUpdateFile(

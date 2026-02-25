@@ -4,9 +4,11 @@ import { GitHubProvider } from '../github.js';
 
 const mockRepos = {
   listForOrg: vi.fn(),
+  listForUser: vi.fn(),
   get: vi.fn(),
   getContent: vi.fn(),
   createInOrg: vi.fn(),
+  createForAuthenticatedUser: vi.fn(),
   createOrUpdateFileContents: vi.fn(),
   listWebhooks: vi.fn(),
   createWebhook: vi.fn(),
@@ -15,6 +17,15 @@ const mockRepos = {
 const mockPulls = { create: vi.fn() };
 const mockApps = { listInstallations: vi.fn() };
 const mockPaginate = { iterator: vi.fn() };
+
+/** Returns an async iterable that throws the given error on first next() call. */
+function throwingAsyncIterable(err: unknown) {
+  return {
+    [Symbol.asyncIterator]() {
+      return { async next(): Promise<IteratorResult<never>> { throw err; } };
+    },
+  };
+}
 
 vi.mock('@octokit/rest', () => ({
   Octokit: vi.fn().mockImplementation(() => ({
@@ -230,5 +241,95 @@ describe('GitHubProvider', () => {
     const provider = makeProvider();
     await provider.resolveInstallation('org1');
     expect(mockApps.listInstallations).not.toHaveBeenCalled();
+  });
+
+  describe('user vs org fallback', () => {
+    it('listRepos falls back to listForUser when listForOrg returns 404', async () => {
+      mockPaginate.iterator
+        .mockReturnValueOnce(throwingAsyncIterable({ status: 404 }))
+        .mockReturnValueOnce([
+          {
+            data: [
+              {
+                owner: { login: 'john' },
+                name: 'personal-repo',
+                full_name: 'john/personal-repo',
+                default_branch: 'main',
+                private: false,
+                html_url: 'https://github.com/john/personal-repo',
+                topics: [],
+                updated_at: '2025-01-01T00:00:00Z',
+              },
+            ],
+          },
+        ]);
+
+      const provider = makeProvider();
+      const repos: import('../types.js').RepoSummary[] = [];
+      for await (const repo of provider.listRepos({ org: 'john' })) {
+        repos.push(repo);
+      }
+
+      expect(repos).toHaveLength(1);
+      expect(repos[0].ref.repo).toBe('personal-repo');
+      expect(mockPaginate.iterator).toHaveBeenCalledTimes(2);
+      // Second call must use listForUser with username param
+      expect(mockPaginate.iterator.mock.calls[1][0]).toBe(mockRepos.listForUser);
+      expect(mockPaginate.iterator.mock.calls[1][1]).toEqual({ username: 'john', per_page: 100 });
+    });
+
+    it('listRepos re-throws non-404 errors from org endpoint', async () => {
+      mockPaginate.iterator.mockReturnValueOnce(throwingAsyncIterable({ status: 403 }));
+
+      const provider = makeProvider();
+      const gen = provider.listRepos({ org: 'org1' });
+      await expect(gen.next()).rejects.toMatchObject({ status: 403 });
+    });
+
+    it('createRepo falls back to createForAuthenticatedUser when createInOrg returns 404', async () => {
+      mockRepos.createInOrg.mockRejectedValue({ status: 404 });
+      mockRepos.createForAuthenticatedUser.mockResolvedValue({
+        data: {
+          owner: { login: 'john' },
+          name: 'personal-repo',
+          full_name: 'john/personal-repo',
+          default_branch: 'main',
+          private: true,
+          html_url: 'https://github.com/john/personal-repo',
+          topics: [],
+          updated_at: '2025-01-01T00:00:00Z',
+          description: null,
+          language: null,
+          archived: false,
+        },
+      });
+
+      const provider = makeProvider();
+      const result = await provider.createRepo({
+        org: 'john',
+        name: 'personal-repo',
+        description: '',
+        private: true,
+        autoInit: false,
+      });
+
+      expect(result.ref.repo).toBe('personal-repo');
+      expect(mockRepos.createInOrg).toHaveBeenCalledOnce();
+      expect(mockRepos.createForAuthenticatedUser).toHaveBeenCalledOnce();
+      expect(mockRepos.createForAuthenticatedUser.mock.calls[0][0]).toMatchObject({
+        name: 'personal-repo',
+        private: true,
+      });
+    });
+
+    it('createRepo re-throws non-404 errors from createInOrg', async () => {
+      mockRepos.createInOrg.mockRejectedValue({ status: 422, message: 'already exists' });
+
+      const provider = makeProvider();
+      await expect(
+        provider.createRepo({ org: 'org1', name: 'repo', description: '', private: true, autoInit: false }),
+      ).rejects.toMatchObject({ status: 422 });
+      expect(mockRepos.createForAuthenticatedUser).not.toHaveBeenCalled();
+    });
   });
 });
