@@ -85,6 +85,8 @@ export const scmConfigSchema = z.object({
       token: z.string().optional(),
       webhookSecret: z.string().optional(),
     })
+    .nullable()
+    .transform((v) => v ?? {})
     .default({}),
   gitlab: z
     .object({
@@ -92,6 +94,8 @@ export const scmConfigSchema = z.object({
       baseUrl: z.string().url().default('https://gitlab.com'),
       webhookSecret: z.string().optional(),
     })
+    .nullable()
+    .transform((v) => v ?? {})
     .default({}),
 });
 
