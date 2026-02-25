@@ -1,4 +1,0 @@
-chore: untrack _bmad-output from git (gitignored planning artifacts)
-
-_bmad-output/ was accidentally committed. It is in .gitignore and must
-not be part of the public repo. git rm --cached removes tracking only.

@@ -35,4 +35,8 @@ npm-debug.log*
 pnpm-debug.log*
 
 redeploy_now.py
+clean_commit.py
+do_commit.py
+*.py
 _commit_msg.txt
+_tmp_commit.txt

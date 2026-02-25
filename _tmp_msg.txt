@@ -1,0 +1,4 @@
+chore: remove personal scripts and temp files from git tracking
+
+Remove clean_commit.py, do_commit.py, _tmp_commit.txt from tracking.
+Add *.py and temp file patterns to .gitignore to prevent future accidents.
