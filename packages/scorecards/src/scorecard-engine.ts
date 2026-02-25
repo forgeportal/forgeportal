@@ -30,7 +30,6 @@ export class ScorecardEngine {
   }
 
   async evaluate(params: EvaluateParams): Promise<EvaluationResult> {
-    const { scorecardId, entityId, force = false } = params;
     const startMs = performance.now();
 
     try {
