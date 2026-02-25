@@ -7,6 +7,16 @@ sidebar_position: 1
 
 ForgePortal is configured via a single **YAML file** (`forgeportal.yaml` at the project root) validated by Zod. Every value can be overridden by [environment variables](/docs/configuration/env-vars). This page documents each top-level section and its fields (type, default, description).
 
+:::info Docker Compose
+The provided `docker-compose.yml` mounts `forgeportal.yaml` from the project root into the API and Worker containers automatically. Create yours from the example:
+
+```bash
+cp forgeportal.example.yaml forgeportal.yaml
+```
+
+If the file does not exist, containers start with schema defaults only.
+:::
+
 ## Overview
 
 The file has **11 top-level sections**: `db`, `server`, `auth`, `scm`, `discovery`, `migrations`, `docs`, `plugins`, `pluginPackages`, `scorecards`, `encryptionKey`. Omitted sections use schema defaults. Secrets (passwords, client secrets, tokens) should be set via env vars, not committed in the file.
@@ -136,7 +146,7 @@ Catalog discovery (repo scan).
 |-------|------|---------|-------------|
 | `entityFilePath` | string | `entity.yaml` | File name (or path) to look for in each repo. |
 | `intervalMinutes` | number | `0` | Scheduled scan interval in minutes. `0` = disabled (manual only). |
-| `orgs` | array | `[]` | List of `{ provider: github \| gitlab, org: string, topic?: string }`. |
+| `orgs` | array | `[]` | List of `{ provider: github \| gitlab, org: string, topic?: string }`. `org` may be a GitHub **organisation slug or personal username** — the scanner detects user vs. org automatically. |
 
 **Example:**
 

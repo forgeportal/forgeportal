@@ -163,7 +163,24 @@ Authenticated user.
 }
 ```
 
-`status`: `pending` | `success` | `failed`. When `status` is `pending`, `level` and `evaluatedAt` are `null`. `fixAction` is only present for failing rules when a fix is available.
+### Status values
+
+- `"pending"` — scorecard applies to the entity but has not been evaluated yet. `level` and `evaluatedAt` are `null`.
+- `"success"` — all applicable rules were evaluated; level calculated.
+- `"partial"` — some rules returned `null` (SCM not configured for this entity); level calculated from non-null rules only.
+- `"failed"` — evaluation threw an unexpected error.
+
+### `rules[].pass` values
+
+- `true` — rule passed.
+- `false` — rule failed.
+- `null` — rule was **not evaluated** (e.g. the entity has no SCM URL, or no SCM provider is configured for the entity's SCM host). Treated as neutral — does not count as a pass or a fail.
+
+`fixAction` is only present for failing rules when a fix is available.
+
+:::tip Rules that require SCM
+Rules of type `scm.file.exists` and `scm.anyOf` check the entity's repository directly. If no SCM provider is configured for the entity's host, these rules return `pass: null` (not evaluated) rather than `false`. The entity will show `status: "partial"` and a note indicating which rules were skipped.
+:::
 
 ### Errors
 

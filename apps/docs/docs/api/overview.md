@@ -111,4 +111,4 @@ Other endpoints may be rate-limited in the future; clients should respect `429` 
 | Pagination  | `limit` / `offset` + `pagination: { offset, limit, total }` in list responses |
 | Rate limits | Search 60/min, webhooks 100/min, action/template runs per user |
 
-See the following pages for per-endpoint details: [Catalog](/docs/api/catalog-api), [Templates & Actions](/docs/api/templates-api), [Scorecards](/docs/api/scorecards-api), [Search](/docs/api/search-api), [Webhooks](/docs/api/webhooks), [Plugins](/docs/api/plugins-api).
+See the following pages for per-endpoint details: [Catalog](/docs/api/catalog-api), [Templates & Actions](/docs/api/templates-api), [Scorecards](/docs/api/scorecards-api), [Action Runs](/docs/api/action-runs), [Search](/docs/api/search-api), [Webhooks](/docs/api/webhooks), [Plugins](/docs/api/plugins-api).

@@ -99,6 +99,30 @@ networks:
 
 ---
 
+## Configuration file (`forgeportal.yaml`)
+
+The `api` and `worker` services mount `../../forgeportal.yaml` (relative to the Compose file) into `/app/forgeportal.yaml` inside the container. Place your `forgeportal.yaml` at the **project root** — it is picked up automatically. If the file does not exist the containers start with schema defaults.
+
+```bash
+# At the repository root:
+cp forgeportal.example.yaml forgeportal.yaml
+# Edit to add SCM org, discovery settings, scorecards, etc.
+```
+
+---
+
+## Updating environment variables
+
+:::caution Updating environment variables
+`docker compose restart` does **not** reload `.env`. After changing any environment variable, force container recreation:
+
+```bash
+docker compose up -d --force-recreate api worker
+```
+:::
+
+---
+
 ## Secrets
 
 **Never** commit `.env.production` or files containing passwords.

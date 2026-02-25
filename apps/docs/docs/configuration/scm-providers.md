@@ -1,4 +1,4 @@
-﻿---
+---
 title: SCM Providers
 sidebar_position: 3
 ---
@@ -18,22 +18,35 @@ Two authentication modes are supported: **Personal Access Token (PAT)** or **Git
 1. **GitHub** → Settings → Developer settings → Personal access tokens → Generate new token (classic).
 2. Scopes: at least **repo** (full control of private repos). For org repos, ensure the token has access to the organization.
 3. Set the token in config **without** putting it in YAML:
-   - Env: `FORGEPORTAL_SCM__GITHUB__TOKEN=<token>`
-   - Or in `forgeportal.yaml` only in secure environments (not recommended):
 
-```yaml
-scm:
-  github:
-    token: ghp_xxxx
+```bash
+# .env — short form (preferred for Docker Compose)
+SCM_GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
+
+# or long form (always works, required in CI/CD without .env)
+FORGEPORTAL_SCM__GITHUB__TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 ```
+
+Both aliases map to the same config path (`scm.github.token`).
+
+| Alias | Config path |
+|-------|-------------|
+| `SCM_GITHUB_TOKEN` | `scm.github.token` |
+| `FORGEPORTAL_SCM__GITHUB__TOKEN` | `scm.github.token` |
 
 **YAML (token from env):**
 
 ```yaml
 scm:
   github: {}
-  # token provided via FORGEPORTAL_SCM__GITHUB__TOKEN
+  # token provided via SCM_GITHUB_TOKEN or FORGEPORTAL_SCM__GITHUB__TOKEN
 ```
+
+> **Personal accounts and organisations:** You can configure `discovery.orgs`
+> with either a GitHub **organisation** slug or a personal **username** — the
+> scanner automatically uses the correct API endpoint (`/orgs/{org}` or
+> `/users/{user}`). Similarly, the `create-repo` template action supports
+> creating repositories in both organisations and personal accounts.
 
 ### Option B: GitHub App
 

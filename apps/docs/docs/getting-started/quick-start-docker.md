@@ -79,6 +79,29 @@ The portal starts in **dev-bypass mode**: you are automatically logged in as an 
 To connect a real identity provider, see [OIDC Setup](/docs/configuration/oidc-setup).
 :::
 
+:::caution Applying .env changes
+`docker compose restart` reuses the existing container's environment.
+After editing `.env`, run:
+
+```bash
+docker compose up -d --force-recreate api worker
+```
+
+This recreates the containers and picks up the new variables.
+:::
+
+### 3b. (Optional) Create your ForgePortal config
+
+For basic evaluation the defaults are fine. To configure SCM discovery, plugins, or scorecards, create `forgeportal.yaml` at the **project root** (`forgeportal/`):
+
+```bash
+cp forgeportal.example.yaml forgeportal.yaml
+# Edit forgeportal.yaml to add your SCM org, discovery settings, etc.
+```
+
+This file is automatically mounted into the API and Worker containers.
+See the [forgeportal.yaml reference](/docs/configuration/forgeportal-yaml) for all options.
+
 ### 4. Start the stack
 
 From `deployments/docker-compose`:

@@ -33,6 +33,13 @@ These names are explicitly mapped to config paths. Values are **coerced**: `"tru
 | `MIGRATIONS_DIR` | `migrations.dir` | string (default: `tools/migration`) |
 | `RUN_SEED` | `migrations.runSeed` | boolean (default: `false`) |
 | `SEED_FILE` | `migrations.seedFile` | string (default: `tools/seed/seed_v1.sql`) |
+| `SCM_GITHUB_TOKEN` | `scm.github.token` | string (GitHub PAT) |
+| `SCM_GITHUB_APP_ID` | `scm.github.appId` | string |
+| `SCM_GITHUB_APP_PRIVATE_KEY_PATH` | `scm.github.privateKeyPath` | string (file path) |
+| `SCM_GITHUB_WEBHOOK_SECRET` | `scm.github.webhookSecret` | string (secret) |
+| `SCM_GITLAB_TOKEN` | `scm.gitlab.token` | string (GitLab PAT) |
+| `SCM_GITLAB_BASE_URL` | `scm.gitlab.baseUrl` | string (URL, default: `https://gitlab.com`) |
+| `SCM_GITLAB_WEBHOOK_SECRET` | `scm.gitlab.webhookSecret` | string (secret) |
 
 **Example (production DB):**
 
@@ -88,6 +95,16 @@ So you can set values that have no legacy name, such as SCM tokens, server host,
 | `FORGEPORTAL_SCORECARDS__EVAL_INTERVAL_HOURS` | `scorecards.evalIntervalHours` | Scorecard run interval (number) |
 
 Coercion is the same: `"true"`/`"false"` → boolean, numeric string → number, else string.
+
+> Values starting with `[` or `{` are parsed as JSON. This allows setting array
+> or object config values from environment variables:
+>
+> ```bash
+> FORGEPORTAL_DISCOVERY__ORGS='[{"provider":"github","org":"my-org"}]'
+> ```
+>
+> This is the only way to set `discovery.orgs` (an array of objects) without
+> mounting a `forgeportal.yaml` file.
 
 ---
 
