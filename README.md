@@ -122,23 +122,36 @@ forgeportal/
 **Prerequisites:** Node.js >= 20.19, pnpm 10, Docker (for PostgreSQL)
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Start all services in watch mode (API :4000, UI :3000, Worker)
-pnpm dev
-
-# Run all tests
-pnpm test
-
-# Build all packages
-pnpm build
 ```
 
-**Running just the API + DB:**
+### Option A — Full Docker (zero setup)
+
 ```bash
-docker compose -f deployments/docker-compose/docker-compose.yml up postgres -d
-pnpm --filter @forgeportal/api dev
+docker compose -f deployments/docker-compose/docker-compose.yml up
+```
+
+All services run in containers — no local Node required.
+
+### Option B — Native (faster, recommended for contributors)
+
+```bash
+# Starts Postgres in Docker, then all apps in TypeScript watch mode
+pnpm dev:full
+```
+
+Hot-reload on every file save. Stop Postgres when done:
+
+```bash
+pnpm dev:stop
+```
+
+### Other useful commands
+
+```bash
+pnpm test    # run all tests
+pnpm build   # build all packages
+pnpm lint    # lint all packages
 ```
 
 **Service ports:**

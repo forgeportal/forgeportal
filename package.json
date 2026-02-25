@@ -7,6 +7,9 @@
   "packageManager": "pnpm@10.6.2",
   "scripts": {
     "dev": "turbo dev",
+    "dev:db": "docker compose -f deployments/docker-compose/docker-compose.yml up postgres -d --wait",
+    "dev:full": "pnpm dev:db && pnpm dev",
+    "dev:stop": "docker compose -f deployments/docker-compose/docker-compose.yml stop postgres",
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",

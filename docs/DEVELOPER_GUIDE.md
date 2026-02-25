@@ -63,6 +63,40 @@ Services will be available at:
 
 ---
 
+## Native Development (recommended for contributors)
+
+Use this workflow for faster hot-reload without full Docker rebuilds. Only PostgreSQL runs in Docker; everything else is native TypeScript watch mode.
+
+### Prerequisites
+
+- Node 20+, pnpm 10+, Docker Desktop running
+
+### Start
+
+```bash
+# Starts Postgres in Docker + all apps natively in watch mode
+pnpm dev:full
+```
+
+`pnpm dev:full` runs `pnpm dev:db` (Postgres with `--wait` for healthcheck) then `pnpm dev` (Turborepo watch across all packages).
+
+Services will be available at:
+
+| Service | URL |
+|---------|-----|
+| API | http://localhost:4000 |
+| UI | http://localhost:3000 |
+| Docs | http://localhost:3001 |
+
+### Stop
+
+```bash
+# Stop the Postgres container when done
+pnpm dev:stop
+```
+
+---
+
 ## Monorepo Structure
 
 ```
