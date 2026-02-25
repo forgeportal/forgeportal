@@ -83,7 +83,7 @@ export async function indexDocs(
   const isPartialRun = Array.isArray(changedPaths) && changedPaths.length > 0;
   if (isPartialRun) {
     const changedSet = new Set(changedPaths);
-    listedFiles = listedFiles.filter((f) => changedSet.has(f));
+    listedFiles = listedFiles.filter((f: string) => changedSet.has(f));
   }
 
   for (const filePath of listedFiles) {

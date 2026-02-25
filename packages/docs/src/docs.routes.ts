@@ -40,7 +40,7 @@ export async function docsRoutes(
 
   app.addHook('onSend', docsCSPHook);
 
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler((error: Error, _request, reply) => {
     if (error instanceof NotFoundError) {
       return reply.status(404).send({ error: 'Not Found', message: error.message });
     }

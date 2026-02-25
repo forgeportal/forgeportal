@@ -64,7 +64,8 @@ jobs:
 
       - name: Build docs
         if: steps.docs-changed.outputs.changed == 'true'
-        run: pnpm --filter @forgeportal/docs build
+        # Use Turbo so workspace dependencies (core, scm, auth) are built first.
+        run: pnpm turbo build --filter=@forgeportal/docs
 
       # ── Deploy ────────────────────────────────────────────────────────────
       - name: Deploy to VPS via rsync
