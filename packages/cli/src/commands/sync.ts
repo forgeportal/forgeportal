@@ -162,30 +162,11 @@ export async function syncCommand(opts: SyncOptions = {}): Promise<SyncResult> {
 // ─── Manifest resolution ──────────────────────────────────────────────────────
 
 /**
- * Resolves a plugin's type and version from:
- *   1. Local workspace package (packages/plugin-<name>/forgeportal-plugin.json)
- *   2. node_modules/<pkg>/forgeportal-plugin.json  (installed package or workspace symlink)
- *   3. npm registry via `npm view`
+ * Resolves a plugin manifest from the workspace, node_modules, or the npm registry.
+ * Workspace packages always take priority and receive the "workspace:*" version specifier.
  */
 async function resolveManifest(packageName: string, root: string): Promise<PluginInfo> {
-  // ── Try via require.resolve (covers both node_modules and workspace symlinks) ──
-  try {
-    const req      = createRequire(path.join(root, '_placeholder_.js'));
-    const pkgDir   = path.dirname(req.resolve(`${packageName}/package.json`));
-    const manifest = JSON.parse(
-      fs.readFileSync(path.join(pkgDir, 'forgeportal-plugin.json'), 'utf8'),
-    ) as { version: string; forgeportal: { type: string } };
-
-    return {
-      packageName,
-      version:    manifest.version,
-      pluginType: manifest.forgeportal.type as PluginInfo['pluginType'],
-    };
-  } catch {
-    // not in node_modules — try workspace packages directory directly
-  }
-
-  // ── Try workspace scan: packages/*/forgeportal-plugin.json ──
+  // ── 1. Workspace scan: packages directory ─────────────────────────────────
   const pkgsDir = path.join(root, 'packages');
   if (fs.existsSync(pkgsDir)) {
     for (const dir of fs.readdirSync(pkgsDir)) {
@@ -205,7 +186,24 @@ async function resolveManifest(packageName: string, root: string): Promise<Plugi
     }
   }
 
-  // ── Fall back to npm registry ──────────────────────────────────────────────
+  // ── 2. node_modules via require.resolve (external installed package) ───────
+  try {
+    const req      = createRequire(path.join(root, '_placeholder_.js'));
+    const pkgDir   = path.dirname(req.resolve(`${packageName}/package.json`));
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(pkgDir, 'forgeportal-plugin.json'), 'utf8'),
+    ) as { version: string; forgeportal: { type: string } };
+
+    return {
+      packageName,
+      version:    manifest.version,
+      pluginType: manifest.forgeportal.type as PluginInfo['pluginType'],
+    };
+  } catch {
+    // not installed in node_modules — try npm registry
+  }
+
+  // ── 3. Fall back to npm registry ──────────────────────────────────────────
   try {
     const raw  = execSync(
       `npm view ${packageName} version --json 2>/dev/null`,
@@ -224,7 +222,7 @@ async function resolveManifest(packageName: string, root: string): Promise<Plugi
     return { packageName, version, pluginType };
   } catch {
     throw new Error(
-      `Plugin "${packageName}" not found in node_modules, workspace packages, or npm registry.`,
+      `Plugin "${packageName}" not found in workspace packages, node_modules, or npm registry.`,
     );
   }
 }
