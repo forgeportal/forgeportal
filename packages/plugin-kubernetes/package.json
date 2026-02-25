@@ -19,26 +19,31 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test":  "vitest run",
-    "lint":  "eslint src/",
+    "test": "vitest run",
+    "lint": "eslint src/",
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@forgeportal/plugin-sdk": "workspace:*"
+    "@forgeportal/plugin-sdk": "workspace:*",
+    "undici": "^7.22.0"
   },
   "devDependencies": {
+    "@tanstack/react-query": "*",
     "@types/react": "*",
     "fastify": "^5.3.3",
     "react": "*",
-    "@tanstack/react-query": "*",
     "vitest": "*"
   },
   "peerDependencies": {
-    "react": ">=19",
-    "@tanstack/react-query": ">=5"
+    "@tanstack/react-query": ">=5",
+    "react": ">=19"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true },
-    "@tanstack/react-query": { "optional": true }
+    "react": {
+      "optional": true
+    },
+    "@tanstack/react-query": {
+      "optional": true
+    }
   }
 }

@@ -429,6 +429,9 @@ importers:
       '@forgeportal/plugin-sdk':
         specifier: workspace:*
         version: link:../plugin-sdk
+      undici:
+        specifier: ^7.22.0
+        version: 7.22.0
     devDependencies:
       '@tanstack/react-query':
         specifier: '*'

@@ -1,3 +1,5 @@
+import { Agent } from 'undici';
+import type { Dispatcher } from 'undici';
 import type {
   ClusterConfig,
   WorkloadsResponse,
@@ -118,18 +120,27 @@ function mapIngress(i: RawIngress): K8sIngress {
 // ─── Client ───────────────────────────────────────────────────────────────────
 
 export class KubernetesApiClient {
-  constructor(private readonly cluster: ClusterConfig) {}
+  private readonly dispatcher: Dispatcher | undefined;
+
+  constructor(private readonly cluster: ClusterConfig) {
+    if (cluster.skipTLSVerify) {
+      this.dispatcher = new Agent({ connect: { rejectUnauthorized: false } });
+    }
+  }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
     const url = `${this.cluster.url}${path}`;
-    const res = await fetch(url, {
-      ...init,
+    const options: Record<string, unknown> = {
+      ...(init ?? {}),
       headers: {
         Authorization: `Bearer ${this.cluster.token}`,
         Accept:        'application/json',
-        ...(init?.headers ?? {}),
+        ...((init?.headers as Record<string, string>) ?? {}),
       },
-    });
+    };
+    if (this.dispatcher) options['dispatcher'] = this.dispatcher;
+
+    const res = await (fetch as (url: string, init: Record<string, unknown>) => Promise<Response>)(url, options);
     if (!res.ok) {
       const body = await res.text().catch(() => res.statusText);
       throw new Error(`Kubernetes API [${this.cluster.name}] ${path} → ${res.status}: ${body}`);
@@ -172,9 +183,12 @@ export class KubernetesApiClient {
   /** Returns the last N log lines for a pod container as a plain string. */
   async getPodLogs(namespace: string, podName: string, tailLines = 100): Promise<string> {
     const path = `/api/v1/namespaces/${namespace}/pods/${podName}/log?tailLines=${tailLines}&timestamps=true`;
-    const res = await fetch(`${this.cluster.url}${path}`, {
+    const options: Record<string, unknown> = {
       headers: { Authorization: `Bearer ${this.cluster.token}` },
-    });
+    };
+    if (this.dispatcher) options['dispatcher'] = this.dispatcher;
+
+    const res = await (fetch as (url: string, init: Record<string, unknown>) => Promise<Response>)(`${this.cluster.url}${path}`, options);
     if (!res.ok) throw new Error(`Pod logs [${podName}]: ${res.status}`);
     return res.text();
   }
