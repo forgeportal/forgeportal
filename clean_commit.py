@@ -1,60 +1,53 @@
 """
-Commit + strip Co-authored-by: Cursor via git commit-tree direct.
-Usage: python clean_commit.py "message"
+Create a clean git commit bypassing Cursor's Co-authored-by injection.
+Usage: python clean_commit.py "commit message"
 """
-import subprocess, os, sys
+import subprocess
+import sys
+import os
 
-REPO = r'A:\ForgePortal'
-os.chdir(REPO)
+def run(cmd):
+    r = subprocess.run(cmd, capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)))
+    if r.returncode != 0:
+        print(f"ERROR: {' '.join(cmd)}\n{r.stderr}", file=sys.stderr)
+        sys.exit(r.returncode)
+    return r.stdout.strip()
 
-def git(*args, input_bytes=None):
-    r = subprocess.run(['git'] + list(args), capture_output=True, input=input_bytes)
-    return r.stdout.decode('utf-8', errors='replace').strip()
+def main():
+    msg = sys.argv[1] if len(sys.argv) > 1 else "chore: update"
 
-# Stage all
-subprocess.run(['git', 'add', '-A'])
+    # Write tree from current index
+    tree = run(["git", "write-tree"])
 
-# Check if anything to commit
-status = git('status', '--porcelain')
-if not status:
-    print('Nothing to commit.')
-    sys.exit(0)
+    # Get current HEAD (parent)
+    try:
+        parent = run(["git", "rev-parse", "HEAD"])
+        parent_args = ["-p", parent]
+    except SystemExit:
+        parent_args = []
 
-# Commit via normal path (Cursor will inject Co-authored-by)
-msg_file = os.path.join(REPO, '.git', 'CLEAN_MSG_TMP')
-commit_msg = open(msg_file, 'r', encoding='utf-8').read() if os.path.exists(msg_file) else sys.argv[1] if len(sys.argv) > 1 else 'chore: update'
+    author = "Ahmed Bendaamer"
+    email  = "bendaamerahmed@gmail.com"
 
-# Write clean message
-with open('.git/_COMMIT_MSG', 'w', newline='\n', encoding='utf-8') as f:
-    f.write(commit_msg.rstrip('\n') + '\nSigned-off-by: bendaamerahmed <ahmed.b.daamer@gmail.com>\n')
+    env = os.environ.copy()
+    env["GIT_AUTHOR_NAME"]     = author
+    env["GIT_AUTHOR_EMAIL"]    = email
+    env["GIT_COMMITTER_NAME"]  = author
+    env["GIT_COMMITTER_EMAIL"] = email
 
-subprocess.run(['git', 'commit', '-F', '.git/_COMMIT_MSG'])
+    cmd = ["git", "commit-tree", tree] + parent_args + ["-m", msg]
+    r = subprocess.run(cmd, capture_output=True, text=True,
+                       cwd=os.path.dirname(os.path.abspath(__file__)), env=env)
+    if r.returncode != 0:
+        print(f"ERROR commit-tree:\n{r.stderr}", file=sys.stderr)
+        sys.exit(r.returncode)
+    new_commit = r.stdout.strip()
 
-# Now strip Co-authored-by: Cursor from the result
-raw = subprocess.run(['git', 'cat-file', 'commit', 'HEAD'], capture_output=True).stdout.decode('utf-8', errors='replace')
-lines = raw.split('\n')
-sep = lines.index('')
-body_lines = lines[sep + 1:]
-clean_lines = [l for l in body_lines if 'Co-authored-by: Cursor' not in l]
-while clean_lines and not clean_lines[-1].strip():
-    clean_lines.pop()
-clean_msg = '\n'.join(clean_lines) + '\n'
+    # Get current branch
+    branch = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    run(["git", "update-ref", f"refs/heads/{branch}", new_commit])
 
-tree   = git('rev-parse', 'HEAD^{tree}')
-parent = git('rev-parse', 'HEAD~1')
-env = os.environ.copy()
-env.update({
-    'GIT_AUTHOR_NAME':     git('log', '-1', '--format=%an'),
-    'GIT_AUTHOR_EMAIL':    git('log', '-1', '--format=%ae'),
-    'GIT_AUTHOR_DATE':     git('log', '-1', '--format=%aI'),
-    'GIT_COMMITTER_NAME':  git('log', '-1', '--format=%an'),
-    'GIT_COMMITTER_EMAIL': git('log', '-1', '--format=%ae'),
-    'GIT_COMMITTER_DATE':  git('log', '-1', '--format=%cI'),
-})
-result = subprocess.run(['git', 'commit-tree', tree, '-p', parent], input=clean_msg.encode('utf-8'), capture_output=True, env=env)
-new_hash = result.stdout.decode().strip()
-subprocess.run(['git', 'update-ref', 'refs/heads/master', new_hash])
-subprocess.run(['git', 'reset', '--hard', new_hash])
+    print(f"Created commit {new_commit} on {branch}")
 
-print(f'Commit: {new_hash[:8]}')
-print(git('log', '-1', '--pretty=%B'))
+if __name__ == "__main__":
+    main()

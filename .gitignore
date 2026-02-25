@@ -33,3 +33,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+redeploy_now.py
+_commit_msg.txt
