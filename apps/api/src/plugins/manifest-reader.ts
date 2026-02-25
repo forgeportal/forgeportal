@@ -76,17 +76,38 @@ export async function readPluginManifest(
 ): Promise<ManifestReadResult> {
   const require = createRequire(path.join(fromDir, '__placeholder__.js'));
 
-  let pkgJsonPath: string;
+  // Resolve the plugin directory. Try `./package.json` subpath first (needs
+  // explicit export in the package), then fall back to the package main entry
+  // (which works even if `exports` doesn't include `./package.json`).
+  let pluginDir: string;
   try {
-    pkgJsonPath = require.resolve(`${packageName}/package.json`);
+    // Strategy 1: resolve package.json via subpath export
+    const pkgJsonPath = require.resolve(`${packageName}/package.json`);
+    pluginDir = path.dirname(pkgJsonPath);
   } catch {
-    throw new Error(
-      `Plugin package "${packageName}" not found in node_modules. ` +
-      `Run "pnpm forge sync" and restart the server.`,
-    );
-  }
+    try {
+      // Strategy 2: resolve main entry and walk up to the package root
+      const mainEntry = require.resolve(packageName);
+      let dir = path.dirname(mainEntry);
+      // Walk up until we find a package.json belonging to this package
+      while (dir !== path.dirname(dir)) {
+        try {
+          const pkg = JSON.parse(
+            await fs.readFile(path.join(dir, 'package.json'), 'utf8'),
+          ) as { name?: string };
+          if (pkg.name === packageName) { pluginDir = dir; break; }
+        } catch { /* continue */ }
+        dir = path.dirname(dir);
+      }
+    } catch { /* fall through */ }
 
-  const pluginDir = path.dirname(pkgJsonPath);
+    if (!pluginDir!) {
+      throw new Error(
+        `Plugin package "${packageName}" not found in node_modules. ` +
+        `Run "pnpm forge sync" and restart the server.`,
+      );
+    }
+  }
   const manifestPath = path.join(pluginDir, 'forgeportal-plugin.json');
 
   let manifestRaw: string;

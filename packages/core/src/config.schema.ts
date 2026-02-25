@@ -78,25 +78,24 @@ export const authConfigSchema = z.object({
 });
 
 export const scmConfigSchema = z.object({
-  github: z
-    .object({
+  // z.preprocess coerces null → {} so YAML `github:` (parsed as null) is valid.
+  github: z.preprocess(
+    (v) => (v == null ? {} : v),
+    z.object({
       appId: z.string().optional(),
       privateKeyPath: z.string().optional(),
       token: z.string().optional(),
       webhookSecret: z.string().optional(),
-    })
-    .nullable()
-    .transform((v) => v ?? {})
-    .default({}),
-  gitlab: z
-    .object({
+    }),
+  ).default({}),
+  gitlab: z.preprocess(
+    (v) => (v == null ? {} : v),
+    z.object({
       token: z.string().optional(),
       baseUrl: z.string().url().default('https://gitlab.com'),
       webhookSecret: z.string().optional(),
-    })
-    .nullable()
-    .transform((v) => v ?? {})
-    .default({}),
+    }),
+  ).default({}),
 });
 
 export const migrationsConfigSchema = z.object({
