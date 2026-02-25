@@ -17,6 +17,7 @@ export const entityYamlSchema = z.object({
         }),
       )
       .default([]),
+    annotations: z.record(z.string()).optional().default({}),
   }),
   spec: z
     .object({

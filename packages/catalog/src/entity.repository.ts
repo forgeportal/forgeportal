@@ -16,6 +16,7 @@ function mapRow(row: Record<string, unknown>): EntityRow {
     lifecycle: (row['lifecycle'] as string) ?? null,
     tags: (row['tags'] as string[]) ?? [],
     links: (row['links'] as { title: string; url: string }[]) ?? [],
+    annotations: (row['annotations'] as Record<string, string>) ?? {},
     scm: (row['scm'] as Record<string, unknown>) ?? {},
     spec: (row['spec'] as Record<string, unknown>) ?? {},
     created_at: row['created_at'] as Date,
@@ -30,16 +31,17 @@ export class EntityRepository {
     const id = crypto.randomUUID();
     const result = await this.pool.query<Record<string, unknown>>(
       `INSERT INTO entities
-         (id, kind, namespace, name, owner_ref, lifecycle, tags, links, scm, spec)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         (id, kind, namespace, name, owner_ref, lifecycle, tags, links, annotations, scm, spec)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        ON CONFLICT (kind, namespace, name) DO UPDATE SET
-         owner_ref  = EXCLUDED.owner_ref,
-         lifecycle  = EXCLUDED.lifecycle,
-         tags       = EXCLUDED.tags,
-         links      = EXCLUDED.links,
-         scm        = EXCLUDED.scm,
-         spec       = EXCLUDED.spec,
-         updated_at = now()
+         owner_ref   = EXCLUDED.owner_ref,
+         lifecycle   = EXCLUDED.lifecycle,
+         tags        = EXCLUDED.tags,
+         links       = EXCLUDED.links,
+         annotations = EXCLUDED.annotations,
+         scm         = EXCLUDED.scm,
+         spec        = EXCLUDED.spec,
+         updated_at  = now()
        RETURNING *, (xmax = 0) AS inserted`,
       [
         id,
@@ -50,6 +52,7 @@ export class EntityRepository {
         data.lifecycle ?? null,
         JSON.stringify(data.tags ?? []),
         JSON.stringify(data.links ?? []),
+        JSON.stringify(data.annotations ?? {}),
         JSON.stringify(data.scm ?? {}),
         JSON.stringify(data.spec ?? {}),
       ],
@@ -70,14 +73,15 @@ export class EntityRepository {
       lifecycle: data.lifecycle ?? null,
       tags: JSON.stringify(data.tags ?? []),
       links: JSON.stringify(data.links ?? []),
+      annotations: JSON.stringify(data.annotations ?? {}),
       scm: JSON.stringify(data.scm ?? {}),
       spec: JSON.stringify(data.spec ?? {}),
     };
 
     try {
       const result = await this.pool.query(
-        `INSERT INTO entities (id, kind, namespace, name, owner_ref, lifecycle, tags, links, scm, spec)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `INSERT INTO entities (id, kind, namespace, name, owner_ref, lifecycle, tags, links, annotations, scm, spec)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          RETURNING *`,
         [
           row.id,
@@ -88,6 +92,7 @@ export class EntityRepository {
           row.lifecycle,
           row.tags,
           row.links,
+          row.annotations,
           row.scm,
           row.spec,
         ],
@@ -198,16 +203,14 @@ export class EntityRepository {
       'lifecycle',
       'tags',
       'links',
+      'annotations',
       'scm',
       'spec',
     ];
     for (const key of fields) {
       const v = data[key];
       if (v === undefined) continue;
-      if (key === 'tags' || key === 'links') {
-        updates.push(`${key} = $${paramIdx++}::jsonb`);
-        params.push(JSON.stringify(v));
-      } else if (key === 'scm' || key === 'spec') {
+      if (key === 'tags' || key === 'links' || key === 'annotations' || key === 'scm' || key === 'spec') {
         updates.push(`${key} = $${paramIdx++}::jsonb`);
         params.push(JSON.stringify(v));
       } else {

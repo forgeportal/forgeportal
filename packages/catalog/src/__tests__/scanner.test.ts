@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { scanOrg } from '../scanner.js';
+import { scanOrg, mapYamlToInput } from '../scanner.js';
 
 function makeEntityYaml(name = 'test-svc') {
   return [
@@ -72,8 +72,9 @@ function mockPool() {
           lifecycle: params?.[5],
           tags: JSON.parse((params?.[6] as string) ?? '[]'),
           links: JSON.parse((params?.[7] as string) ?? '[]'),
-          scm: JSON.parse((params?.[8] as string) ?? '{}'),
-          spec: JSON.parse((params?.[9] as string) ?? '{}'),
+          annotations: JSON.parse((params?.[8] as string) ?? '{}'),
+          scm: JSON.parse((params?.[9] as string) ?? '{}'),
+          spec: JSON.parse((params?.[10] as string) ?? '{}'),
           created_at: new Date(),
           updated_at: new Date(),
         };
@@ -118,6 +119,60 @@ const noopLogger = {
   silent: vi.fn(),
   level: 'info',
 } as never;
+
+describe('mapYamlToInput', () => {
+  it('maps annotations from metadata to input', () => {
+    const yaml = {
+      apiVersion: 'forgeportal/v1' as const,
+      kind: 'service' as const,
+      metadata: {
+        name: 'payment-api',
+        namespace: 'default',
+        tags: [],
+        links: [],
+        annotations: {
+          'forgeportal.dev/k8s-label-selector': 'app=payment-api',
+          'forgeportal.dev/argocd-app-name': 'payment-api-prod',
+        },
+      },
+      spec: {
+        owner: 'team:backend',
+        lifecycle: 'production' as const,
+        dependsOn: [],
+        providesApi: [],
+        consumesApi: [],
+      },
+    };
+    const result = mapYamlToInput(yaml, 'https://github.com/org/payment-api', 'github', 'main');
+    expect(result.annotations).toEqual({
+      'forgeportal.dev/k8s-label-selector': 'app=payment-api',
+      'forgeportal.dev/argocd-app-name': 'payment-api-prod',
+    });
+  });
+
+  it('defaults annotations to empty object when absent', () => {
+    const yaml = {
+      apiVersion: 'forgeportal/v1' as const,
+      kind: 'service' as const,
+      metadata: {
+        name: 'no-annotations-svc',
+        namespace: 'default',
+        tags: [],
+        links: [],
+        annotations: {},
+      },
+      spec: {
+        owner: undefined,
+        lifecycle: undefined,
+        dependsOn: [],
+        providesApi: [],
+        consumesApi: [],
+      },
+    };
+    const result = mapYamlToInput(yaml, 'https://github.com/org/repo', 'github', 'main');
+    expect(result.annotations).toEqual({});
+  });
+});
 
 describe('scanOrg', () => {
   it('repo with entity.yaml → entity created + source upserted', async () => {

@@ -52,6 +52,7 @@ export function mapYamlToInput(
     lifecycle: data.spec.lifecycle,
     tags: data.metadata.tags,
     links: data.metadata.links,
+    annotations: data.metadata.annotations ?? {},
     scm: {
       repoUrl,
       provider: providerName,

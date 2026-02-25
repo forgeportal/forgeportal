@@ -38,6 +38,7 @@ export interface EntityRow {
   lifecycle: string | null;
   tags: string[];
   links: { title: string; url: string }[];
+  annotations: Record<string, string>;
   scm: Record<string, unknown>;
   spec: Record<string, unknown>;
   created_at: Date;

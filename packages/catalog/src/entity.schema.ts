@@ -24,6 +24,7 @@ export const createEntitySchema = z.object({
   lifecycle: z.enum(ENTITY_LIFECYCLES).optional(),
   tags: z.array(z.string()).default([]),
   links: z.array(linkSchema).default([]),
+  annotations: z.record(z.string()).default({}),
   scm: z
     .object({
       owner: scmOwnerRepoSchema.optional(),

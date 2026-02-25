@@ -12,6 +12,7 @@ function makeRow(overrides: Record<string, unknown> = {}) {
     lifecycle: overrides['lifecycle'] ?? null,
     tags: overrides['tags'] ?? [],
     links: overrides['links'] ?? [],
+    annotations: overrides['annotations'] ?? {},
     scm: overrides['scm'] ?? {},
     spec: overrides['spec'] ?? {},
     created_at: overrides['created_at'] ?? new Date(),
@@ -36,12 +37,37 @@ describe('EntityRepository', () => {
       namespace: 'default',
       tags: [],
       links: [],
+      annotations: {},
       scm: {},
       spec: {},
       relations: [],
     });
     expect(entity.kind).toBe('service');
     expect(entity.id).toBeDefined();
+  });
+
+  it('upsert persists and returns annotations', async () => {
+    const annotations = { 'forgeportal.dev/k8s-label-selector': 'app=payment-api' };
+    const pool = mockPool(
+      vi.fn().mockResolvedValue({
+        rows: [{ ...makeRow({ annotations }), inserted: true }],
+        rowCount: 1,
+      }),
+    );
+    const repo = new EntityRepository(pool);
+    const { entity, created } = await repo.upsert({
+      kind: 'service',
+      name: 'payment-api',
+      namespace: 'default',
+      tags: [],
+      links: [],
+      annotations,
+      scm: {},
+      spec: {},
+      relations: [],
+    });
+    expect(created).toBe(true);
+    expect(entity.annotations).toEqual(annotations);
   });
 
   it('create duplicate throws ConflictError', async () => {
@@ -54,6 +80,7 @@ describe('EntityRepository', () => {
         namespace: 'default',
         tags: [],
         links: [],
+        annotations: {},
         scm: {},
         spec: {},
         relations: [],

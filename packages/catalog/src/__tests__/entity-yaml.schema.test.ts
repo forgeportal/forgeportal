@@ -72,8 +72,42 @@ describe('entityYamlSchema', () => {
       expect(result.data.metadata.namespace).toBe('default');
       expect(result.data.metadata.tags).toEqual([]);
       expect(result.data.metadata.links).toEqual([]);
+      expect(result.data.metadata.annotations).toEqual({});
       expect(result.data.spec.dependsOn).toEqual([]);
     }
+  });
+
+  it('metadata.annotations are parsed correctly', () => {
+    const yaml = {
+      ...validMinimal,
+      metadata: {
+        ...validMinimal.metadata,
+        annotations: {
+          'forgeportal.dev/k8s-label-selector': 'app=payment-api',
+          'forgeportal.dev/argocd-app-name': 'payment-api-prod',
+        },
+      },
+    };
+    const result = entityYamlSchema.safeParse(yaml);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.metadata.annotations).toEqual({
+        'forgeportal.dev/k8s-label-selector': 'app=payment-api',
+        'forgeportal.dev/argocd-app-name': 'payment-api-prod',
+      });
+    }
+  });
+
+  it('annotations with non-string values fail', () => {
+    const yaml = {
+      ...validMinimal,
+      metadata: {
+        ...validMinimal.metadata,
+        annotations: { 'some.key': 42 },
+      },
+    };
+    const result = entityYamlSchema.safeParse(yaml);
+    expect(result.success).toBe(false);
   });
 
   it('spec passthrough preserves extra fields', () => {

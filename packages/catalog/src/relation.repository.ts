@@ -102,6 +102,7 @@ export class RelationRepository {
           lifecycle: (entityRow['lifecycle'] as string) ?? null,
           tags: (entityRow['tags'] as string[]) ?? [],
           links: (entityRow['links'] as { title: string; url: string }[]) ?? [],
+          annotations: (entityRow['annotations'] as Record<string, string>) ?? {},
           scm: (entityRow['scm'] as Record<string, unknown>) ?? {},
           spec: (entityRow['spec'] as Record<string, unknown>) ?? {},
           created_at: entityRow['created_at'] as Date,
