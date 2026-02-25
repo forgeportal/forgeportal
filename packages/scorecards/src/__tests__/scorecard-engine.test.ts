@@ -29,6 +29,7 @@ const ENTITY: EntityRow = {
   lifecycle: 'production',
   tags:      ['node'],
   links:     [],
+  annotations: {},
   scm:       { provider: 'github', owner: 'myorg', repo: 'my-service' },
   spec:      {},
   created_at: new Date(),

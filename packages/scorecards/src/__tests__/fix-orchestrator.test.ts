@@ -18,6 +18,7 @@ const entityGitHub: EntityRow = {
   lifecycle:  'production',
   tags:       [],
   links:      [],
+  annotations: {},
   scm:        { provider: 'github', owner: 'acme', repo: 'payment', defaultBranch: 'main' },
   spec:       {},
   created_at: new Date(),

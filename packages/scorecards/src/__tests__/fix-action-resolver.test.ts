@@ -15,6 +15,7 @@ function makeEntity(scm: Record<string, unknown> = {}): EntityRow {
     lifecycle:  'production',
     tags:       [],
     links:      [],
+    annotations: {},
     scm,
     spec:       {},
     created_at: new Date(),
