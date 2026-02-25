@@ -23,8 +23,19 @@ const LEGACY_ENV_MAP: Record<string, string[]> = {
   SESSION_SECRET: ['auth', 'sessionSecret'],
   ENCRYPTION_KEY: ['encryptionKey'],
   MIGRATIONS_DIR: ['migrations', 'dir'],
-  RUN_SEED: ['migrations', 'runSeed'],
-  SEED_FILE: ['migrations', 'seedFile'],
+  RUN_SEED:       ['migrations', 'runSeed'],
+  SEED_FILE:      ['migrations', 'seedFile'],
+
+  // SCM — GitHub
+  SCM_GITHUB_TOKEN:                ['scm', 'github', 'token'],
+  SCM_GITHUB_APP_ID:               ['scm', 'github', 'appId'],
+  SCM_GITHUB_APP_PRIVATE_KEY_PATH: ['scm', 'github', 'privateKeyPath'],
+  SCM_GITHUB_WEBHOOK_SECRET:       ['scm', 'github', 'webhookSecret'],
+
+  // SCM — GitLab
+  SCM_GITLAB_TOKEN:          ['scm', 'gitlab', 'token'],
+  SCM_GITLAB_BASE_URL:       ['scm', 'gitlab', 'baseUrl'],
+  SCM_GITLAB_WEBHOOK_SECRET: ['scm', 'gitlab', 'webhookSecret'],
 };
 
 function snakeToCamel(s: string): string {

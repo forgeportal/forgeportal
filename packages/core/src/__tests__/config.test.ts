@@ -133,4 +133,73 @@ db:
       },
     );
   });
+
+  describe('SCM legacy env aliases', () => {
+    it('SCM_GITHUB_TOKEN maps to config.scm.github.token', () => {
+      const config = loadConfig('nonexistent.yaml', {
+        SCM_GITHUB_TOKEN: 'ghp_testtoken',
+      });
+      expect(config.scm.github?.token).toBe('ghp_testtoken');
+    });
+
+    it('SCM_GITHUB_APP_ID maps to config.scm.github.appId', () => {
+      // appId is a string in the schema — use a value that won't be coerced to a number
+      const config = loadConfig('nonexistent.yaml', {
+        SCM_GITHUB_APP_ID: 'app-99999',
+      });
+      expect(config.scm.github?.appId).toBe('app-99999');
+    });
+
+    it('SCM_GITHUB_APP_PRIVATE_KEY_PATH maps to config.scm.github.privateKeyPath', () => {
+      const config = loadConfig('nonexistent.yaml', {
+        SCM_GITHUB_APP_PRIVATE_KEY_PATH: '/secrets/github-app.pem',
+      });
+      expect(config.scm.github?.privateKeyPath).toBe('/secrets/github-app.pem');
+    });
+
+    it('SCM_GITHUB_WEBHOOK_SECRET maps to config.scm.github.webhookSecret', () => {
+      const config = loadConfig('nonexistent.yaml', {
+        SCM_GITHUB_WEBHOOK_SECRET: 'wh-secret-gh',
+      });
+      expect(config.scm.github?.webhookSecret).toBe('wh-secret-gh');
+    });
+
+    it('SCM_GITLAB_TOKEN maps to config.scm.gitlab.token', () => {
+      const config = loadConfig('nonexistent.yaml', {
+        SCM_GITLAB_TOKEN: 'glpat-testtoken',
+      });
+      expect(config.scm.gitlab?.token).toBe('glpat-testtoken');
+    });
+
+    it('SCM_GITLAB_BASE_URL maps to config.scm.gitlab.baseUrl', () => {
+      const config = loadConfig('nonexistent.yaml', {
+        SCM_GITLAB_BASE_URL: 'https://gitlab.mycompany.com',
+      });
+      expect(config.scm.gitlab?.baseUrl).toBe('https://gitlab.mycompany.com');
+    });
+
+    it('SCM_GITLAB_WEBHOOK_SECRET maps to config.scm.gitlab.webhookSecret', () => {
+      const config = loadConfig('nonexistent.yaml', {
+        SCM_GITLAB_WEBHOOK_SECRET: 'wh-secret-gl',
+      });
+      expect(config.scm.gitlab?.webhookSecret).toBe('wh-secret-gl');
+    });
+
+    it('FORGEPORTAL_SCM__GITHUB__TOKEN takes priority over SCM_GITHUB_TOKEN', () => {
+      const config = loadConfig('nonexistent.yaml', {
+        SCM_GITHUB_TOKEN:            'ghp_legacy',
+        FORGEPORTAL_SCM__GITHUB__TOKEN: 'ghp_forgeportal',
+      });
+      expect(config.scm.github?.token).toBe('ghp_forgeportal');
+    });
+  });
+
+  describe('JSON coercion via FORGEPORTAL_ env vars', () => {
+    it('parses JSON array for FORGEPORTAL_DISCOVERY__ORGS', () => {
+      const config = loadConfig('nonexistent.yaml', {
+        FORGEPORTAL_DISCOVERY__ORGS: '[{"provider":"github","org":"my-org"}]',
+      });
+      expect(config.discovery.orgs).toEqual([{ provider: 'github', org: 'my-org' }]);
+    });
+  });
 });
