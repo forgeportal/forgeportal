@@ -539,8 +539,11 @@ VALUES (
 )
 ON CONFLICT (name, version) DO NOTHING;
 
--- Fix template: creates a file on a branch, then opens a PR
--- Used by the scorecard fix flow (Story 4-4). One template handles all file-based fixes.
+-- Fix template: creates a file on a branch, then opens a PR.
+-- Used by the scorecard fix flow. One template handles all file-based fixes.
+-- Inputs (passed programmatically by the fix engine, not filled by users):
+--   provider, owner, repo, branch, defaultBranch,
+--   path, contentBase64, commitMessage, prTitle, prBody
 INSERT INTO templates (id, name, version, schema, created_at)
 VALUES (
   gen_random_uuid(),
@@ -551,45 +554,45 @@ VALUES (
     "kind": "Template",
     "metadata": {
       "name": "forge-fix-file",
-      "version": "v1",
       "title": "Fix: Create File + Open PR",
-      "description": "Internal template used by the scorecard fix flow. Creates a missing file on a fix branch and opens a PR."
+      "description": "Internal template used by the scorecard fix flow. Creates a missing file on a fix branch and opens a PR.",
+      "tags": []
     },
-    "parameters": [],
-    "steps": [
-      {
-        "id": "create-file",
-        "title": "Create {{inputs.path}}",
-        "action": "scm.createOrUpdateFile@v1",
-        "input": {
-          "provider":      "{{inputs.provider}}",
-          "owner":         "{{inputs.owner}}",
-          "repo":          "{{inputs.repo}}",
-          "defaultBranch": "{{inputs.defaultBranch}}",
-          "path":          "{{inputs.path}}",
-          "contentBase64": "{{inputs.contentBase64}}",
-          "message":       "{{inputs.commitMessage}}",
-          "branch":        "{{inputs.branch}}"
+    "spec": {
+      "parameters": [],
+      "steps": [
+        {
+          "id": "create-file",
+          "action": "scm.createOrUpdateFile@v1",
+          "input": {
+            "provider":      "{{provider}}",
+            "owner":         "{{owner}}",
+            "repo":          "{{repo}}",
+            "defaultBranch": "{{defaultBranch}}",
+            "path":          "{{path}}",
+            "contentBase64": "{{contentBase64}}",
+            "message":       "{{commitMessage}}",
+            "branch":        "{{branch}}"
+          }
+        },
+        {
+          "id": "open-pr",
+          "action": "scm.openPrOrMr@v1",
+          "input": {
+            "provider":   "{{provider}}",
+            "owner":      "{{owner}}",
+            "repo":       "{{repo}}",
+            "headBranch": "{{branch}}",
+            "baseBranch": "{{defaultBranch}}",
+            "title":      "{{prTitle}}",
+            "body":       "{{prBody}}"
+          }
         }
-      },
-      {
-        "id": "open-pr",
-        "title": "Open Pull Request",
-        "action": "scm.openPrOrMr@v1",
-        "input": {
-          "provider":    "{{inputs.provider}}",
-          "owner":       "{{inputs.owner}}",
-          "repo":        "{{inputs.repo}}",
-          "headBranch":  "{{inputs.branch}}",
-          "baseBranch":  "{{inputs.defaultBranch}}",
-          "title":       "{{inputs.prTitle}}",
-          "body":        "{{inputs.prBody}}"
-        }
-      }
-    ]
+      ]
+    }
   }'::jsonb,
   now()
 )
-ON CONFLICT (name, version) DO NOTHING;
+ON CONFLICT (name, version) DO UPDATE SET schema = EXCLUDED.schema;
 
 COMMIT;

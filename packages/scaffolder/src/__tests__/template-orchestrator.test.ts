@@ -194,6 +194,128 @@ describe('TemplateOrchestrator.advanceTemplateRun', () => {
     expect(insertParams[1]).toContain('step-3');
   });
 
+  it('forge-fix-file — legacy flat format (no spec.steps) throws ValidationError with helpful message', async () => {
+    const legacyDef = {
+      apiVersion: 'forgeportal/v1',
+      kind: 'Template',
+      metadata: { name: 'forge-fix-file', title: 'Fix', description: 'fix' },
+      // Bug: parameters and steps at root level, not inside spec
+      parameters: [],
+      steps: [{ id: 'create-file', action: 'scm.createOrUpdateFile@v1', input: {} }],
+    };
+
+    const pool = mockPool({
+      query: vi.fn().mockResolvedValueOnce({ rows: [{ schema: legacyDef }] }),
+    });
+    const orchestrator = new TemplateOrchestrator(
+      pool,
+      new TemplateRunRepository(pool),
+      new ActionRunRepository(pool),
+      makeLogger() as never,
+    );
+
+    await expect(
+      orchestrator.startTemplateRun('tmpl-fix', 'system', {}),
+    ).rejects.toMatchObject({
+      message: expect.stringContaining('legacy format'),
+    });
+  });
+
+  it('forge-fix-file — correct spec format starts run and queues create-file step', async () => {
+    const fixFileDef = {
+      apiVersion: 'forgeportal/v1',
+      kind: 'Template',
+      metadata: {
+        name: 'forge-fix-file',
+        title: 'Fix: Create File + Open PR',
+        description: 'Internal fix template',
+        tags: [],
+      },
+      spec: {
+        parameters: [],
+        steps: [
+          {
+            id: 'create-file',
+            action: 'scm.createOrUpdateFile@v1',
+            input: {
+              provider:      '{{provider}}',
+              owner:         '{{owner}}',
+              repo:          '{{repo}}',
+              defaultBranch: '{{defaultBranch}}',
+              path:          '{{path}}',
+              contentBase64: '{{contentBase64}}',
+              message:       '{{commitMessage}}',
+              branch:        '{{branch}}',
+            },
+          },
+          {
+            id: 'open-pr',
+            action: 'scm.openPrOrMr@v1',
+            input: {
+              provider:   '{{provider}}',
+              owner:      '{{owner}}',
+              repo:       '{{repo}}',
+              headBranch: '{{branch}}',
+              baseBranch: '{{defaultBranch}}',
+              title:      '{{prTitle}}',
+              body:       '{{prBody}}',
+            },
+          },
+        ],
+      },
+    };
+
+    const fixInputs = {
+      provider:      'github',
+      owner:         'acme',
+      repo:          'my-service',
+      branch:        'fix/add-readme',
+      defaultBranch: 'main',
+      path:          'README.md',
+      contentBase64: Buffer.from('# my-service\n').toString('base64'),
+      commitMessage: '[ForgePortal] Add README.md',
+      prTitle:       '[ForgePortal] Add README.md',
+      prBody:        'Automated fix from ForgePortal scorecard',
+    };
+
+    const fakeRun = {
+      id: 'tr-fix-1', template_id: 'tmpl-fix',
+      requested_by: 'system', status: 'running' as const,
+      user_inputs: fixInputs, step_outputs: {},
+      current_step: null, created_at: new Date(), finished_at: null,
+    };
+
+    const pool = mockPool({
+      query: vi.fn()
+        .mockResolvedValueOnce({ rows: [{ schema: fixFileDef }] })       // loadTemplate
+        .mockResolvedValueOnce({ rows: [fakeRun] })                       // INSERT template_run
+        .mockResolvedValueOnce({ rows: [{ id: 'action-create-file' }] }) // lookupActionId create-file
+        .mockResolvedValueOnce({ rows: [{ id: 'ar-1', action_id: 'action-create-file', template_run_id: 'tr-fix-1', step_id: 'create-file', requested_by: 'system', status: 'queued', input: {}, output: {}, locked_by: null, locked_at: null, retry_count: 0, max_retries: 3, idempotency_key: null, next_attempt_at: null, started_at: null, finished_at: null, created_at: new Date(), template_id: null }] }), // INSERT action_run
+    });
+
+    const orchestrator = new TemplateOrchestrator(
+      pool,
+      new TemplateRunRepository(pool),
+      new ActionRunRepository(pool),
+      makeLogger() as never,
+    );
+
+    const run = await orchestrator.startTemplateRun('tmpl-fix', 'system', fixInputs);
+    expect(run.id).toBe('tr-fix-1');
+
+    // Verify the action_run INSERT was called with the create-file step
+    const calls = (pool.query as ReturnType<typeof vi.fn>).mock.calls;
+    const insertCall = calls.find(
+      (c: unknown[]) => typeof c[0] === 'string' && (c[0] as string).includes('INSERT INTO action_runs'),
+    );
+    expect(insertCall).toBeDefined();
+    // Inputs should have rendered {{provider}} → 'github', {{owner}} → 'acme', etc.
+    const inputArg = JSON.stringify(insertCall![1]);
+    expect(inputArg).toContain('github');
+    expect(inputArg).toContain('acme');
+    expect(inputArg).toContain('README.md');
+  });
+
   it('AC6 — skeleton templatePath is resolved to contentBase64', async () => {
     const defWithSkeleton = {
       ...TEMPLATE_DEF,
