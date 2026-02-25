@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchDocsList, fetchDocsPage } from '../lib/docs.api.js';
+import { ApiError } from '../lib/api.js';
 import ErrorMessage from '../components/ErrorMessage.js';
 
 interface EntityDocsTabProps {
@@ -104,7 +105,10 @@ export default function EntityDocsTab({ entityId }: EntityDocsTabProps) {
   // No binding configured → 404 from API
   if (listError) {
     const err = listErr as Error;
-    if (err.message?.includes('404') || err.message?.toLowerCase().includes('not found')) {
+    const is404 = (listErr instanceof ApiError && listErr.status === 404) ||
+                  err.message?.includes('404') ||
+                  err.message?.toLowerCase().includes('not found');
+    if (is404) {
       return (
         <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
           <div className="rounded-full bg-gray-100 p-4">
