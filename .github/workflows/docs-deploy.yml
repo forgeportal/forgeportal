@@ -64,8 +64,10 @@ jobs:
 
       - name: Build docs
         if: steps.docs-changed.outputs.changed == 'true'
-        # Use Turbo so workspace dependencies (core, scm, auth) are built first.
-        run: pnpm turbo build --filter=@forgeportal/docs
+        # @forgeportal/docs-site is the Docusaurus app in apps/docs/ that
+        # produces apps/docs/build/ — not packages/docs (the backend indexer).
+        # Turbo respects ^build so any workspace deps are compiled first.
+        run: pnpm turbo build --filter=@forgeportal/docs-site
 
       # ── Deploy ────────────────────────────────────────────────────────────
       - name: Deploy to VPS via rsync
