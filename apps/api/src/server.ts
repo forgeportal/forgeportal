@@ -76,13 +76,36 @@ app.listen(
       ? `OIDC  (${config.auth.oidc.issuer ?? 'configured'})`
       : 'dev-bypass  (no login required)';
     const scmCount = scmProviders.all().length;
-    app.log.info(
-      `\n╔══════════════════════════════════════════╗\n` +
-      `║  ForgePortal API ready                   ║\n` +
-      `║  Listening : ${address.padEnd(26)}║\n` +
-      `║  Auth      : ${authMode.padEnd(26)}║\n` +
-      `║  SCM       : ${String(scmCount + ' provider(s) configured').padEnd(26)}║\n` +
-      `╚══════════════════════════════════════════╝`,
-    );
+
+    // Query entity + template counts for the banner (best-effort, non-blocking).
+    void (async () => {
+      try {
+        const [ent, tpl] = await Promise.all([
+          pool.query<{ count: string }>('SELECT COUNT(*) AS count FROM entities'),
+          pool.query<{ count: string }>('SELECT COUNT(*) AS count FROM templates'),
+        ]);
+        const entityCount   = parseInt(ent.rows[0]?.count  ?? '0', 10);
+        const templateCount = parseInt(tpl.rows[0]?.count ?? '0', 10);
+        const W = 44;
+        const line = (label: string, value: string) => {
+          const content = `  ${label.padEnd(10)} ${value}`;
+          return `║${content.padEnd(W - 2)}║`;
+        };
+        app.log.info(
+          `\n╔${'═'.repeat(W - 2)}╗\n` +
+          `║${'  ForgePortal API ready'.padEnd(W - 2)}║\n` +
+          `║${'─'.repeat(W - 2)}║\n` +
+          `${line('Listening:', address)}\n` +
+          `${line('Auth:', authMode)}\n` +
+          `${line('SCM:', `${scmCount} provider(s)`)}\n` +
+          `${line('Catalog:', `${entityCount} entity(ies), ${templateCount} template(s)`)}\n` +
+          `${line('Docs:', 'https://docs.forgeportal.dev')}\n` +
+          `╚${'═'.repeat(W - 2)}╝`,
+        );
+      } catch {
+        // Fallback banner without DB stats
+        app.log.info(`ForgePortal API ready — listening at ${address} | auth: ${authMode} | SCM: ${scmCount} provider(s)`);
+      }
+    })();
   },
 );

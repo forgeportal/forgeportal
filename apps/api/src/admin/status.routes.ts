@@ -18,6 +18,9 @@ export async function statusRoutes(
       !!(config.scm.github?.appId) ||
       !!(config.scm.gitlab?.token);
 
+    const oidcConfigured = !!(config.auth.oidc.issuer);
+    const authMode: 'oidc' | 'dev-bypass' = oidcConfigured ? 'oidc' : 'dev-bypass';
+
     const [entitiesResult, templatesResult] = await Promise.all([
       pool.query<{ count: string }>('SELECT COUNT(*) AS count FROM entities'),
       pool.query<{ count: string }>('SELECT COUNT(*) AS count FROM templates'),
@@ -26,11 +29,16 @@ export async function statusRoutes(
     const entityCount   = parseInt(entitiesResult.rows[0]?.count  ?? '0', 10);
     const templateCount = parseInt(templatesResult.rows[0]?.count ?? '0', 10);
 
+    const version = process.env['npm_package_version'] ?? process.env['FORGEPORTAL_VERSION'] ?? 'unknown';
+
     return {
       data: {
         scmConfigured,
+        oidcConfigured,
+        authMode,
         entityCount,
         templateCount,
+        version,
       },
     };
   });

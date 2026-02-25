@@ -1,9 +1,12 @@
 import { api } from './api.js';
 
 export interface SetupStatus {
-  scmConfigured: boolean;
-  entityCount: number;
-  templateCount: number;
+  scmConfigured:  boolean;
+  oidcConfigured: boolean;
+  authMode:       'oidc' | 'dev-bypass';
+  entityCount:    number;
+  templateCount:  number;
+  version:        string;
 }
 
 export async function fetchSetupStatus(): Promise<SetupStatus> {
