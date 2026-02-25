@@ -13,6 +13,11 @@ vi.mock('@forgeportal/catalog', () => ({
   EntityRepository: vi.fn(),
 }));
 
+const { mockObserve } = vi.hoisted(() => ({ mockObserve: vi.fn() }));
+vi.mock('@forgeportal/core', () => ({
+  scorecardEvalSeconds: { observe: mockObserve },
+}));
+
 // ── fixtures ────────────────────────────────────────────────────────────────
 
 const ENTITY: EntityRow = {
@@ -175,6 +180,36 @@ describe('ScorecardEngine', () => {
       expect.objectContaining({ status: 'partial' }),
     );
     expect(result).toBeDefined();
+  });
+
+  it('scorecard_evaluation_seconds metric is observed after successful evaluation', async () => {
+    mockObserve.mockClear();
+    mockScRepo.findLatestEvaluation = vi.fn().mockResolvedValue(null);
+    mockScRepo.findById             = vi.fn().mockResolvedValue(SCORECARD);
+    mockEntityRepo.findById         = vi.fn().mockResolvedValue(ENTITY);
+    mockEvaluator.evaluate          = vi.fn()
+      .mockResolvedValueOnce(PASS_RESULTS[0])
+      .mockResolvedValueOnce(PASS_RESULTS[1]);
+    mockScRepo.insertEvaluation = vi.fn().mockResolvedValue(makeStoredEval());
+
+    await engine.evaluate({ scorecardId: 'sc-1', entityId: 'ent-1' });
+
+    expect(mockObserve).toHaveBeenCalledOnce();
+    const elapsed = mockObserve.mock.calls[0][0] as number;
+    expect(elapsed).toBeGreaterThanOrEqual(0);
+    expect(elapsed).toBeLessThan(5); // sanity: test should complete in under 5s
+  });
+
+  it('scorecard_evaluation_seconds metric is observed even when evaluation throws', async () => {
+    mockObserve.mockClear();
+    mockScRepo.findLatestEvaluation = vi.fn().mockResolvedValue(null);
+    mockScRepo.findById             = vi.fn().mockRejectedValue(new Error('DB down'));
+
+    await expect(engine.evaluate({ scorecardId: 'sc-1', entityId: 'ent-1' }))
+      .rejects.toThrow('DB down');
+
+    // metric must be recorded even on error (finally block)
+    expect(mockObserve).toHaveBeenCalledOnce();
   });
 
   it('all rules pass → status=success, level=Gold (AC: 1-6)', async () => {

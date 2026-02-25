@@ -1,6 +1,7 @@
 import type { Pool } from 'pg';
 import type { SCMProvider } from '@forgeportal/scm';
 import { EntityRepository } from '@forgeportal/catalog';
+import { scorecardEvalSeconds } from '@forgeportal/core';
 import type { EvaluationResult } from './types.js';
 import { ScorecardRepository } from './scorecard.repository.js';
 import { RuleEvaluator }        from './rule-evaluator.js';
@@ -29,6 +30,17 @@ export class ScorecardEngine {
   }
 
   async evaluate(params: EvaluateParams): Promise<EvaluationResult> {
+    const { scorecardId, entityId, force = false } = params;
+    const startMs = performance.now();
+
+    try {
+      return await this._evaluate(params);
+    } finally {
+      scorecardEvalSeconds.observe((performance.now() - startMs) / 1000);
+    }
+  }
+
+  private async _evaluate(params: EvaluateParams): Promise<EvaluationResult> {
     const { scorecardId, entityId, force = false } = params;
 
     // ── 1. Cache check (AC: 7) ────────────────────────────────────────────────
