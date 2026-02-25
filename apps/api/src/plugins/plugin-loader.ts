@@ -36,7 +36,10 @@ export interface LoadedPlugin {
  */
 export function derivePluginId(packageName: string): string {
   const withoutScope = packageName.replace(/^@[^/]+\//, '');
-  return withoutScope.replace(/^forge-plugin-/, '');
+  // Strip forge-plugin- or plugin- prefix so:
+  //   "@forgeportal/plugin-kubernetes" → "kubernetes"
+  //   "forge-plugin-slack"             → "slack"
+  return withoutScope.replace(/^(?:forge-)?plugin-/, '');
 }
 
 export interface PluginLoaderOptions {
