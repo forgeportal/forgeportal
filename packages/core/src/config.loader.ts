@@ -34,10 +34,22 @@ function snakeToCamel(s: string): string {
     .join('');
 }
 
-function coerceValue(value: string): string | number | boolean {
+function coerceValue(value: string): unknown {
   if (value === 'true') return true;
   if (value === 'false') return false;
   if (/^\d+(\.\d+)?$/.test(value)) return Number(value);
+  // Allow JSON arrays/objects via env vars, e.g.:
+  //   FORGEPORTAL_DISCOVERY__ORGS='[{"provider":"github","org":"my-org"}]'
+  if (
+    (value.startsWith('[') && value.endsWith(']')) ||
+    (value.startsWith('{') && value.endsWith('}'))
+  ) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      // fall through to string
+    }
+  }
   return value;
 }
 

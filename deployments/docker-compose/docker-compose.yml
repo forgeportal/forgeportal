@@ -25,6 +25,13 @@ services:
     ports:
       - "4000:4000"
     env_file: .env
+    volumes:
+      - type: bind
+        source: ../../forgeportal.yaml
+        target: /app/forgeportal.yaml
+        read_only: true
+        bind:
+          create_host_path: false
     depends_on:
       postgres:
         condition: service_healthy
@@ -41,6 +48,13 @@ services:
       dockerfile: Dockerfile
       target: worker
     env_file: .env
+    volumes:
+      - type: bind
+        source: ../../forgeportal.yaml
+        target: /app/forgeportal.yaml
+        read_only: true
+        bind:
+          create_host_path: false
     depends_on:
       api:
         condition: service_healthy

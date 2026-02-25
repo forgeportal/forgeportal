@@ -38,14 +38,21 @@ scm:
     # webhookSecret: <from-secret>
 
 discovery:
+  # Organisations or users to scan for entity.yaml files.
+  # Each repo that contains a file at entityFilePath will be catalogued.
+  # Note: "org" must be a GitHub Organisation slug — personal accounts are not supported.
   orgs: []
-    # - provider: github
-    #   org: my-github-org
-    #   topic: forgeportal        # optional: only repos with this topic
-    # - provider: gitlab
-    #   org: my-gitlab-group
+  # - provider: github
+  #   org: my-github-org           # GitHub organisation slug
+  #   topic: forgeportal           # optional: only repos with this topic
+  # - provider: github
+  #   org: another-github-org
+  # - provider: gitlab
+  #   org: my-gitlab-group         # GitLab group path (e.g. "acmecorp/platform")
   entityFilePath: entity.yaml      # path to entity descriptor in each repo
-  intervalMinutes: 0               # 0 = manual only, >0 = periodic (minutes)
+  intervalMinutes: 0               # 0 = manual only, >0 = periodic scan (minutes)
+  # Tip: set via env var for CI/CD without a YAML file:
+  #   FORGEPORTAL_DISCOVERY__ORGS='[{"provider":"github","org":"my-org"}]'
 
 migrations:
   dir: tools/migration

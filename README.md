@@ -45,6 +45,7 @@ ForgePortal is an open-source Internal Developer Portal (IDP) built on **Postgre
 git clone https://github.com/forgeportal/forgeportal
 cd forgeportal
 cp deployments/docker-compose/.env.example deployments/docker-compose/.env
+cp forgeportal.example.yaml forgeportal.yaml   # configure discovery, plugins, scorecards
 docker compose -f deployments/docker-compose/docker-compose.yml up
 ```
 
