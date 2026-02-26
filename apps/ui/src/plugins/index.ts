@@ -16,6 +16,7 @@ import { registerPluginById } from './plugin-registry-ui.js';
 import { registerPlugin as registerKubernetes }      from '@forgeportal/plugin-kubernetes/ui';
 import { registerPlugin as registerArgocd }          from '@forgeportal/plugin-argocd/ui';
 import { registerPlugin as registerGitHubInsights }  from '@forgeportal/plugin-github-insights/ui';
+import { registerPlugin as registerGrafana }         from '@forgeportal/plugin-grafana/ui';
 
 // ── Installed plugins ─────────────────────────────────────────────────────────
 
@@ -33,6 +34,12 @@ registerPluginById('argocd', registerArgocd);
 // repository stats for any entity linked to a GitHub repository.
 // Auto-detects GitHub from entity links or forgeportal.dev/github-repo annotation.
 registerPluginById('github-insights', registerGitHubInsights);
+
+// Grafana plugin — embeds a Grafana dashboard iframe with time-range controls.
+// No backend needed — purely client-side embedding.
+// Annotate with: forgeportal.dev/grafana-dashboard-url
+// Optional:      forgeportal.dev/grafana-variable-name
+registerPluginById('grafana', registerGrafana);
 
 // Example (uncomment when @myorg/forge-plugin-pagerduty is installed):
 // import { registerPlugin as registerPagerDuty } from '@myorg/forge-plugin-pagerduty';

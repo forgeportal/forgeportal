@@ -1,0 +1,32 @@
+{
+  "name": "@forgeportal/plugin-grafana",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./ui": {
+      "types": "./dist/ui.d.ts",
+      "import": "./dist/ui.js"
+    },
+    "./package.json":            "./package.json",
+    "./forgeportal-plugin.json": "./forgeportal-plugin.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build":          "tsc",
+    "prepublishOnly": "pnpm build",
+    "lint":           "eslint src/",
+    "clean":          "rm -rf dist"
+  },
+  "dependencies": {
+    "@forgeportal/plugin-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "*",
+    "react":        "*"
+  },
+  "peerDependencies": {
+    "react": ">=19"
+  }
+}

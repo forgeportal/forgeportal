@@ -1,0 +1,25 @@
+{
+  "name": "@forgeportal/plugin-grafana",
+  "version": "1.0.0",
+  "forgeportal": {
+    "engineVersion": "^1.0.0",
+    "type": "ui",
+    "capabilities": {
+      "ui": {
+        "entityTabs": ["grafana-tab"]
+      }
+    },
+    "config": {
+      "grafanaUrl": {
+        "type":        "string",
+        "description": "Base Grafana URL, e.g. https://grafana.internal. Used to validate annotations.",
+        "required":    false
+      },
+      "defaultTimeRange": {
+        "type":        "string",
+        "description": "Default time range: 1h | 6h | 24h | 7d (default: 6h).",
+        "required":    false
+      }
+    }
+  }
+}

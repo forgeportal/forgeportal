@@ -154,6 +154,9 @@ importers:
       '@forgeportal/plugin-github-insights':
         specifier: workspace:*
         version: link:../../packages/plugin-github-insights
+      '@forgeportal/plugin-grafana':
+        specifier: workspace:*
+        version: link:../../packages/plugin-grafana
       '@forgeportal/plugin-kubernetes':
         specifier: workspace:*
         version: link:../../packages/plugin-kubernetes
@@ -476,6 +479,19 @@ importers:
       vitest:
         specifier: '*'
         version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@22.19.11)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)
+
+  packages/plugin-grafana:
+    dependencies:
+      '@forgeportal/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
+    devDependencies:
+      '@types/react':
+        specifier: '*'
+        version: 19.2.14
+      react:
+        specifier: '*'
+        version: 19.2.4
 
   packages/plugin-kubernetes:
     dependencies:
