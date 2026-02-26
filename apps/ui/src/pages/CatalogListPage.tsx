@@ -202,13 +202,20 @@ function EntityTable({
   );
 }
 
-function SearchResults({ results }: { results: SearchResultItem[] }) {
+function SearchResults({ results, query }: { results: SearchResultItem[]; query: string }) {
   const navigate = useNavigate();
 
   if (results.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
-        No results found
+      <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
+        <p className="text-sm font-medium text-gray-600 mb-1">
+          No results for &ldquo;{query}&rdquo;
+        </p>
+        {query.length >= 3 && (
+          <p className="text-xs text-gray-400">
+            Try: searching by service name, tag (e.g.&nbsp;&ldquo;java&rdquo;), or team name.
+          </p>
+        )}
       </div>
     );
   }
@@ -221,23 +228,25 @@ function SearchResults({ results }: { results: SearchResultItem[] }) {
           onClick={() => navigate(item.url)}
           className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 hover:border-indigo-300 hover:shadow-sm transition-all"
         >
-          <div className="flex items-start justify-between gap-2">
-            <div>
+          <div className="flex items-start gap-3">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <Badge
                   label={item.type}
                   variant={item.type === 'entity' ? 'kind' : 'tag'}
                 />
-                <span className="font-medium text-gray-900 text-sm">{item.title}</span>
+                <span className="font-medium text-gray-900 text-sm truncate">{item.title}</span>
               </div>
-              <p
-                className="text-xs text-gray-500 line-clamp-2"
-                dangerouslySetInnerHTML={{ __html: item.excerpt }}
-              />
+              {item.excerpt && (
+                <p
+                  className="text-xs text-gray-500 line-clamp-2"
+                  dangerouslySetInnerHTML={{ __html: item.excerpt }}
+                />
+              )}
             </div>
-            <span className="text-xs text-gray-300 shrink-0">
-              {(item.score * 100).toFixed(0)}%
-            </span>
+            <svg className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         </div>
       ))}
@@ -328,7 +337,7 @@ export default function CatalogListPage() {
           <div className="mb-2 text-sm text-gray-500">
             {searchData ? `${searchData.data.length} result${searchData.data.length !== 1 ? 's' : ''} for "${debouncedQ}"` : null}
           </div>
-          <SearchResults results={searchData?.data ?? []} />
+          <SearchResults results={searchData?.data ?? []} query={debouncedQ} />
         </>
       ) : (
         <>
