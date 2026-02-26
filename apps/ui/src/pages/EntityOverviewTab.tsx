@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Badge from '../components/Badge.js';
 import type { Entity, EntitySource } from '../lib/types.js';
 import { EntityProvider, PluginConfigProvider } from '@forgeportal/plugin-sdk/react';
@@ -36,6 +37,89 @@ function RelativeTime({ iso }: { iso: string }) {
   if (diffDays < 365) return <span>{Math.floor(diffDays / 30)} months ago</span>;
   return <span>{Math.floor(diffDays / 365)} years ago</span>;
 }
+
+// ─── Annotations panel ───────────────────────────────────────────────────────
+
+const PLUGIN_ANNOTATION_MAP: Record<string, { label: string; color: string; docsPath: string }> = {
+  'forgeportal.dev/k8s':       { label: 'kubernetes', color: 'bg-blue-100 text-blue-700',    docsPath: '/docs/plugins/kubernetes' },
+  'forgeportal.dev/argocd':    { label: 'argocd',     color: 'bg-orange-100 text-orange-700', docsPath: '/docs/plugins/argocd' },
+  'forgeportal.dev/grafana':   { label: 'grafana',    color: 'bg-yellow-100 text-yellow-700', docsPath: '/docs/plugins/grafana' },
+  'forgeportal.dev/pagerduty': { label: 'pagerduty',  color: 'bg-green-100 text-green-700',  docsPath: '/docs/plugins/pagerduty' },
+  'forgeportal.dev/github':    { label: 'github',     color: 'bg-gray-100 text-gray-700',    docsPath: '/docs/plugins/github-insights' },
+};
+
+function getPluginInfo(key: string) {
+  for (const [prefix, info] of Object.entries(PLUGIN_ANNOTATION_MAP)) {
+    if (key.startsWith(prefix)) return info;
+  }
+  return null;
+}
+
+const COLLAPSE_THRESHOLD = 5;
+
+function AnnotationsPanel({ annotations }: { annotations: Record<string, string> }) {
+  const [expanded, setExpanded] = useState(false);
+  const entries = Object.entries(annotations);
+  const visible = expanded ? entries : entries.slice(0, COLLAPSE_THRESHOLD);
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100">
+      {visible.map(([key, value]) => {
+        const plugin = getPluginInfo(key);
+        return (
+          <div key={key} className="px-3 py-2 space-y-0.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {plugin && (
+                <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold ${plugin.color}`}>
+                  {plugin.label}
+                </span>
+              )}
+              <span
+                className="font-mono text-xs text-gray-500 truncate max-w-[220px]"
+                title={key}
+              >
+                {key}
+              </span>
+              {plugin && (
+                <Link
+                  to={plugin.docsPath}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-auto text-gray-300 hover:text-indigo-500 transition-colors shrink-0"
+                  title={`Docs — ${plugin.label}`}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </Link>
+              )}
+            </div>
+            <p
+              className="font-mono text-xs text-gray-700 truncate"
+              title={value}
+            >
+              {value}
+            </p>
+          </div>
+        );
+      })}
+
+      {entries.length > COLLAPSE_THRESHOLD && (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="w-full px-3 py-2 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition-colors text-left"
+        >
+          {expanded
+            ? 'Show less'
+            : `Show all (${entries.length})`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function CollapsibleSpec({ spec }: { spec: Record<string, unknown> }) {
   const [open, setOpen] = useState(false);
@@ -239,6 +323,12 @@ export default function EntityOverviewTab({ entity, sources }: EntityOverviewTab
                 </li>
               ))}
             </ul>
+          </Section>
+        )}
+
+        {Object.keys(entity.annotations ?? {}).length > 0 && (
+          <Section title="Annotations">
+            <AnnotationsPanel annotations={entity.annotations} />
           </Section>
         )}
       </div>
