@@ -1,0 +1,70 @@
+name: Feature Request
+description: Suggest an idea or enhancement for ForgePortal
+title: "[feat]: "
+labels: ["enhancement", "triage"]
+assignees:
+  - bendaamerahmed
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please describe your idea as clearly as possible.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of ForgePortal does this relate to?
+      options:
+        - Software Catalog
+        - Templates & Scaffolding
+        - Scorecards
+        - Plugin System / SDK
+        - First-party Plugin (existing)
+        - New Plugin request
+        - CI/CD & Releases
+        - Documentation
+        - Developer Experience
+        - Security
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: Is your feature request related to a problem? Describe it.
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you'd like to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you considered any alternative solutions or workarounds?
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add any other context, mockups, or references here.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched for existing issues and discussions before filing this one
+          required: true
+        - label: I would be willing to contribute a PR for this feature

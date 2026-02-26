@@ -5,70 +5,114 @@ sidebar_position: 3
 
 # Local Dev Setup
 
-Run ForgePortal from source with **pnpm** and a local **PostgreSQL** instance. Use this when you're developing the platform or contributing.
+Three options depending on your setup. **Option A is recommended for first-time contributors** — zero install required.
 
-## Prerequisites
+---
+
+## Option A — GitHub Codespaces (zero install, recommended)
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/forgeportal/forgeportal)
+
+**Requirements:** a GitHub account. That's it.
+
+1. Click the badge above (or go to the repo → green **Code** button → **Codespaces** tab → **Create codespace on master**).
+2. Wait ~2 minutes for the container to build and PostgreSQL to start.
+3. The setup script runs automatically: migrations + demo data.
+4. In the terminal, run:
+
+```bash
+pnpm dev
+```
+
+5. VS Code opens port forwarding automatically. Click **Open in Browser** for port `3000`.
+
+:::tip Free tier
+GitHub Codespaces is free for individuals up to 60 hours/month on a 2-core machine. That's plenty for contributing.
+:::
+
+---
+
+## Option B — VS Code Dev Container (local, no Docker knowledge needed)
+
+**Requirements:** VS Code + [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) + Docker Desktop.
+
+1. Clone the repo and open it in VS Code.
+2. VS Code shows a notification: **"Reopen in Container"** → click it.
+3. Wait for the container to build (~2min first time, cached after).
+4. The setup script runs automatically: PostgreSQL starts, migrations run, demo data loaded.
+5. Run `pnpm dev` in the integrated terminal.
+
+---
+
+## Option C — Manual (Node.js + local PostgreSQL)
+
+Use this if you prefer full control over your environment.
+
+### Prerequisites
 
 | Requirement | Version / notes |
 |-------------|------------------|
-| **Node.js** | 20+ (project uses `engines.node: ">=20.19.0"`) |
-| **pnpm** | 10+ (monorepo uses pnpm workspaces; `packageManager: "pnpm@10.6.2"`) |
-| **PostgreSQL** | 16 (e.g. `postgres:16-alpine` in Docker, or local 16) |
+| **Node.js** | 20+ (`engines.node: ">=20.19.0"`) |
+| **pnpm** | 10+ (`packageManager: "pnpm@10.6.2"`) |
+| **PostgreSQL** | 16 |
 | **Git** | For cloning and entity discovery |
-
-Check versions:
 
 ```bash
 node --version   # v20.x or v22.x
 pnpm --version   # 10.x
-psql --version   # 16.x (if using local Postgres)
+psql --version   # 16.x
 ```
 
-## Clone and install
+### Clone and install
 
 ```bash
 git clone https://github.com/forgeportal/forgeportal.git
 cd forgeportal
 pnpm install
+cp .env.example .env   # then edit .env
 ```
 
-This installs dependencies for all workspace packages (core, catalog, api, ui, worker, docs, etc.).
+### Database
 
-## Database
-
-You need a running PostgreSQL 16 with a database and user. Options:
-
-1. **Use Docker Compose for Postgres only** — from repo root, run Postgres from the same Compose env:
-   ```bash
-   cd deployments/docker-compose
-   docker compose up -d postgres
-   ```
-   Then point the app to `localhost` and the exposed port (e.g. `5433` if `DB_PORT_HOST=5433`).
-
-2. **Local Postgres 16** — create a database and user:
-   ```bash
-   createdb forgeportal
-   # Ensure user has access; set DB_HOST=localhost, DB_PORT=5432, DB_NAME=forgeportal, DB_USER=..., DB_PASSWORD=...
-   ```
-
-Set env vars (or a `.env` in the repo root if your tooling loads it):
+**Option 1 — Docker for PostgreSQL only:**
 
 ```bash
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_NAME=forgeportal
-export DB_USER=forge
-export DB_PASSWORD=forge_local_dev
-export ENCRYPTION_KEY=local-dev-key-change-in-prod-32chars!
+cd deployments/docker-compose
+docker compose up -d postgres
 ```
 
-Run migrations (from repo root, using the API or a migration script if you have one):
+**Option 2 — Local PostgreSQL:**
 
 ```bash
-# If your project has a migrate script:
-pnpm run migrate
-# Or apply SQL manually from tools/migration/*.sql
+createdb forgeportal_dev
 ```
+
+Set DB env vars in `.env`:
+
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=forgeportal_dev
+DB_USER=postgres
+DB_PASSWORD=postgres
+ENCRYPTION_KEY=local-dev-key-change-in-prod-32chars!
+```
+
+### Run migrations
+
+```bash
+for f in tools/migration/*.sql; do
+  psql -h localhost -U postgres -d forgeportal_dev -f "$f"
+done
+```
+
+Seed demo data (optional):
+
+```bash
+psql -h localhost -U postgres -d forgeportal_dev -f tools/seed/seed_v1.sql
+```
+
+---
 
 ## Run the stack in dev
 

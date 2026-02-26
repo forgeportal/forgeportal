@@ -41,17 +41,35 @@ ForgePortal is an open-source Internal Developer Portal (IDP) built on **Postgre
 
 ## Quick Start
 
+### Option A — GitHub Codespaces (zero install, zero config)
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/forgeportal/forgeportal)
+
+Click the badge → PostgreSQL starts automatically → run one command:
+
+```bash
+pnpm dev
+```
+
+Open **http://localhost:3000** — your portal is live with demo data.
+
+### Option B — Docker Compose (local, 5 minutes)
+
 ```bash
 git clone https://github.com/forgeportal/forgeportal
 cd forgeportal
 cp deployments/docker-compose/.env.example deployments/docker-compose/.env
-cp forgeportal.example.yaml forgeportal.yaml   # configure discovery, plugins, scorecards
+cp forgeportal.example.yaml forgeportal.yaml
 docker compose -f deployments/docker-compose/docker-compose.yml up
 ```
 
 Open **http://localhost:3000** — your portal is live.
 
 > By default the portal runs in **dev mode** (no login required — you are automatically logged in as admin). Add `OIDC_*` variables to enable SSO. See [OIDC Setup](apps/docs/docs/configuration/oidc-setup.md).
+
+### Option C — VS Code Dev Container (local, no Docker knowledge needed)
+
+Open this repo in VS Code → install the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension → **Reopen in Container**. PostgreSQL starts automatically, migrations run, `pnpm dev` is all you need.
 
 ---
 

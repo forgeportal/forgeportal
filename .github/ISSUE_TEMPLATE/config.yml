@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://your-org.github.io/forgeportal
+    about: Read the docs before opening an issue
+  - name: Discussions
+    url: https://github.com/your-org/forgeportal/discussions
+    about: Ask questions and discuss ideas in Discussions
+  - name: Security Vulnerability
+    url: https://github.com/your-org/forgeportal/security/advisories/new
+    about: Report a security vulnerability privately (do not open a public issue)

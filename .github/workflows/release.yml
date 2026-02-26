@@ -123,6 +123,21 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Publish @forgeportal/plugin-argocd
+        run: pnpm --filter @forgeportal/plugin-argocd publish --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @forgeportal/plugin-github-insights
+        run: pnpm --filter @forgeportal/plugin-github-insights publish --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @forgeportal/plugin-grafana
+        run: pnpm --filter @forgeportal/plugin-grafana publish --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   # ── GitHub Release + Helm chart attachment ────────────────────────────────
   github-release:
     name: GitHub Release
@@ -161,4 +176,7 @@ jobs:
             - [`@forgeportal/plugin-sdk`](https://www.npmjs.com/package/@forgeportal/plugin-sdk) — Plugin SDK for building ForgePortal plugins
             - [`@forgeportal/cli`](https://www.npmjs.com/package/@forgeportal/cli) — `forge sync` CLI (auto-sync plugin dependencies)
             - [`@forgeportal/plugin-kubernetes`](https://www.npmjs.com/package/@forgeportal/plugin-kubernetes) — Official Kubernetes plugin
+            - [`@forgeportal/plugin-argocd`](https://www.npmjs.com/package/@forgeportal/plugin-argocd) — Official ArgoCD plugin
+            - [`@forgeportal/plugin-github-insights`](https://www.npmjs.com/package/@forgeportal/plugin-github-insights) — Official GitHub Insights plugin
+            - [`@forgeportal/plugin-grafana`](https://www.npmjs.com/package/@forgeportal/plugin-grafana) — Official Grafana embed plugin
             - [`create-forge-plugin`](https://www.npmjs.com/package/create-forge-plugin) — Plugin scaffolding CLI

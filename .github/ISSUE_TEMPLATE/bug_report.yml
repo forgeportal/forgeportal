@@ -1,0 +1,94 @@
+name: Bug Report
+description: Something is not working as expected
+title: "[bug]: "
+labels: ["bug", "triage"]
+assignees:
+  - bendaamerahmed
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug. Please fill out the sections below as completely as possible.
+
+  - type: input
+    id: version
+    attributes:
+      label: ForgePortal version
+      description: What version are you running? (`git describe --tags` or Docker image tag)
+      placeholder: "v1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment type
+      options:
+        - Docker Compose (development)
+        - Docker Compose (production)
+        - Kubernetes / Helm
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      description: A clear and concise description of what the bug is.
+      placeholder: "When I do X, Y happens instead of Z."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Step-by-step instructions to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened? Include error messages, screenshots, or logs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant configuration
+      description: Paste relevant parts of your `forgeportal.yaml` (redact secrets).
+      render: yaml
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant API/Worker/UI logs (redact secrets and tokens).
+      render: shell
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched for existing issues before filing this one
+          required: true
+        - label: I have redacted all secrets, tokens, and passwords from this report
+          required: true
