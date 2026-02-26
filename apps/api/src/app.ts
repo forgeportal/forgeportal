@@ -23,6 +23,7 @@ import {
 import { catalogRoutes, scanRoutes, webhookRoutes } from '@forgeportal/catalog';
 import { integrationsRoutes } from './admin/integrations.routes.js';
 import { statusRoutes } from './admin/status.routes.js';
+import { setupRoutes } from './admin/setup.routes.js';
 import { searchRoutes } from '@forgeportal/search';
 import { docsRoutes } from '@forgeportal/docs';
 import {
@@ -201,6 +202,9 @@ export function buildApp(
 
   // --- Admin integrations routes ---
   app.register(integrationsRoutes, { pool });
+
+  // --- Admin setup wizard routes ---
+  app.register(setupRoutes, { pool });
 
   // --- Admin status route (onboarding checklist) ---
   app.register(statusRoutes, { pool });

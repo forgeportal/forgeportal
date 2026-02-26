@@ -15,6 +15,7 @@ import AdminPermissionsPage from './pages/admin/AdminPermissionsPage.js';
 import AdminPluginsPage from './pages/admin/AdminPluginsPage.js';
 import AdminScanPage from './pages/admin/AdminScanPage.js';
 import AdminAuditLogsPage from './pages/admin/AdminAuditLogsPage.js';
+import AdminSetupPage from './pages/admin/AdminSetupPage.js';
 import { usePlugins } from './plugins/PluginContext.js';
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="plugins" element={<AdminPluginsPage />} />
             <Route path="scan" element={<AdminScanPage />} />
             <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+            <Route path="setup" element={<AdminSetupPage />} />
           </Route>
 
           {/* Plugin-registered routes */}

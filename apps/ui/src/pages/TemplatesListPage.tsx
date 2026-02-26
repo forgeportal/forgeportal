@@ -14,7 +14,10 @@ function SkeletonCard() {
 }
 
 export default function TemplatesListPage() {
-  const { data: templates, isLoading, error } = useTemplates();
+  const { data: allTemplates, isLoading, error } = useTemplates();
+  // Hide internal system templates that are not meant to be run directly by users
+  const INTERNAL_TEMPLATES = ['forge-fix-file'];
+  const templates = allTemplates?.filter((t) => !INTERNAL_TEMPLATES.includes(t.name));
   const { data: meData } = useCurrentUser();
   const user = meData?.user;
   const canRun = user?.role !== 'viewer';

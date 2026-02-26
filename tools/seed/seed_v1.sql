@@ -472,16 +472,17 @@ VALUES (
     "metadata": {
       "name": "node-service",
       "title": "Node.js Service",
-      "description": "Bootstrap a Node.js microservice with CI, docs, and Kubernetes manifests.",
+      "description": "Production-ready Node.js microservice with Express, Dockerfile, GitHub Actions CI, and ForgePortal entity registration.",
       "tags": ["node", "service", "recommended"]
     },
     "spec": {
       "parameters": [
-        { "id": "name",        "title": "Service Name",  "type": "string",  "required": true,  "pattern": "^[a-z][a-z0-9-]{2,30}$", "description": "Lowercase name used for repo, entity, and K8s resources" },
-        { "id": "owner",       "title": "Owning Team",   "type": "string",  "required": true,  "description": "e.g., team:payments" },
+        { "id": "name",        "title": "Service Name",  "type": "string",  "required": true,  "pattern": "^[a-z][a-z0-9-]{2,30}$", "description": "Lowercase slug used for repo, entity, and K8s label (e.g. payments-api)" },
+        { "id": "description", "title": "Description",   "type": "string",  "required": true,  "description": "One-line description displayed in the catalog" },
+        { "id": "owner",       "title": "Owning Team",   "type": "string",  "required": true,  "description": "Team reference, e.g. team:payments", "ui": "team-picker" },
         { "id": "provider",    "title": "SCM Provider",  "type": "string",  "required": true,  "enum": ["github", "gitlab"] },
-        { "id": "ownerGroup",  "title": "Org / Group",   "type": "string",  "required": true,  "description": "GitHub org or GitLab group" },
-        { "id": "description", "title": "Description",   "type": "string",  "required": false, "default": "" }
+        { "id": "ownerGroup",  "title": "Org / Group",   "type": "string",  "required": true,  "description": "GitHub organisation or GitLab group" },
+        { "id": "port",        "title": "HTTP Port",     "type": "number",  "required": false, "default": 8080, "description": "Port the service listens on (default: 8080)" }
       ],
       "steps": [
         {
@@ -494,21 +495,17 @@ VALUES (
           "action": "scm.pushSkeleton@v1",
           "input": {
             "provider": "{{provider}}", "owner": "{{ownerGroup}}", "repo": "{{name}}", "branch": "main",
-            "message": "feat: bootstrap {{name}}",
+            "message": "feat: bootstrap {{name}} via ForgePortal golden path",
             "files": [
-              { "path": "README.md",     "templatePath": "skeleton/README.md.hbs" },
-              { "path": "entity.yaml",   "templatePath": "skeleton/entity.yaml.hbs" },
-              { "path": "docs/index.md", "templatePath": "skeleton/docs-index.md.hbs" }
+              { "path": "README.md",                    "contentBase64": "IyB7e25hbWV9fQoKPiB7e2Rlc2NyaXB0aW9ufX0KCiMjIEdldHRpbmcgU3RhcnRlZAoKYGBgYmFzaApucG0gaW5zdGFsbApucG0gc3RhcnQKYGBgCgojIyBEZXZlbG9wbWVudAoKYGBgYmFzaApucG0gdGVzdApgYGAKCiMjIERvY2tlcgoKYGBgYmFzaApkb2NrZXIgYnVpbGQgLXQge3tuYW1lfX0gLgpkb2NrZXIgcnVuIC1wIDgwODA6ODA4MCB7e25hbWV9fQpgYGA=" },
+              { "path": "package.json",                 "contentBase64": "ewogICJuYW1lIjogInt7bmFtZX19IiwKICAidmVyc2lvbiI6ICIwLjEuMCIsCiAgImRlc2NyaXB0aW9uIjogInt7ZGVzY3JpcHRpb259fSIsCiAgInR5cGUiOiAibW9kdWxlIiwKICAiZW5naW5lcyI6IHsgIm5vZGUiOiAiPj0yMCIgfSwKICAic2NyaXB0cyI6IHsKICAgICJzdGFydCI6ICJub2RlIHNyYy9pbmRleC5qcyIsCiAgICAidGVzdCI6ICJub2RlIC0tdGVzdCIKICB9LAogICJkZXBlbmRlbmNpZXMiOiB7CiAgICAiZXhwcmVzcyI6ICJeNC4xOS4yIgogIH0KfQ==" },
+              { "path": "src/index.js",                 "contentBase64": "aW1wb3J0IGV4cHJlc3MgZnJvbSAnZXhwcmVzcyc7Cgpjb25zdCBhcHAgID0gZXhwcmVzcygpOwpjb25zdCBwb3J0ID0gcGFyc2VJbnQocHJvY2Vzcy5lbnYuUE9SVCA/PyAnODA4MCcsIDEwKTsKCmFwcC51c2UoZXhwcmVzcy5qc29uKCkpOwoKYXBwLmdldCgnL2hlYWx0aHonLCAoX3JlcSwgcmVzKSA9PiB7CiAgcmVzLmpzb24oeyBzdGF0dXM6ICdvaycsIHNlcnZpY2U6ICd7e25hbWV9fScsIHRzOiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCkgfSk7Cn0pOwoKYXBwLmdldCgnLycsIChfcmVxLCByZXMpID0+IHsKICByZXMuanNvbih7IG1lc3NhZ2U6ICdIZWxsbyBmcm9tIHt7bmFtZX19IScgfSk7Cn0pOwoKYXBwLmxpc3Rlbihwb3J0LCAoKSA9PiB7CiAgY29uc29sZS5sb2coYFt7e25hbWV9fV0gTGlzdGVuaW5nIG9uIHBvcnQgJHtwb3J0fWApOwp9KTs=" },
+              { "path": ".env.example",                 "contentBase64": "UE9SVD04MDgwCk5PREVfRU5WPWRldmVsb3BtZW50" },
+              { "path": "Dockerfile",                   "contentBase64": "RlJPTSBub2RlOjIyLWFscGluZSBBUyBkZXBzCldPUktESVIgL2FwcApDT1BZIHBhY2thZ2UqLmpzb24gLi8KUlVOIG5wbSBjaSAtLW9taXQ9ZGV2CgpGUk9NIG5vZGU6MjItYWxwaW5lIEFTIGZpbmFsCldPUktESVIgL2FwcApFTlYgTk9ERV9FTlY9cHJvZHVjdGlvbgpDT1BZIC0tZnJvbT1kZXBzIC9hcHAvbm9kZV9tb2R1bGVzIC4vbm9kZV9tb2R1bGVzCkNPUFkgLiAuCkVYUE9TRSA4MDgwClVTRVIgbm9kZQpDTUQgWyJub2RlIiwgInNyYy9pbmRleC5qcyJd" },
+              { "path": ".github/workflows/ci.yml",     "contentBase64": "bmFtZTogQ0kKCm9uOgogIHB1c2g6CiAgICBicmFuY2hlczogW21haW5dCiAgcHVsbF9yZXF1ZXN0OgogICAgYnJhbmNoZXM6IFttYWluXQoKam9iczoKICBjaToKICAgIG5hbWU6IExpbnQgKyBUZXN0ICsgQnVpbGQKICAgIHJ1bnMtb246IHVidW50dS1sYXRlc3QKICAgIHN0ZXBzOgogICAgICAtIHVzZXM6IGFjdGlvbnMvY2hlY2tvdXRAdjQKICAgICAgLSB1c2VzOiBhY3Rpb25zL3NldHVwLW5vZGVAdjQKICAgICAgICB3aXRoOgogICAgICAgICAgbm9kZS12ZXJzaW9uOiAnMjInCiAgICAgICAgICBjYWNoZTogbnBtCiAgICAgIC0gcnVuOiBucG0gY2kKICAgICAgLSBydW46IG5wbSB0ZXN0CiAgICAgIC0gbmFtZTogQnVpbGQgRG9ja2VyIGltYWdlCiAgICAgICAgcnVuOiBkb2NrZXIgYnVpbGQgLXQgbXlhcHA6JHt7IGdpdGh1Yi5zaGEgfX0gLg==" },
+              { "path": "entity.yaml",                  "contentBase64": "YXBpVmVyc2lvbjogZm9yZ2Vwb3J0YWwvdjEKa2luZDogc2VydmljZQptZXRhZGF0YToKICBuYW1lOiB7e25hbWV9fQogIG5hbWVzcGFjZTogZGVmYXVsdAogIGFubm90YXRpb25zOgogICAgZm9yZ2Vwb3J0YWwuZGV2L2s4cy1sYWJlbC1zZWxlY3RvcjogImFwcD17e25hbWV9fSIKc3BlYzoKICBvd25lcjoge3tvd25lcn19CiAgbGlmZWN5Y2xlOiBleHBlcmltZW50YWwKICBkZXNjcmlwdGlvbjogInt7ZGVzY3JpcHRpb259fSIKICB0YWdzOgogICAgLSBub2RlCiAgbGlua3M6CiAgICAtIHRpdGxlOiBTb3VyY2UgQ29kZQogICAgICB1cmw6ICJodHRwczovL2dpdGh1Yi5jb20ve3tvd25lckdyb3VwfX0ve3tuYW1lfX0iCiAgICAgIGljb246IGdpdGh1Yg==" },
+              { "path": "docs/index.md",                "contentBase64": "IyB7e25hbWV9fQoKe3tkZXNjcmlwdGlvbn19CgojIyBPdmVydmlldwoKVGhpcyBzZXJ2aWNlIHdhcyBib290c3RyYXBwZWQgd2l0aCB0aGUgRm9yZ2VQb3J0YWwgTm9kZS5qcyBnb2xkZW4gcGF0aC4KCiMjIEFQSQoKfCBFbmRwb2ludCAgIHwgTWV0aG9kIHwgRGVzY3JpcHRpb24gICAgICAgICAgICAgfAp8LS0tLS0tLS0tLS0tfC0tLS0tLS0tfC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS18CnwgYC9gICAgICAgICB8IEdFVCAgICB8IFJldHVybnMgYSBoZWxsbyBtZXNzYWdlIHwKfCBgL2hlYWx0aHpgIHwgR0VUICAgIHwgSGVhbHRoIGNoZWNrIGVuZHBvaW50ICAgfAoKIyMgR2V0dGluZyBTdGFydGVkCgpgYGBiYXNoCm5wbSBpbnN0YWxsCm5wbSBzdGFydApgYGAKCiMjIENvbmZpZ3VyYXRpb24KCnwgVmFyaWFibGUgICB8IERlZmF1bHQgICAgICAgfCBEZXNjcmlwdGlvbiAgICAgICAgIHwKfC0tLS0tLS0tLS0tLXwtLS0tLS0tLS0tLS0tLS18LS0tLS0tLS0tLS0tLS0tLS0tLS0tfAp8IFBPUlQgICAgICAgfCA4MDgwICAgICAgICAgIHwgSFRUUCBwb3J0ICAgICAgICAgICB8CnwgTk9ERV9FTlYgICB8IGRldmVsb3BtZW50ICAgfCBOb2RlLmpzIGVudmlyb25tZW50IHw=" }
             ]
-          }
-        },
-        {
-          "id": "bootstrap-ci",
-          "action": "ci.bootstrap@v1",
-          "input": {
-            "provider": "{{provider}}", "owner": "{{ownerGroup}}", "repo": "{{name}}",
-            "type": "{{#if (eq provider \"github\")}}github-actions{{else}}gitlab-ci{{/if}}",
-            "language": "node"
           }
         },
         {
@@ -527,17 +524,12 @@ VALUES (
       "outputs": {
         "repoUrl":  "{{steps.create-repo.outputs.repoUrl}}",
         "entityId": "{{steps.register.outputs.entityId}}"
-      },
-      "skeletonFiles": {
-        "skeleton/README.md.hbs":     "# {{name}}\n\n> {{description}}\n\n## Overview\n\nAdd an overview here.\n\n## Getting Started\n\n```bash\nnpm install\nnpm start\n```\n",
-        "skeleton/entity.yaml.hbs":   "apiVersion: forgeportal/v1\nkind: service\nmetadata:\n  name: {{name}}\n  namespace: default\nspec:\n  owner: {{owner}}\n  lifecycle: experimental\n  tags:\n    - node\n",
-        "skeleton/docs-index.md.hbs": "# {{name}} Documentation\n\n## Overview\n\n{{description}}\n\n## Getting Started\n\nDescribe how to run **{{name}}**.\n"
       }
     }
   }'::jsonb,
   now()
 )
-ON CONFLICT (name, version) DO NOTHING;
+ON CONFLICT (name, version) DO UPDATE SET schema = EXCLUDED.schema;
 
 -- Fix template: creates a file on a branch, then opens a PR.
 -- Used by the scorecard fix flow. One template handles all file-based fixes.

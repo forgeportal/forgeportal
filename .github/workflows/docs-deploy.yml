@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group:              ${{ github.workflow }}-${{ github.ref }}
+  group:              docs-deploy-${{ github.event.workflow_run.head_sha || github.sha }}
   cancel-in-progress: true
 
 jobs:

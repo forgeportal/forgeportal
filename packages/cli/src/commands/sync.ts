@@ -188,15 +188,22 @@ async function resolveManifest(packageName: string, root: string): Promise<Plugi
 
   // ── 2. node_modules via require.resolve (external installed package) ───────
   try {
-    const req      = createRequire(path.join(root, '_placeholder_.js'));
-    const pkgDir   = path.dirname(req.resolve(`${packageName}/package.json`));
+    const req    = createRequire(path.join(root, '_placeholder_.js'));
+    const pkgDir = path.dirname(req.resolve(`${packageName}/package.json`));
     const manifest = JSON.parse(
       fs.readFileSync(path.join(pkgDir, 'forgeportal-plugin.json'), 'utf8'),
     ) as { version: string; forgeportal: { type: string } };
 
+    // If the resolved package lives under any "packages/" directory (workspace
+    // symlink or monorepo root), always use "workspace:*" so pnpm is happy.
+    const normalizedPkgDir = pkgDir.replace(/\\/g, '/');
+    const isWorkspaceLink  = [root, process.cwd()].some((base) =>
+      normalizedPkgDir.startsWith(path.join(base, 'packages').replace(/\\/g, '/')),
+    );
+
     return {
       packageName,
-      version:    manifest.version,
+      version:    isWorkspaceLink ? 'workspace:*' : manifest.version,
       pluginType: manifest.forgeportal.type as PluginInfo['pluginType'],
     };
   } catch {

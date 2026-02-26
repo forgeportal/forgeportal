@@ -54,6 +54,7 @@ export default function AdminLayout() {
       <div className="mb-6 border-b border-gray-200 pb-4">
         <h1 className="text-2xl font-bold text-gray-900">Administration</h1>
         <nav className="mt-3 flex flex-wrap gap-1">
+          <AdminNavItem to="/admin/setup" label="Setup Wizard" />
           <AdminNavItem to="/admin/integrations" label="Integrations" />
           <AdminNavItem to="/admin/permissions" label="Permissions" />
           <AdminNavItem to="/admin/plugins" label="Plugins" />

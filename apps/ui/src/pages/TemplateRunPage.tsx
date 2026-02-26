@@ -4,53 +4,53 @@ import RunStatusBadge from '../components/RunStatusBadge.js';
 import Spinner from '../components/Spinner.js';
 import type { TemplateRunStep } from '../lib/types.js';
 
-/** Translate backend error codes/messages into user-friendly text. */
+/** Translate backend error codes into user-friendly English text. */
 function translateStepError(outputs: Record<string, unknown>): { message: string; hint: string } {
   const raw = String(outputs['error'] ?? '');
 
   if (raw.includes('AUTH_ERROR')) {
     return {
-      message: 'Authentification SCM échouée',
-      hint: 'Le token GitHub/GitLab est manquant ou invalide. Contactez votre administrateur pour configurer SCM_GITHUB_TOKEN ou SCM_GITLAB_TOKEN.',
+      message: 'SCM authentication failed',
+      hint: 'The GitHub/GitLab token is missing or invalid. Ask your administrator to configure SCM_GITHUB_TOKEN or SCM_GITLAB_TOKEN.',
     };
   }
   if (raw.includes('NOT_FOUND')) {
     return {
-      message: 'Ressource introuvable',
-      hint: 'Vérifiez le nom de l\'organisation, du groupe ou du dépôt saisi dans le formulaire.',
+      message: 'Resource not found',
+      hint: 'Check the organisation, group, or repository name entered in the form.',
     };
   }
   if (raw.includes('CONFLICT')) {
     return {
-      message: 'Conflit détecté',
-      hint: 'Le dépôt ou la ressource existe déjà. Utilisez un nom différent ou supprimez la ressource existante.',
+      message: 'Conflict detected',
+      hint: 'The repository or resource already exists. Use a different name or delete the existing resource.',
     };
   }
   if (raw.includes('RATE_LIMITED')) {
     return {
-      message: 'Limite de taux SCM atteinte',
-      hint: 'Trop de requêtes vers l\'API SCM. Patientez quelques minutes avant de réessayer.',
+      message: 'SCM rate limit reached',
+      hint: 'Too many requests to the SCM API. Wait a few minutes before retrying.',
     };
   }
   if (raw.includes('VALIDATION_ERROR')) {
     const detail = raw.replace(/VALIDATION_ERROR[:\s]*/i, '').trim();
     return {
-      message: 'Paramètres invalides',
-      hint: detail || 'Vérifiez les valeurs saisies dans le formulaire.',
+      message: 'Invalid parameters',
+      hint: detail || 'Check the values entered in the form.',
     };
   }
   if (raw.includes('REMOTE_ERROR')) {
     return {
-      message: 'Erreur de l\'API SCM',
-      hint: 'Le service SCM distant a retourné une erreur. Réessayez dans quelques instants.',
+      message: 'SCM API error',
+      hint: 'The remote SCM service returned an error. Try again in a moment.',
     };
   }
   if (raw) {
-    return { message: 'Étape échouée', hint: raw };
+    return { message: 'Step failed', hint: raw };
   }
   return {
-    message: 'Étape échouée',
-    hint: 'Consultez les logs d\'action pour plus de détails.',
+    message: 'Step failed',
+    hint: 'Check the action logs for more details.',
   };
 }
 
@@ -143,10 +143,16 @@ export default function TemplateRunPage() {
   if (error || !run) {
     return (
       <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-        {(error as Error | null)?.message ?? 'Template run introuvable'}
+        {(error as Error | null)?.message ?? 'Template run not found'}
       </div>
     );
   }
+
+  const pageTitle =
+    run.status === 'success' ? 'Template completed' :
+    run.status === 'failed'  ? 'Template failed' :
+    run.status === 'running' ? 'Running template…' :
+                               'Template run';
 
   return (
     <div className="max-w-3xl">
@@ -156,12 +162,12 @@ export default function TemplateRunPage() {
           ← Templates
         </Link>
         <div className="mt-2 flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900">Exécution en cours</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
           <RunStatusBadge status={run.status} />
         </div>
         <p className="mt-1 text-sm text-gray-500">
           Run <span className="font-mono text-xs">{run.runId}</span>
-          {' · '}Demandé par {run.requestedBy}
+          {' · '}Requested by {run.requestedBy}
         </p>
       </div>
 
@@ -169,7 +175,7 @@ export default function TemplateRunPage() {
       {run.steps.length === 0 ? (
         <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-6 text-sm text-gray-500">
           <Spinner size="sm" />
-          <span>Run créé, en attente de la première étape…</span>
+          <span>Run created, waiting for first step…</span>
         </div>
       ) : (
         <div className="space-y-3">
@@ -182,7 +188,7 @@ export default function TemplateRunPage() {
       {/* Success panel */}
       {run.status === 'success' && Object.keys(run.outputs).length > 0 && (
         <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4">
-          <h3 className="mb-3 text-sm font-semibold text-green-800">✓ Template terminé avec succès</h3>
+          <h3 className="mb-3 text-sm font-semibold text-green-800">✓ Template completed successfully</h3>
           <div className="flex flex-wrap gap-2">
             {Object.entries(run.outputs).map(([key, value]) => {
               const isUrl = typeof value === 'string' && value.startsWith('http');
@@ -206,27 +212,27 @@ export default function TemplateRunPage() {
         </div>
       )}
 
-      {/* Failure panel — with retry button */}
+      {/* Failure panel */}
       {run.status === 'failed' && (
         <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
           <h3 className="text-sm font-semibold text-red-800">
-            Échec à l'étape : <span className="font-mono">{run.currentStep ?? 'inconnue'}</span>
+            Failed at step: <span className="font-mono">{run.currentStep ?? 'unknown'}</span>
           </h3>
           <p className="mt-1 text-sm text-red-600">
-            Corrigez les paramètres et relancez, ou consultez les logs d'action pour diagnostiquer l'erreur.
+            Fix the parameters and try again, or check the action logs to diagnose the error.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               to={`/templates/${run.templateId}`}
               className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
             >
-              ↩ Réessayer avec d'autres paramètres
+              ↩ Retry with different parameters
             </Link>
             <Link
               to="/actions"
               className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Voir les logs d'action →
+              View action logs →
             </Link>
           </div>
         </div>

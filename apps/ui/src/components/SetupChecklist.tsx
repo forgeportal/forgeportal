@@ -54,14 +54,12 @@ export default function SetupChecklist() {
             forgeportal.yaml
           </code>
           .{' '}
-          <a
-            href="https://docs.forgeportal.dev/docs/configuration/scm-providers"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/admin/setup"
             className="font-medium text-amber-700 underline hover:text-amber-900"
           >
-            SCM Providers guide →
-          </a>
+            Use the Setup Wizard →
+          </Link>
         </>
       ),
       done: status?.scmConfigured ?? false,

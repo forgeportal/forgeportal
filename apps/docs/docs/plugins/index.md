@@ -14,10 +14,10 @@ ForgePortal ships with **first-party plugins** that extend the portal with integ
 
 | Plugin | Type | Description | Docs |
 |--------|------|-------------|------|
-| `@forgeportal/plugin-kubernetes` | Fullstack | Kubernetes workloads, pod logs, restart, scale | [→ Docs](./kubernetes) |
-| `@forgeportal/plugin-argocd` | Fullstack | ArgoCD sync status, history, sync & rollback actions | [→ Docs](./argocd) |
-| `@forgeportal/plugin-github-insights` | Fullstack | PRs, commits, contributors, CI workflow runs | [→ Docs](./github-insights) |
-| `@forgeportal/plugin-grafana` | UI only | Embed Grafana dashboards via iframe | [→ Docs](./grafana) |
+| `@forgeportal/plugin-kubernetes` | Fullstack | Kubernetes workloads, pod logs, restart, scale | [→ Docs](/docs/plugins/kubernetes) |
+| `@forgeportal/plugin-argocd` | Fullstack | ArgoCD sync status, history, sync & rollback actions | [→ Docs](/docs/plugins/argocd) |
+| `@forgeportal/plugin-github-insights` | Fullstack | PRs, commits, contributors, CI workflow runs | [→ Docs](/docs/plugins/github-insights) |
+| `@forgeportal/plugin-grafana` | UI only | Embed Grafana dashboards via iframe | [→ Docs](/docs/plugins/grafana) |
 
 ---
 
@@ -42,7 +42,7 @@ ForgePortal ships with **first-party plugins** that extend the portal with integ
 | `@forgeportal/plugin-prometheus` | UI only | Inline PromQL charts without leaving the catalog |
 | `@forgeportal/plugin-statuspage` | Fullstack | Statuspage.io component status and active incidents |
 
-Want a plugin not listed here? [Open a GitHub Discussion](https://github.com/forgeportal/forgeportal/discussions) or contribute via the [Plugin Developer Guide](../plugin-development/overview).
+Want a plugin not listed here? [Open a GitHub Discussion](https://github.com/forgeportal/forgeportal/discussions) or contribute via the [Plugin Developer Guide](/docs/plugin-development/overview).
 
 ---
 
@@ -94,4 +94,4 @@ ForgePortal's plugin SDK makes it easy to create custom integrations.
 npx @forgeportal/cli create-plugin my-plugin
 ```
 
-→ See the [Plugin Developer Guide](../plugin-development/overview) for a complete walkthrough.
+→ See the [Plugin Developer Guide](/docs/plugin-development/overview) for a complete walkthrough.

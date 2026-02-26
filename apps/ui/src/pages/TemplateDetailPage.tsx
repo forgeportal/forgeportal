@@ -11,16 +11,16 @@ import ErrorMessage from '../components/ErrorMessage.js';
 /** Map action name to a short human-readable label */
 function actionLabel(action: string): string {
   const map: Record<string, string> = {
-    'scm.createRepo@v1':          'Créer le dépôt',
-    'scm.pushSkeleton@v1':        'Pousser le squelette de code',
-    'scm.createOrUpdateFile@v1':  'Créer / mettre à jour un fichier',
-    'scm.openPrOrMr@v1':          'Ouvrir une Pull Request',
-    'scm.ensureWebhook@v1':       'Configurer le webhook',
-    'ci.bootstrap@v1':            'Configurer la CI',
-    'catalog.registerEntity@v1':  'Enregistrer l\'entité dans le catalog',
-    'docs.bootstrap@v1':          'Initialiser la documentation',
-    'k8s.bootstrap@v1':           'Générer les manifests Kubernetes',
-    'scorecards.evaluate@v1':     'Évaluer les scorecards',
+    'scm.createRepo@v1':          'Create repository',
+    'scm.pushSkeleton@v1':        'Push code skeleton',
+    'scm.createOrUpdateFile@v1':  'Create / update file',
+    'scm.openPrOrMr@v1':          'Open Pull Request',
+    'scm.ensureWebhook@v1':       'Configure webhook',
+    'ci.bootstrap@v1':            'Bootstrap CI pipeline',
+    'catalog.registerEntity@v1':  'Register entity in catalog',
+    'docs.bootstrap@v1':          'Bootstrap documentation',
+    'k8s.bootstrap@v1':           'Generate Kubernetes manifests',
+    'scorecards.evaluate@v1':     'Evaluate scorecards',
   };
   return map[action] ?? action;
 }
@@ -42,7 +42,7 @@ export default function TemplateDetailPage() {
       navigate(`/templates/runs/${runId}`);
     } catch (err) {
       setSubmitError(
-        err instanceof ApiError ? err.message : 'Soumission échouée. Veuillez réessayer.',
+        err instanceof ApiError ? err.message : 'Submission failed. Please try again.',
       );
       setSubmitting(false);
     }
@@ -59,7 +59,7 @@ export default function TemplateDetailPage() {
   if (error || !template) {
     return (
       <ErrorMessage
-        message={(error as Error | null)?.message ?? 'Template introuvable'}
+        message={(error as Error | null)?.message ?? 'Template not found'}
       />
     );
   }
@@ -93,7 +93,7 @@ export default function TemplateDetailPage() {
       {steps.length > 0 && (
         <div className="mb-6 rounded-lg border border-indigo-100 bg-indigo-50 p-4">
           <h2 className="mb-3 text-sm font-semibold text-indigo-800">
-            Ce que ce template va faire ({steps.length} étape{steps.length > 1 ? 's' : ''})
+            What this template will do ({steps.length} step{steps.length > 1 ? 's' : ''})
           </h2>
           <ol className="space-y-2">
             {steps.map((step, idx) => (
@@ -113,10 +113,9 @@ export default function TemplateDetailPage() {
         </div>
       )}
 
-      {/* Submit error — inline, pas centré */}
       {submitError && (
         <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <strong>Erreur : </strong>{submitError}
+          <strong>Error: </strong>{submitError}
         </div>
       )}
 
@@ -125,6 +124,7 @@ export default function TemplateDetailPage() {
         parameters={template.parameters}
         onSubmit={handleSubmit}
         loading={submitting}
+        submitLabel={`Créer ${template.title ?? template.name}`}
       />
     </div>
   );
