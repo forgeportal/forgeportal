@@ -54,7 +54,7 @@ const sidebars: SidebarsConfig = {
       label:     '🧩 Official Plugins',
       collapsed: false,
       items: [
-        'plugins/index',
+        'plugins/plugins-overview',
         'plugins/kubernetes',
         'plugins/argocd',
         'plugins/github-insights',
