@@ -54,7 +54,11 @@ const sidebars: SidebarsConfig = {
       label:     '🧩 Official Plugins',
       collapsed: false,
       items: [
+        'plugins/index',
         'plugins/kubernetes',
+        'plugins/argocd',
+        'plugins/github-insights',
+        'plugins/grafana',
       ],
     },
 
@@ -119,6 +123,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'contributing/how-to-contribute',
         'contributing/architectural-decisions',
+        'contributing/changelog',
       ],
     },
   ],
