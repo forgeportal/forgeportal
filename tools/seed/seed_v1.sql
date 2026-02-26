@@ -755,4 +755,198 @@ ON CONFLICT (name, applies_to_kind, version) DO UPDATE
   SET definition = EXCLUDED.definition,
       enabled    = EXCLUDED.enabled;
 
+-- -------------------------
+-- Template: create-cache (Story 12-2)
+-- -------------------------
+INSERT INTO templates (id, name, version, schema, created_at)
+VALUES (
+  gen_random_uuid(),
+  'create-cache',
+  'v1',
+  '{
+    "apiVersion": "forgeportal/v1",
+    "kind": "Template",
+    "metadata": {
+      "name": "create-cache",
+      "title": "Create Cache (Redis)",
+      "description": "Provision a Redis cache for local-docker, Kubernetes (Bitnami), AWS ElastiCache, or docker-compose — then register it in the catalog.",
+      "tags": ["cache", "redis", "infrastructure"]
+    },
+    "spec": {
+      "parameters": [
+        { "id": "cacheName",    "title": "Cache name",          "type": "string",  "required": true,  "pattern": "^[a-z][a-z0-9-]{1,30}$",                                                                                               "description": "Lowercase letters, numbers, hyphens (e.g. session-cache)" },
+        { "id": "destination",  "title": "Where to deploy",     "type": "string",  "required": true,  "enum": ["local-docker", "docker-compose", "kubernetes", "aws-elasticache"],                                                        "description": "Choose your deployment target" },
+        { "id": "redisVersion", "title": "Redis version",       "type": "string",  "required": false, "default": "7.2",                                                                                                                    "description": "Redis version to deploy" },
+        { "id": "owner",        "title": "Owning team",         "type": "string",  "required": true,  "ui": "team-picker",                                                                                                                 "description": "e.g. team:platform" },
+        { "id": "provider",     "title": "SCM provider",        "type": "string",  "required": true,  "enum": ["github", "gitlab"],                                                                                                        "description": "Where to create the config repo" },
+        { "id": "ownerGroup",   "title": "Org / Group",         "type": "string",  "required": true,                                                                                                                                       "description": "GitHub org or GitLab group" },
+        { "id": "enableAuth",   "title": "Enable password auth","type": "boolean", "required": false, "default": true,                                                                                                                     "description": "Generate a random password for Redis AUTH" },
+        { "id": "maxMemory",    "title": "Max memory",          "type": "string",  "required": false, "default": "256mb",                                                                                                                  "description": "e.g. 256mb, 1gb" },
+        { "id": "evictionPolicy","title": "Eviction policy",    "type": "string",  "required": false, "enum": ["noeviction", "allkeys-lru", "volatile-lru", "allkeys-lfu"], "default": "allkeys-lru",                                     "description": "Memory eviction policy" },
+        { "id": "k8sNamespace", "title": "Kubernetes namespace","type": "string",  "required": false, "default": "default", "dependsOn": { "destination": "kubernetes" } },
+        { "id": "k8sMode",      "title": "Redis mode",          "type": "string",  "required": false, "enum": ["standalone", "sentinel", "cluster"], "default": "standalone", "dependsOn": { "destination": "kubernetes" },             "description": "standalone, sentinel, or cluster" },
+        { "id": "elasticacheNodeType", "title": "Node type",    "type": "string",  "required": false, "enum": ["cache.t3.micro", "cache.t3.small", "cache.m6g.large"], "default": "cache.t3.micro", "dependsOn": { "destination": "aws-elasticache" } },
+        { "id": "elasticacheReplicas", "title": "Read replicas","type": "number",  "required": false, "default": 0, "dependsOn": { "destination": "aws-elasticache" } },
+        { "id": "infraRepo",    "title": "Infrastructure repo (org/repo)", "type": "string", "required": false, "dependsOn": { "destination": "aws-elasticache" }, "description": "Repo where Terraform modules live" }
+      ],
+      "steps": [
+        {
+          "id": "create-repo",
+          "action": "scm.createRepo@v1",
+          "input": {
+            "provider": "{{provider}}",
+            "owner": "{{ownerGroup}}",
+            "repo": "{{cacheName}}-cache",
+            "visibility": "private",
+            "description": "Redis cache config — {{cacheName}} ({{destination}})"
+          }
+        },
+        {
+          "id": "push-skeleton",
+          "action": "scm.pushSkeleton@v1",
+          "input": {
+            "provider": "{{provider}}",
+            "owner": "{{ownerGroup}}",
+            "repo": "{{cacheName}}-cache",
+            "branch": "main",
+            "message": "feat: provision {{cacheName}} Redis cache on {{destination}}",
+            "files": [
+              { "path": "README.md",                        "contentBase64": "IyB7e2NhY2hlTmFtZX19Cgo+IFJlZGlzIHt7cmVkaXNWZXJzaW9ufX0gY2FjaGUg4oCUIGRlcGxveWVkIG9uIHt7ZGVzdGluYXRpb259fQoKIyMgU2V0dXAKCiMjIyBMb2NhbCBEb2NrZXIKYGBgYmFzaApjaG1vZCAreCBsb2NhbC1kb2NrZXIvcnVuLnNoCi4vbG9jYWwtZG9ja2VyL3J1bi5zaApgYGAKCiMjIyBLdWJlcm5ldGVzIChIZWxtIC8gQml0bmFtaSkKYGBgYmFzaApjaG1vZCAreCBrdWJlcm5ldGVzL2hlbG0vaW5zdGFsbC5zaAouL2t1YmVybmV0ZXMvaGVsbS9pbnN0YWxsLnNoCmBgYAoKIyMjIEFXUyBFbGFzdGlDYWNoZSAoVGVycmFmb3JtKQpgYGBiYXNoCmNkIHRlcnJhZm9ybQp0ZXJyYWZvcm0gaW5pdCAmJiB0ZXJyYWZvcm0gcGxhbiAmJiB0ZXJyYWZvcm0gYXBwbHkKYGBgCgojIyBDb25uZWN0aW9uCmBgYApyZWRpczovLzp7e3Bhc3N3b3JkfX1APGhvc3Q+OjYzNzkvMApgYGAKCiMjIEZvcmdlUG9ydGFsClRoaXMgcmVzb3VyY2UgaXMgdHJhY2tlZCBpbiB0aGUgY2F0YWxvZzogW1ZpZXcgZW50aXR5XShodHRwOi8vbG9jYWxob3N0OjMwMDAvY2F0YWxvZyk=" },
+              { "path": "entity.yaml",                     "contentBase64": "YXBpVmVyc2lvbjogZm9yZ2Vwb3J0YWwvdjEKa2luZDogcmVzb3VyY2UKbWV0YWRhdGE6CiAgbmFtZToge3tjYWNoZU5hbWV9fQogIG5hbWVzcGFjZTogZGVmYXVsdAogIGFubm90YXRpb25zOgogICAgZm9yZ2Vwb3J0YWwuZGV2L2RiLWVuZ2luZTogInJlZGlzIgogICAgZm9yZ2Vwb3J0YWwuZGV2L2RiLWRlc3RpbmF0aW9uOiAie3tkZXN0aW5hdGlvbn19IgpzcGVjOgogIG93bmVyOiB7e293bmVyfX0KICBsaWZlY3ljbGU6IHByb2R1Y3Rpb24KICB0eXBlOiBjYWNoZQogIGRlc2NyaXB0aW9uOiAiUmVkaXMge3tyZWRpc1ZlcnNpb259fSBjYWNoZSBkZXBsb3llZCBvbiB7e2Rlc3RpbmF0aW9ufX0iCiAgdGFnczoKICAgIC0gY2FjaGUKICAgIC0gcmVkaXM=" },
+              { "path": "local-docker/run.sh",             "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIFN0YXJ0IHt7Y2FjaGVOYW1lfX0gKFJlZGlzIHt7cmVkaXNWZXJzaW9ufX0pCnNldCAtZXVvIHBpcGVmYWlsClBBU1NXT1JEPSQob3BlbnNzbCByYW5kIC1oZXggMTYpCmRvY2tlciBydW4gLWQgXAogIC0tbmFtZSB7e2NhY2hlTmFtZX19IFwKICAtcCA2Mzc5OjYzNzkgXAogIC12IHt7Y2FjaGVOYW1lfX1fZGF0YTovZGF0YSBcCiAgcmVkaXM6e3tyZWRpc1ZlcnNpb259fS1hbHBpbmUgXAogIHJlZGlzLXNlcnZlciBcCiAgLS1tYXhtZW1vcnkge3ttYXhNZW1vcnl9fSBcCiAgLS1tYXhtZW1vcnktcG9saWN5IHt7ZXZpY3Rpb25Qb2xpY3l9fSBcCiAgLS1yZXF1aXJlcGFzcyAiJHtQQVNTV09SRH0iIFwKICAtLWFwcGVuZG9ubHkgeWVzCmVjaG8gIuKchSB7e2NhY2hlTmFtZX19IFJlZGlzIHJ1bm5pbmcgb24gbG9jYWxob3N0OjYzNzkiCmVjaG8gIiAgIENvbm5lY3Rpb246IHJlZGlzOi8vOiR7UEFTU1dPUkR9QGxvY2FsaG9zdDo2Mzc5LzAiCmVjaG8gIiAgIFNhdmUgeW91ciBwYXNzd29yZCDigJQgaXQgd29uJ3QgYmUgc2hvd24gYWdhaW4hIg==" },
+              { "path": "local-docker/redis.conf",         "contentBase64": "IyBSZWRpcyBjb25maWd1cmF0aW9uIGZvciB7e2NhY2hlTmFtZX19Cm1heG1lbW9yeSB7e21heE1lbW9yeX19Cm1heG1lbW9yeS1wb2xpY3kge3tldmljdGlvblBvbGljeX19CmFwcGVuZG9ubHkgeWVz" },
+              { "path": "kubernetes/helm/values.yaml",     "contentBase64": "IyBCaXRuYW1pIFJlZGlzIOKAlCB7e2NhY2hlTmFtZX19CnJlcGxpY2E6CiAgcmVwbGljYUNvdW50OiAwCgphdXRoOgogIGVuYWJsZWQ6IHRydWUKICBleGlzdGluZ1NlY3JldDoge3tjYWNoZU5hbWV9fS1yZWRpcy1zZWNyZXQKCm1hc3RlcjoKICBwZXJzaXN0ZW5jZToKICAgIGVuYWJsZWQ6IHRydWUKICAgIHNpemU6IDhHaQogIHJlc291cmNlczoKICAgIHJlcXVlc3RzOgogICAgICBtZW1vcnk6IDI1Nk1pCiAgICAgIGNwdTogMTAwbQoKY29tbW9uQ29uZmlndXJhdGlvbjogfC0KICBtYXhtZW1vcnkge3ttYXhNZW1vcnl9fQogIG1heG1lbW9yeS1wb2xpY3kge3tldmljdGlvblBvbGljeX19CiAgYXBwZW5kb25seSB5ZXM=" },
+              { "path": "kubernetes/helm/install.sh",      "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaApzZXQgLWV1byBwaXBlZmFpbApoZWxtIHJlcG8gYWRkIGJpdG5hbWkgaHR0cHM6Ly9jaGFydHMuYml0bmFtaS5jb20vYml0bmFtaQpoZWxtIHJlcG8gdXBkYXRlCmt1YmVjdGwgY3JlYXRlIHNlY3JldCBnZW5lcmljIHt7Y2FjaGVOYW1lfX0tcmVkaXMtc2VjcmV0IFwKICAtLW5hbWVzcGFjZSB7e2s4c05hbWVzcGFjZX19IFwKICAtLWZyb20tbGl0ZXJhbD1yZWRpcy1wYXNzd29yZD0iJChvcGVuc3NsIHJhbmQgLWhleCAxNikiIFwKICAtLWRyeS1ydW49Y2xpZW50IC1vIHlhbWwgfCBrdWJlY3RsIGFwcGx5IC1mIC0KaGVsbSB1cGdyYWRlIC0taW5zdGFsbCB7e2NhY2hlTmFtZX19IGJpdG5hbWkvcmVkaXMgXAogIC0tbmFtZXNwYWNlIHt7azhzTmFtZXNwYWNlfX0gXAogIC0tY3JlYXRlLW5hbWVzcGFjZSBcCiAgLWYga3ViZXJuZXRlcy9oZWxtL3ZhbHVlcy55YW1sCmVjaG8gIuKchSB7e2NhY2hlTmFtZX19IFJlZGlzIGRlcGxveWVkIGluIG5hbWVzcGFjZSB7e2s4c05hbWVzcGFjZX19Ig==" },
+              { "path": "terraform/main.tf",               "contentBase64": "cmVzb3VyY2UgImF3c19lbGFzdGljYWNoZV9yZXBsaWNhdGlvbl9ncm91cCIgImNhY2hlIiB7CiAgcmVwbGljYXRpb25fZ3JvdXBfaWQgICAgICAgPSAie3tjYWNoZU5hbWV9fSIKICBkZXNjcmlwdGlvbiAgICAgICAgICAgICAgICA9ICJSZWRpcyBjYWNoZSBmb3Ige3tjYWNoZU5hbWV9fSIKICBub2RlX3R5cGUgICAgICAgICAgICAgICAgICA9ICJ7e2VsYXN0aWNhY2hlTm9kZVR5cGV9fSIKICBudW1fY2FjaGVfY2x1c3RlcnMgICAgICAgICA9IDEKICBhdXRvbWF0aWNfZmFpbG92ZXJfZW5hYmxlZCA9IGZhbHNlCgogIGVuZ2luZSAgICAgICAgID0gInJlZGlzIgogIGVuZ2luZV92ZXJzaW9uID0gInt7cmVkaXNWZXJzaW9ufX0iCiAgcG9ydCAgICAgICAgICAgPSA2Mzc5CgogIGF0X3Jlc3RfZW5jcnlwdGlvbl9lbmFibGVkID0gdHJ1ZQogIHRyYW5zaXRfZW5jcnlwdGlvbl9lbmFibGVkID0gdHJ1ZQoKICBwYXJhbWV0ZXJfZ3JvdXBfbmFtZSA9IGF3c19lbGFzdGljYWNoZV9wYXJhbWV0ZXJfZ3JvdXAuY2FjaGUubmFtZQoKICB0YWdzID0gewogICAgT3duZXIgICAgID0gInt7b3duZXJ9fSIKICAgIE1hbmFnZWRCeSA9ICJmb3JnZXBvcnRhbCIKICB9Cn0KCnJlc291cmNlICJhd3NfZWxhc3RpY2FjaGVfcGFyYW1ldGVyX2dyb3VwIiAiY2FjaGUiIHsKICBuYW1lICAgPSAie3tjYWNoZU5hbWV9fS1wYXJhbXMiCiAgZmFtaWx5ID0gInJlZGlzNyIKCiAgcGFyYW1ldGVyIHsKICAgIG5hbWUgID0gIm1heG1lbW9yeS1wb2xpY3kiCiAgICB2YWx1ZSA9ICJ7e2V2aWN0aW9uUG9saWN5fX0iCiAgfQp9" }
+            ]
+          }
+        },
+        {
+          "id": "register",
+          "action": "catalog.registerEntity@v1",
+          "input": {
+            "entity": {
+              "kind": "resource",
+              "name": "{{cacheName}}",
+              "ownerRef": "{{owner}}",
+              "lifecycle": "production",
+              "tags": ["cache", "redis"],
+              "annotations": {
+                "forgeportal.dev/db-engine": "redis",
+                "forgeportal.dev/db-destination": "{{destination}}"
+              },
+              "scm": { "provider": "{{provider}}", "owner": "{{ownerGroup}}", "repo": "{{cacheName}}-cache", "defaultBranch": "main" },
+              "spec": { "type": "cache", "description": "Redis {{redisVersion}} cache deployed on {{destination}}" }
+            },
+            "source": { "provider": "{{provider}}", "repoUrl": "{{steps.create-repo.outputs.repoUrl}}", "path": "/" }
+          }
+        }
+      ],
+      "outputs": {
+        "repoUrl":                "{{steps.create-repo.outputs.repoUrl}}",
+        "entityId":               "{{steps.register.outputs.entityId}}",
+        "connectionStringFormat": "redis://:{{password}}@<host>:6379/0"
+      }
+    }
+  }'::jsonb,
+  now()
+)
+ON CONFLICT (name, version) DO UPDATE SET schema = EXCLUDED.schema;
+
+-- -------------------------
+-- Template: create-message-queue (Story 12-3)
+-- -------------------------
+INSERT INTO templates (id, name, version, schema, created_at)
+VALUES (
+  gen_random_uuid(),
+  'create-message-queue',
+  'v1',
+  '{
+    "apiVersion": "forgeportal/v1",
+    "kind": "Template",
+    "metadata": {
+      "name": "create-message-queue",
+      "title": "Create Message Queue (RabbitMQ / Kafka)",
+      "description": "Provision RabbitMQ or Kafka for local-docker, docker-compose, or Kubernetes — then register it in the catalog.",
+      "tags": ["messaging", "rabbitmq", "kafka", "infrastructure"]
+    },
+    "spec": {
+      "parameters": [
+        { "id": "queueName",    "title": "Queue / broker name",  "type": "string",  "required": true,  "pattern": "^[a-z][a-z0-9-]{1,30}$",                                                   "description": "Lowercase letters, numbers, hyphens (e.g. payments-events)" },
+        { "id": "engine",       "title": "Message broker",       "type": "string",  "required": true,  "enum": ["rabbitmq", "kafka"],                                                           "description": "RabbitMQ for task queues / pub-sub; Kafka for high-volume event streaming" },
+        { "id": "destination",  "title": "Where to deploy",      "type": "string",  "required": true,  "enum": ["local-docker", "docker-compose", "kubernetes"],                               "description": "Choose your deployment target" },
+        { "id": "owner",        "title": "Owning team",          "type": "string",  "required": true,  "ui": "team-picker",                                                                     "description": "e.g. team:platform" },
+        { "id": "provider",     "title": "SCM provider",         "type": "string",  "required": true,  "enum": ["github", "gitlab"],                                                           "description": "Where to create the config repo" },
+        { "id": "ownerGroup",   "title": "Org / Group",          "type": "string",  "required": true,                                                                                          "description": "GitHub org or GitLab group" },
+        { "id": "rmqVhost",     "title": "Virtual host",         "type": "string",  "required": false, "default": "/", "dependsOn": { "engine": "rabbitmq" },                                  "description": "RabbitMQ virtual host (default: /)" },
+        { "id": "rmqManagementUI", "title": "Enable management UI", "type": "boolean", "required": false, "default": true, "dependsOn": { "engine": "rabbitmq" },                             "description": "Expose RabbitMQ management console on port 15672" },
+        { "id": "kafkaPartitions", "title": "Default partitions","type": "number",  "required": false, "default": 3, "dependsOn": { "engine": "kafka" } },
+        { "id": "kafkaReplicationFactor", "title": "Replication factor", "type": "number", "required": false, "default": 1, "dependsOn": { "engine": "kafka" },                               "description": "Set to 3 for production HA" },
+        { "id": "kafkaKraft",   "title": "Use KRaft mode (no ZooKeeper)", "type": "boolean", "required": false, "default": true, "dependsOn": { "engine": "kafka" } },
+        { "id": "k8sNamespace", "title": "Kubernetes namespace", "type": "string",  "required": false, "default": "default", "dependsOn": { "destination": "kubernetes" } }
+      ],
+      "steps": [
+        {
+          "id": "create-repo",
+          "action": "scm.createRepo@v1",
+          "input": {
+            "provider": "{{provider}}",
+            "owner": "{{ownerGroup}}",
+            "repo": "{{queueName}}-mq",
+            "visibility": "private",
+            "description": "{{engine}} message broker config — {{queueName}} ({{destination}})"
+          }
+        },
+        {
+          "id": "push-skeleton",
+          "action": "scm.pushSkeleton@v1",
+          "input": {
+            "provider": "{{provider}}",
+            "owner": "{{ownerGroup}}",
+            "repo": "{{queueName}}-mq",
+            "branch": "main",
+            "message": "feat: provision {{queueName}} ({{engine}} on {{destination}})",
+            "files": [
+              { "path": "README.md",                                "contentBase64": "IyB7e3F1ZXVlTmFtZX19Cgo+IHt7ZW5naW5lfX0gbWVzc2FnZSBicm9rZXIg4oCUIGRlcGxveWVkIG9uIHt7ZGVzdGluYXRpb259fQoKIyMgU2V0dXAKCiMjIyBMb2NhbCBEb2NrZXIKYGBgYmFzaApjaG1vZCAreCBsb2NhbC1kb2NrZXIvcnVuLnNoCi4vbG9jYWwtZG9ja2VyL3J1bi5zaApgYGAKCiMjIyBEb2NrZXIgQ29tcG9zZQpgYGBiYXNoCmRvY2tlciBjb21wb3NlIC1mIGRvY2tlci1jb21wb3NlL2RvY2tlci1jb21wb3NlLnltbCB1cCAtZApgYGAKCiMjIyBLdWJlcm5ldGVzIChIZWxtIC8gQml0bmFtaSkKYGBgYmFzaApjaG1vZCAreCBrdWJlcm5ldGVzL2hlbG0vaW5zdGFsbC5zaAouL2t1YmVybmV0ZXMvaGVsbS9pbnN0YWxsLnNoCmBgYAoKIyMgRm9yZ2VQb3J0YWwKVGhpcyByZXNvdXJjZSBpcyB0cmFja2VkIGluIHRoZSBjYXRhbG9nOiBbVmlldyBlbnRpdHldKGh0dHA6Ly9sb2NhbGhvc3Q6MzAwMC9jYXRhbG9nKQ==" },
+              { "path": "entity.yaml",                              "contentBase64": "YXBpVmVyc2lvbjogZm9yZ2Vwb3J0YWwvdjEKa2luZDogcmVzb3VyY2UKbWV0YWRhdGE6CiAgbmFtZToge3txdWV1ZU5hbWV9fQogIG5hbWVzcGFjZTogZGVmYXVsdAogIGFubm90YXRpb25zOgogICAgZm9yZ2Vwb3J0YWwuZGV2L21xLWVuZ2luZTogInt7ZW5naW5lfX0iCnNwZWM6CiAgb3duZXI6IHt7b3duZXJ9fQogIGxpZmVjeWNsZTogcHJvZHVjdGlvbgogIHR5cGU6IG1lc3NhZ2UtcXVldWUKICBkZXNjcmlwdGlvbjogInt7ZW5naW5lfX0gbWVzc2FnZSBicm9rZXIgZGVwbG95ZWQgb24ge3tkZXN0aW5hdGlvbn19IgogIHRhZ3M6CiAgICAtIG1lc3NhZ2UtcXVldWUKICAgIC0gInt7ZW5naW5lfX0i" },
+              { "path": "local-docker/run-rabbitmq.sh",             "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIFN0YXJ0IHt7cXVldWVOYW1lfX0gKFJhYmJpdE1RKQpzZXQgLWV1byBwaXBlZmFpbApQQVNTPSQob3BlbnNzbCByYW5kIC1oZXggMTIpCmRvY2tlciBydW4gLWQgXAogIC0tbmFtZSB7e3F1ZXVlTmFtZX19IFwKICAtZSBSQUJCSVRNUV9ERUZBVUxUX1VTRVI9YWRtaW4gXAogIC1lICJSQUJCSVRNUV9ERUZBVUxUX1BBU1M9JHtQQVNTfSIgXAogIC1lIFJBQkJJVE1RX0RFRkFVTFRfVkhPU1Q9e3tybXFWaG9zdH19IFwKICAtcCA1NjcyOjU2NzIgXAogIC1wIDE1NjcyOjE1NjcyIFwKICByYWJiaXRtcTptYW5hZ2VtZW50LWFscGluZQplY2hvICLinIUge3txdWV1ZU5hbWV9fSBSYWJiaXRNUSBydW5uaW5nIgplY2hvICIgICBBTVFQOiAgICAgICAgYW1xcDovL2FkbWluOiR7UEFTU31AbG9jYWxob3N0OjU2NzIve3tybXFWaG9zdH19IgplY2hvICIgICBNYW5hZ2VtZW50OiAgaHR0cDovL2xvY2FsaG9zdDoxNTY3MiAgKGFkbWluIC8gJHtQQVNTfSkiCmVjaG8gIiAgIFNhdmUgeW91ciBwYXNzd29yZCDigJQgaXQgd29uJ3QgYmUgc2hvd24gYWdhaW4hIg==" },
+              { "path": "local-docker/run-kafka.sh",                "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIFN0YXJ0IHt7cXVldWVOYW1lfX0gKEthZmthIOKAlCBLUmFmdCBtb2RlKQpzZXQgLWV1byBwaXBlZmFpbApDTFVTVEVSX0lEPSQob3BlbnNzbCByYW5kIC1oZXggMTYpCmRvY2tlciBydW4gLWQgXAogIC0tbmFtZSB7e3F1ZXVlTmFtZX19IFwKICAtZSBLQUZLQV9DRkdfTk9ERV9JRD0wIFwKICAtZSBLQUZLQV9DRkdfUFJPQ0VTU19ST0xFUz1jb250cm9sbGVyLGJyb2tlciBcCiAgLWUgS0FGS0FfQ0ZHX0xJU1RFTkVSUz1QTEFJTlRFWFQ6Ly86OTA5MixDT05UUk9MTEVSOi8vOjkwOTMgXAogIC1lIEtBRktBX0NGR19BRFZFUlRJU0VEX0xJU1RFTkVSUz1QTEFJTlRFWFQ6Ly9sb2NhbGhvc3Q6OTA5MiBcCiAgLWUgS0FGS0FfQ0ZHX0xJU1RFTkVSX1NFQ1VSSVRZX1BST1RPQ09MX01BUD1DT05UUk9MTEVSOlBMQUlOVEVYVCxQTEFJTlRFWFQ6UExBSU5URVhUIFwKICAtZSBLQUZLQV9DRkdfQ09OVFJPTExFUl9RVU9SVU1fVk9URVJTPTBAe3txdWV1ZU5hbWV9fTo5MDkzIFwKICAtZSBLQUZLQV9DRkdfQ09OVFJPTExFUl9MSVNURU5FUl9OQU1FUz1DT05UUk9MTEVSIFwKICAtZSBLQUZLQV9DRkdfTlVNX1BBUlRJVElPTlM9e3trYWZrYVBhcnRpdGlvbnN9fSBcCiAgLWUgS0FGS0FfQ0ZHX0RFRkFVTFRfUkVQTElDQVRJT05fRkFDVE9SPXt7a2Fma2FSZXBsaWNhdGlvbkZhY3Rvcn19IFwKICAtZSBLQUZLQV9LUkFGVF9DTFVTVEVSX0lEPSIke0NMVVNURVJfSUR9IiBcCiAgLXAgOTA5Mjo5MDkyIFwKICAtdiB7e3F1ZXVlTmFtZX19X2RhdGE6L2JpdG5hbWkva2Fma2EgXAogIGJpdG5hbWkva2Fma2E6bGF0ZXN0CmVjaG8gIuKchSB7e3F1ZXVlTmFtZX19IEthZmthIChLUmFmdCkgcnVubmluZyBvbiBsb2NhbGhvc3Q6OTA5MiI=" },
+              { "path": "docker-compose/docker-compose-rabbitmq.yml","contentBase64": "c2VydmljZXM6CiAge3txdWV1ZU5hbWV9fToKICAgIGltYWdlOiByYWJiaXRtcTptYW5hZ2VtZW50LWFscGluZQogICAgZW52aXJvbm1lbnQ6CiAgICAgIFJBQkJJVE1RX0RFRkFVTFRfVVNFUjogYWRtaW4KICAgICAgUkFCQklUTVFfREVGQVVMVF9QQVNTOiBjaGFuZ2VtZQogICAgICBSQUJCSVRNUV9ERUZBVUxUX1ZIT1NUOiB7e3JtcVZob3N0fX0KICAgIHBvcnRzOgogICAgICAtICI1NjcyOjU2NzIiCiAgICAgIC0gIjE1NjcyOjE1NjcyIgogICAgdm9sdW1lczoKICAgICAgLSB7e3F1ZXVlTmFtZX19X2RhdGE6L3Zhci9saWIvcmFiYml0bXEKCnZvbHVtZXM6CiAge3txdWV1ZU5hbWV9fV9kYXRhOg==" },
+              { "path": "docker-compose/docker-compose-kafka.yml",   "contentBase64": "c2VydmljZXM6CiAge3txdWV1ZU5hbWV9fToKICAgIGltYWdlOiBiaXRuYW1pL2thZmthOmxhdGVzdAogICAgZW52aXJvbm1lbnQ6CiAgICAgIEtBRktBX0NGR19OT0RFX0lEOiAiMCIKICAgICAgS0FGS0FfQ0ZHX1BST0NFU1NfUk9MRVM6IGNvbnRyb2xsZXIsYnJva2VyCiAgICAgIEtBRktBX0NGR19MSVNURU5FUlM6IFBMQUlOVEVYVDovLzo5MDkyLENPTlRST0xMRVI6Ly86OTA5MwogICAgICBLQUZLQV9DRkdfQURWRVJUSVNFRF9MSVNURU5FUlM6IFBMQUlOVEVYVDovL3t7cXVldWVOYW1lfX06OTA5MgogICAgICBLQUZLQV9DRkdfTElTVEVORVJfU0VDVVJJVFlfUFJPVE9DT0xfTUFQOiBDT05UUk9MTEVSOlBMQUlOVEVYVCxQTEFJTlRFWFQ6UExBSU5URVhUCiAgICAgIEtBRktBX0NGR19DT05UUk9MTEVSX1FVT1JVTV9WT1RFUlM6IDBAe3txdWV1ZU5hbWV9fTo5MDkzCiAgICAgIEtBRktBX0NGR19DT05UUk9MTEVSX0xJU1RFTkVSX05BTUVTOiBDT05UUk9MTEVSCiAgICAgIEtBRktBX0NGR19OVU1fUEFSVElUSU9OUzogInt7a2Fma2FQYXJ0aXRpb25zfX0iCiAgICAgIEtBRktBX0NGR19ERUZBVUxUX1JFUExJQ0FUSU9OX0ZBQ1RPUjogInt7a2Fma2FSZXBsaWNhdGlvbkZhY3Rvcn19IgogICAgICBLQUZLQV9LUkFGVF9DTFVTVEVSX0lEOiBjaGFuZ2VtZS1jbHVzdGVyLWlkCiAgICBwb3J0czoKICAgICAgLSAiOTA5Mjo5MDkyIgogICAgdm9sdW1lczoKICAgICAgLSB7e3F1ZXVlTmFtZX19X2thZmthX2RhdGE6L2JpdG5hbWkva2Fma2EKCnZvbHVtZXM6CiAge3txdWV1ZU5hbWV9fV9rYWZrYV9kYXRhOg==" },
+              { "path": "kubernetes/helm/values-rabbitmq.yaml",      "contentBase64": "IyBCaXRuYW1pIFJhYmJpdE1RIOKAlCB7e3F1ZXVlTmFtZX19CmF1dGg6CiAgdXNlcm5hbWU6IGFkbWluCiAgZXhpc3RpbmdQYXNzd29yZFNlY3JldDoge3txdWV1ZU5hbWV9fS1ybXEtc2VjcmV0CgpwZXJzaXN0ZW5jZToKICBlbmFibGVkOiB0cnVlCiAgc2l6ZTogOEdpCgpyZXNvdXJjZXM6CiAgcmVxdWVzdHM6CiAgICBtZW1vcnk6IDI1Nk1pCiAgICBjcHU6IDEwMG0=" },
+              { "path": "kubernetes/helm/values-kafka.yaml",         "contentBase64": "IyBCaXRuYW1pIEthZmthIChLUmFmdCkg4oCUIHt7cXVldWVOYW1lfX0Ka3JhZnQ6CiAgZW5hYmxlZDogdHJ1ZQoKcmVwbGljYUNvdW50OiB7e2thZmthUmVwbGljYXRpb25GYWN0b3J9fQpkZWZhdWx0UmVwbGljYXRpb25GYWN0b3I6IHt7a2Fma2FSZXBsaWNhdGlvbkZhY3Rvcn19Cm51bVBhcnRpdGlvbnM6IHt7a2Fma2FQYXJ0aXRpb25zfX0KCnBlcnNpc3RlbmNlOgogIGVuYWJsZWQ6IHRydWUKICBzaXplOiA4R2kKCnJlc291cmNlczoKICByZXF1ZXN0czoKICAgIG1lbW9yeTogNTEyTWkKICAgIGNwdTogMjUwbQ==" },
+              { "path": "kubernetes/helm/install.sh",                "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIEluc3RhbGwge3txdWV1ZU5hbWV9fSB2aWEgSGVsbSAoQml0bmFtaSkKc2V0IC1ldW8gcGlwZWZhaWwKRU5HSU5FPXt7ZW5naW5lfX0KaGVsbSByZXBvIGFkZCBiaXRuYW1pIGh0dHBzOi8vY2hhcnRzLmJpdG5hbWkuY29tL2JpdG5hbWkKaGVsbSByZXBvIHVwZGF0ZQoKaWYgWyAiJEVOR0lORSIgPSAicmFiYml0bXEiIF07IHRoZW4KICBrdWJlY3RsIGNyZWF0ZSBzZWNyZXQgZ2VuZXJpYyB7e3F1ZXVlTmFtZX19LXJtcS1zZWNyZXQgXAogICAgLS1uYW1lc3BhY2Uge3trOHNOYW1lc3BhY2V9fSBcCiAgICAtLWZyb20tbGl0ZXJhbD1yYWJiaXRtcS1wYXNzd29yZD0iJChvcGVuc3NsIHJhbmQgLWhleCAxNikiIFwKICAgIC0tZHJ5LXJ1bj1jbGllbnQgLW8geWFtbCB8IGt1YmVjdGwgYXBwbHkgLWYgLQogIGhlbG0gdXBncmFkZSAtLWluc3RhbGwge3txdWV1ZU5hbWV9fSBiaXRuYW1pL3JhYmJpdG1xIFwKICAgIC0tbmFtZXNwYWNlIHt7azhzTmFtZXNwYWNlfX0gXAogICAgLS1jcmVhdGUtbmFtZXNwYWNlIFwKICAgIC1mIGt1YmVybmV0ZXMvaGVsbS92YWx1ZXMtcmFiYml0bXEueWFtbAplbHNlCiAgaGVsbSB1cGdyYWRlIC0taW5zdGFsbCB7e3F1ZXVlTmFtZX19IGJpdG5hbWkva2Fma2EgXAogICAgLS1uYW1lc3BhY2Uge3trOHNOYW1lc3BhY2V9fSBcCiAgICAtLWNyZWF0ZS1uYW1lc3BhY2UgXAogICAgLWYga3ViZXJuZXRlcy9oZWxtL3ZhbHVlcy1rYWZrYS55YW1sCmZpCmVjaG8gIuKchSB7e3F1ZXVlTmFtZX19ICgkRU5HSU5FKSBkZXBsb3llZCBpbiBuYW1lc3BhY2Uge3trOHNOYW1lc3BhY2V9fSI=" }
+            ]
+          }
+        },
+        {
+          "id": "register",
+          "action": "catalog.registerEntity@v1",
+          "input": {
+            "entity": {
+              "kind": "resource",
+              "name": "{{queueName}}",
+              "ownerRef": "{{owner}}",
+              "lifecycle": "production",
+              "tags": ["message-queue", "{{engine}}"],
+              "annotations": {
+                "forgeportal.dev/mq-engine": "{{engine}}"
+              },
+              "scm": { "provider": "{{provider}}", "owner": "{{ownerGroup}}", "repo": "{{queueName}}-mq", "defaultBranch": "main" },
+              "spec": { "type": "message-queue", "description": "{{engine}} message broker deployed on {{destination}}" }
+            },
+            "source": { "provider": "{{provider}}", "repoUrl": "{{steps.create-repo.outputs.repoUrl}}", "path": "/" }
+          }
+        }
+      ],
+      "outputs": {
+        "repoUrl":  "{{steps.create-repo.outputs.repoUrl}}",
+        "entityId": "{{steps.register.outputs.entityId}}"
+      }
+    }
+  }'::jsonb,
+  now()
+)
+ON CONFLICT (name, version) DO UPDATE SET schema = EXCLUDED.schema;
+
 COMMIT;
