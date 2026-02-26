@@ -75,8 +75,8 @@ export class TemplateRunRepository {
   ): Promise<void> {
     await this.pool.query(
       `UPDATE template_runs SET
-         step_outputs = step_outputs || jsonb_build_object($2, jsonb_build_object('outputs', $3::jsonb)),
-         current_step = $2
+         step_outputs = step_outputs || jsonb_build_object($2::text, jsonb_build_object('outputs', $3::jsonb)),
+         current_step = $2::text
        WHERE id = $1`,
       [id, stepId, JSON.stringify(outputs)],
     );

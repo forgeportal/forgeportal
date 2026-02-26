@@ -747,9 +747,8 @@ VALUES (
   }'::jsonb,
   now()
 )
-ON CONFLICT (name) DO UPDATE
+ON CONFLICT (name, applies_to_kind, version) DO UPDATE
   SET definition = EXCLUDED.definition,
-      enabled    = EXCLUDED.enabled,
-      version    = EXCLUDED.version;
+      enabled    = EXCLUDED.enabled;
 
 COMMIT;
