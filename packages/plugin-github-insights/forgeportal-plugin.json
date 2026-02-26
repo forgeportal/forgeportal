@@ -1,0 +1,23 @@
+{
+  "name": "@forgeportal/plugin-github-insights",
+  "version": "1.0.0",
+  "forgeportal": {
+    "engineVersion": "^1.0.0",
+    "type": "fullstack",
+    "capabilities": {
+      "ui": {
+        "entityTabs": ["github-insights-tab"]
+      },
+      "backend": {
+        "routes": ["/api/v1/plugins/github-insights"]
+      }
+    },
+    "config": {
+      "cacheTTLSeconds": {
+        "type":        "number",
+        "description": "Cache TTL for GitHub API responses (default: 300s). Set to 0 to disable caching.",
+        "required":    false
+      }
+    }
+  }
+}

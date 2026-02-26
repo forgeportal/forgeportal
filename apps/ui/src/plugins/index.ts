@@ -13,8 +13,9 @@
 //
 
 import { registerPluginById } from './plugin-registry-ui.js';
-import { registerPlugin as registerKubernetes } from '@forgeportal/plugin-kubernetes/ui';
-import { registerPlugin as registerArgocd }     from '@forgeportal/plugin-argocd/ui';
+import { registerPlugin as registerKubernetes }      from '@forgeportal/plugin-kubernetes/ui';
+import { registerPlugin as registerArgocd }          from '@forgeportal/plugin-argocd/ui';
+import { registerPlugin as registerGitHubInsights }  from '@forgeportal/plugin-github-insights/ui';
 
 // ── Installed plugins ─────────────────────────────────────────────────────────
 
@@ -27,6 +28,11 @@ registerPluginById('kubernetes', registerKubernetes);
 // for entities that have the annotation forgeportal.dev/argocd-app-name.
 // Configure server URL in forgeportal.yaml → plugins.argocd.config.url.
 registerPluginById('argocd', registerArgocd);
+
+// GitHub Insights plugin — shows open PRs, recent commits, contributors, and
+// repository stats for any entity linked to a GitHub repository.
+// Auto-detects GitHub from entity links or forgeportal.dev/github-repo annotation.
+registerPluginById('github-insights', registerGitHubInsights);
 
 // Example (uncomment when @myorg/forge-plugin-pagerduty is installed):
 // import { registerPlugin as registerPagerDuty } from '@myorg/forge-plugin-pagerduty';

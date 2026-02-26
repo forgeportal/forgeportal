@@ -151,6 +151,9 @@ importers:
       '@forgeportal/plugin-argocd':
         specifier: workspace:*
         version: link:../../packages/plugin-argocd
+      '@forgeportal/plugin-github-insights':
+        specifier: workspace:*
+        version: link:../../packages/plugin-github-insights
       '@forgeportal/plugin-kubernetes':
         specifier: workspace:*
         version: link:../../packages/plugin-kubernetes
@@ -435,6 +438,28 @@ importers:
       undici:
         specifier: ^7.22.0
         version: 7.22.0
+    devDependencies:
+      '@tanstack/react-query':
+        specifier: '*'
+        version: 5.90.21(react@19.2.4)
+      '@types/react':
+        specifier: '*'
+        version: 19.2.14
+      fastify:
+        specifier: ^5.3.3
+        version: 5.7.4
+      react:
+        specifier: '*'
+        version: 19.2.4
+      vitest:
+        specifier: '*'
+        version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@22.19.11)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)
+
+  packages/plugin-github-insights:
+    dependencies:
+      '@forgeportal/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
     devDependencies:
       '@tanstack/react-query':
         specifier: '*'
