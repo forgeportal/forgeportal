@@ -8,6 +8,7 @@ import {
   ENTITY_KINDS,
   ENTITY_LIFECYCLES,
   RELATION_TYPES,
+  enqueueScorecardEvalJobs,
 } from '@forgeportal/catalog';
 
 const registerEntityInputSchema = z.object({
@@ -86,6 +87,22 @@ export class RegisterEntityHandler implements ActionHandler {
     }
 
     await ctx.log('info', `Entity ${created ? 'created' : 'updated'}: ${saved.id}`);
+
+    // Auto-trigger scorecard evaluation so results appear immediately after
+    // registration instead of waiting for the cron / manual trigger.
+    try {
+      const jobsEnqueued = await enqueueScorecardEvalJobs(
+        this.pool,
+        saved.id,
+        entity.kind,
+        true,
+      );
+      if (jobsEnqueued > 0) {
+        await ctx.log('info', `Enqueued ${jobsEnqueued} scorecard-eval job(s) for ${saved.id}`);
+      }
+    } catch (err) {
+      await ctx.log('warn', `Failed to enqueue scorecard-eval jobs: ${String(err)}`);
+    }
 
     return {
       status: 'success',

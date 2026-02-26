@@ -19,6 +19,7 @@ export {
 } from './scanner.js';
 export { runRepoScan, type RunScanOptions } from './scan-orchestrator.js';
 export { scanRoutes, type ScanRoutesOptions } from './scan.routes.js';
+export { enqueueScorecardEvalJobs } from './scorecard-trigger.js';
 export {
   webhookRoutes,
   type WebhookRoutesOptions,

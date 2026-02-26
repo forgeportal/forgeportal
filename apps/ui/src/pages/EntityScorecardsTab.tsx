@@ -1,10 +1,12 @@
-import { useState }               from 'react';
-import { useQuery }               from '@tanstack/react-query';
-import { fetchEntityScorecards }  from '../lib/scorecards.api.js';
-import { useCurrentUser }         from '../hooks/useCurrentUser.js';
-import LevelBadge                 from '../components/LevelBadge.js';
-import FixConfirmDialog           from '../components/FixConfirmDialog.js';
-import ErrorMessage               from '../components/ErrorMessage.js';
+import { useState }                            from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchEntityScorecards, triggerEvaluate } from '../lib/scorecards.api.js';
+import { useCurrentUser }                      from '../hooks/useCurrentUser.js';
+import { getCsrfToken }                        from '../lib/csrf.js';
+import LevelBadge                              from '../components/LevelBadge.js';
+import FixConfirmDialog                        from '../components/FixConfirmDialog.js';
+import ErrorMessage                            from '../components/ErrorMessage.js';
+import Spinner                                 from '../components/Spinner.js';
 import type { ScorecardRuleResult, ScorecardEvaluation } from '../lib/types.js';
 
 interface Props { entityId: string }
@@ -132,6 +134,7 @@ function ScorecardBlock({
 }
 
 export default function EntityScorecardsTab({ entityId }: Props) {
+  const queryClient                             = useQueryClient();
   const { data: me }                            = useCurrentUser();
   const { data, isLoading, isError, error }     = useQuery({
     queryKey:  ['entity-scorecards', entityId],
@@ -139,8 +142,35 @@ export default function EntityScorecardsTab({ entityId }: Props) {
     staleTime: 60_000,
   });
 
+  const [evalFeedback, setEvalFeedback] = useState<string | null>(null);
+
+  const evaluateMutation = useMutation({
+    mutationFn: async () => {
+      const csrf = await getCsrfToken();
+      return triggerEvaluate(entityId, csrf);
+    },
+    onSuccess: (res) => {
+      const n = res.data.jobsEnqueued;
+      setEvalFeedback(
+        n > 0
+          ? `Evaluation queued — results will appear within seconds.`
+          : 'No applicable scorecards found.',
+      );
+      setTimeout(() => {
+        setEvalFeedback(null);
+        void queryClient.invalidateQueries({ queryKey: ['entity-scorecards', entityId] });
+      }, 5000);
+    },
+    onError: () => {
+      setEvalFeedback('Failed to queue evaluation. Please try again.');
+      setTimeout(() => setEvalFeedback(null), 4000);
+    },
+  });
+
   const canFix      = me?.user?.role !== 'viewer' && me?.user?.role !== 'team-admin';
+  const canEvaluate = me?.user?.role === 'platform-admin' || me?.user?.role === 'template-admin';
   const evaluations = data?.data.evaluations ?? [];
+  const hasPending  = evaluations.some((ev) => ev.rules.some((r) => r.pass === null));
 
   if (isLoading) {
     return (
@@ -174,6 +204,28 @@ export default function EntityScorecardsTab({ entityId }: Props) {
 
   return (
     <div className="space-y-5">
+      {/* Evaluate Now banner */}
+      {hasPending && canEvaluate && (
+        <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-sm text-amber-800">
+            {evalFeedback ?? 'Some rules have not been evaluated yet.'}
+          </p>
+          {!evalFeedback && (
+            <button
+              onClick={() => evaluateMutation.mutate()}
+              disabled={evaluateMutation.isPending}
+              className="ml-4 inline-flex shrink-0 items-center gap-1.5 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:opacity-60 transition-colors"
+            >
+              {evaluateMutation.isPending && <Spinner size="xs" />}
+              Evaluate now
+            </button>
+          )}
+          {evalFeedback && (
+            <span className="ml-4 shrink-0 text-xs font-medium text-amber-700">✓</span>
+          )}
+        </div>
+      )}
+
       {evaluations.map((ev) => (
         <ScorecardBlock
           key={ev.scorecardId}

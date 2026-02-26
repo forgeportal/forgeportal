@@ -6,6 +6,7 @@ import type { SCMProvider, RepoSummary, RepoRef } from '@forgeportal/scm';
 import { entityYamlSchema, type EntityYaml } from './entity-yaml.schema.js';
 import { EntityRepository } from './entity.repository.js';
 import { SourceRepository } from './source.repository.js';
+import { enqueueScorecardEvalJobs } from './scorecard-trigger.js';
 
 export interface ScanOrgOptions {
   provider: SCMProvider;
@@ -197,6 +198,11 @@ export async function scanOrg(opts: ScanOrgOptions): Promise<ScanResult> {
       });
       if (result.action === 'created') counters.entitiesCreated++;
       else counters.entitiesUpdated++;
+
+      // Auto-trigger scorecard eval after every upsert (deduped).
+      enqueueScorecardEvalJobs(pool, result.entityId, result.entityKind, false).catch((err) => {
+        logger.warn({ err, entityId: result.entityId }, 'Failed to enqueue scorecard-eval after scan');
+      });
     } catch {
       counters.errors++;
     }
