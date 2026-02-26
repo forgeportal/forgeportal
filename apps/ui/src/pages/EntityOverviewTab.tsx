@@ -88,16 +88,18 @@ export default function EntityOverviewTab({ entity, sources }: EntityOverviewTab
   const scm = entity.scm as Record<string, string | null | undefined>;
 
   const sdkEntity: SdkEntity = {
-    id:        entity.id,
-    kind:      entity.kind,
-    namespace: entity.namespace,
-    name:      entity.name,
-    title:     entity.name,
-    tags:      entity.tags,
-    links:     entity.links,
-    owner_ref: entity.owner_ref ?? undefined,
-    lifecycle: entity.lifecycle ?? undefined,
-    spec:      entity.spec,
+    id:          entity.id,
+    kind:        entity.kind,
+    namespace:   entity.namespace,
+    name:        entity.name,
+    title:       entity.name,
+    description: entity.description,
+    tags:        entity.tags,
+    links:       entity.links,
+    annotations: entity.annotations,
+    owner_ref:   entity.owner_ref ?? undefined,
+    lifecycle:   entity.lifecycle ?? undefined,
+    spec:        entity.spec,
   };
 
   const pluginCards = getEntityCards(entity.kind);
@@ -109,6 +111,12 @@ export default function EntityOverviewTab({ entity, sources }: EntityOverviewTab
         <Section title="Metadata">
           <dl className="rounded-lg border border-gray-200 bg-white px-4 py-2 divide-y divide-gray-100">
             <KVRow label="Namespace" value={entity.namespace} />
+            <KVRow
+              label="Description"
+              value={entity.description
+                ? <span className="text-gray-700">{entity.description}</span>
+                : <span className="text-gray-300">—</span>}
+            />
             <KVRow
               label="Lifecycle"
               value={entity.lifecycle

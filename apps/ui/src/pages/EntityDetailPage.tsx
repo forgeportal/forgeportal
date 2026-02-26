@@ -37,7 +37,7 @@ function toSdkEntity(entity: Entity): SdkEntity {
     namespace:   entity.namespace,
     name:        entity.name,
     title:       entity.name,
-    description: undefined,
+    description: entity.description,
     tags:        entity.tags,
     links:       entity.links,
     annotations: entity.annotations,
@@ -155,6 +155,9 @@ export default function EntityDetailPage() {
                 <> · <span className="text-gray-700">{entity.owner_ref}</span></>
               )}
             </p>
+            {entity.description && (
+              <p className="mt-1 text-sm text-gray-500">{entity.description}</p>
+            )}
           </div>
           <div className="text-right text-xs text-gray-400">
             <div>Updated <RelativeTime iso={entity.updated_at} /></div>

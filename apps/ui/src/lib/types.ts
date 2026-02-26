@@ -3,6 +3,7 @@ export interface Entity {
   kind: string;
   namespace: string;
   name: string;
+  description?: string;
   owner_ref: string | null;
   lifecycle: string | null;
   tags: string[];

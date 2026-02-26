@@ -162,9 +162,16 @@ function EntityTable({
                   className="cursor-pointer hover:bg-indigo-50 transition-colors"
                 >
                   <td className="px-4 py-3">
-                    <span className="font-medium text-indigo-600 hover:text-indigo-800 text-sm">
-                      {entity.name}
-                    </span>
+                    <div>
+                      <span className="font-medium text-indigo-600 hover:text-indigo-800 text-sm">
+                        {entity.name}
+                      </span>
+                      {entity.description && (
+                        <p className="mt-0.5 text-xs text-gray-400 line-clamp-1">
+                          {entity.description}
+                        </p>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <Badge label={entity.kind} variant="kind" />
