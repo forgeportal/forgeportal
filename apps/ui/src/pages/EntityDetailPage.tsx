@@ -40,6 +40,7 @@ function toSdkEntity(entity: Entity): SdkEntity {
     description: undefined,
     tags:        entity.tags,
     links:       entity.links,
+    annotations: entity.annotations,
     owner_ref:   entity.owner_ref ?? undefined,
     lifecycle:   entity.lifecycle ?? undefined,
     spec:        entity.spec,

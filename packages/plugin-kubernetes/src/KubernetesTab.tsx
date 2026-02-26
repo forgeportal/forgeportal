@@ -5,18 +5,6 @@ import type { WorkloadsResponse } from './types.js';
 import { PodStatusBadge } from './PodStatusBadge.js';
 import { LogsDrawer } from './LogsDrawer.js';
 
-// ─── Catalog entity shape (annotations not in SDK Entity) ────────────────────
-
-interface FullEntity {
-  id:          string;
-  annotations: Record<string, string> | null;
-  spec?:       Record<string, unknown>;
-}
-
-interface EntityDetailResponse {
-  data: { entity: FullEntity };
-}
-
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function SectionHeader({ title, count }: { title: string; count: number }): React.ReactElement {
@@ -50,21 +38,16 @@ export function KubernetesTab({ entity }: KubernetesTabProps): React.ReactElemen
   const [selectedCluster, setSelectedCluster] = useState<string | undefined>(undefined);
   const [logsTarget, setLogsTarget] = useState<{ podName: string; namespace: string } | null>(null);
 
-  // Fetch full entity to read annotations (SDK Entity type doesn't include them)
-  const {
-    data: entityDetail,
-    isPending: entityLoading,
-  } = useApi<EntityDetailResponse>(`/api/v1/catalog/entities/${entity.id}`);
+  // Annotations are now part of the SDK Entity — no extra API call needed.
+  const annotations       = entity.annotations ?? {};
+  const labelSelector     = annotations['forgeportal.dev/k8s-label-selector'];
+  const clusterAnnotation = annotations['forgeportal.dev/k8s-cluster'];
 
   // Fetch available clusters from plugin backend
   const { data: clustersData } = useApi<ClustersResponse>(
     '/api/v1/plugins/kubernetes/clusters',
   );
   const availableClusters = clustersData?.data ?? [];
-
-  const annotations       = entityDetail?.data.entity.annotations ?? {};
-  const labelSelector     = annotations['forgeportal.dev/k8s-label-selector'];
-  const clusterAnnotation = annotations['forgeportal.dev/k8s-cluster'];
 
   // Active cluster: user pick > entity annotation > first cluster
   const activeCluster =
@@ -97,7 +80,7 @@ export function KubernetesTab({ entity }: KubernetesTabProps): React.ReactElemen
   });
 
   // ── Not configured state
-  if (!entityLoading && !labelSelector) {
+  if (!labelSelector) {
     return (
       <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
         <p className="text-sm font-medium text-gray-700 mb-1">Kubernetes not configured for this entity</p>
@@ -150,7 +133,7 @@ export function KubernetesTab({ entity }: KubernetesTabProps): React.ReactElemen
       </div>
 
       {/* Loading */}
-      {(entityLoading || workloadsLoading) && (
+      {workloadsLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-10 animate-pulse rounded bg-gray-100" />

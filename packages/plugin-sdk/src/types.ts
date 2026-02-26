@@ -11,6 +11,7 @@ export interface Entity {
   description?: string;
   tags?:        string[];
   links?:       Array<{ title: string; url: string }>;
+  annotations?: Record<string, string>;
   owner_ref?:   string;
   lifecycle?:   string;
   spec?:        Record<string, unknown>;
