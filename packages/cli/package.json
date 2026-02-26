@@ -1,7 +1,6 @@
 {
   "name": "@forgeportal/cli",
   "version": "1.2.0",
-  "private": true,
   "type": "module",
   "bin": {
     "forge": "./dist/bin.js"
@@ -14,11 +13,15 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc",
-    "test":  "vitest run",
-    "lint":  "eslint src/",
-    "clean": "rm -rf dist"
+    "build":          "tsc",
+    "prepublishOnly": "pnpm build",
+    "test":           "vitest run",
+    "lint":           "eslint src/",
+    "clean":          "rm -rf dist"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"

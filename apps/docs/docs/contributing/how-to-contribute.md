@@ -36,7 +36,7 @@ Prerequisites: **Node 22+**, **pnpm 9+**, **Docker** (for PostgreSQL via `docker
 ## Git workflow
 
 1. **Fork** the repo (or clone directly if you have access).
-2. **Create a branch** from `main`:
+2. **Create a branch** from `master`:
 
    ```bash
    git checkout -b feat/my-feature
@@ -45,7 +45,7 @@ Prerequisites: **Node 22+**, **pnpm 9+**, **Docker** (for PostgreSQL via `docker
    ```
 
 3. **Make changes**, write tests, and ensure CI passes locally (see below).
-4. **Push** and open a **Pull Request** to `main`.
+4. **Push** and open a **Pull Request** to `master`.
 5. Address review comments; once approved, a maintainer merges.
 
 ### Branch naming
@@ -150,6 +150,32 @@ Plugins live outside the core repo (separate npm packages). To contribute a plug
 2. Develop and test locally as described in [Plugin Development](/docs/plugin-development/overview).
 3. Publish to npm (or a private registry).
 4. If the plugin is a useful community contribution, open an issue or PR to link it from the docs.
+
+---
+
+## CI/CD & required GitHub secrets
+
+ForgePortal uses GitHub Actions for CI, releases, and docs deployment. The following secrets must be configured in the repository settings (`Settings → Secrets and variables → Actions`) before any release workflow can succeed.
+
+| Secret | Required for | How to obtain |
+|--------|-------------|---------------|
+| `NPM_TOKEN` | Publishing packages to npm | Create an **Automation** token at [npmjs.com/settings/tokens](https://www.npmjs.com/settings/tokens) with "Publish" permission |
+| `VPS_HOST` | Deploying docs to VPS | IP address or hostname of your server |
+| `VPS_SSH_KEY` | Deploying docs to VPS | Private SSH key (`-----BEGIN OPENSSH PRIVATE KEY-----`) for `root@<VPS_HOST>` |
+| `TURBO_TOKEN` | Turborepo remote cache (optional) | From [vercel.com/account/tokens](https://vercel.com/account/tokens) |
+| `TURBO_TEAM` | Turborepo remote cache (optional) | Your Vercel team slug |
+
+`GITHUB_TOKEN` is provided automatically by GitHub Actions — no manual setup required.
+
+### Tagging a release
+
+```bash
+# Bump version in package.json files first, then:
+git tag -a v1.2.0 -m "ForgePortal v1.2.0"
+git push origin v1.2.0
+```
+
+Pushing a `v*.*.*` tag triggers the release workflow which: runs CI, builds Docker images, publishes to npm, and creates a GitHub Release with the Helm chart attached.
 
 ---
 
