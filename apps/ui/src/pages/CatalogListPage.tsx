@@ -312,7 +312,7 @@ export default function CatalogListPage() {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Search entities and docs…"
+            placeholder="Filter by name, tags, owner…"
             className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           {isSearchLoading && debouncedQ.length > 0 && (
