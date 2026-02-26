@@ -41,7 +41,7 @@ function FilterBar() {
   const hasFilters = kind || lifecycle || owner || tag;
 
   return (
-    <div className="flex flex-wrap items-end gap-3 mb-4">
+    <div className="flex flex-nowrap sm:flex-wrap items-end gap-3 mb-4 overflow-x-auto pb-1 scrollbar-hide">
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium text-gray-500">Kind</label>
         <select
@@ -119,85 +119,144 @@ function EntityTable({
 }) {
   const navigate = useNavigate();
 
-  if (isError) {
-    const msg = error instanceof Error ? error.message : 'Failed to load entities';
-    return <ErrorMessage message={msg} onRetry={refetch} />;
-  }
+  const empty = !isLoading && entities.length === 0;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            {['Name', 'Kind', 'Owner', 'Lifecycle', 'Tags'].map((col) => (
-              <th
-                key={col}
-                className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+    <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+      {/* ── Mobile card list (< md) ─────────────────────────────────────────── */}
+      <div className="md:hidden divide-y divide-gray-100">
+        {isLoading
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="p-4 animate-pulse space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-24 rounded bg-gray-100" />
+                  <div className="h-5 w-16 rounded-full bg-gray-100" />
+                </div>
+                <div className="h-3 w-48 rounded bg-gray-100" />
+              </div>
+            ))
+          : empty
+            ? (
+              <div className="px-4 py-12 text-center text-sm text-gray-400 flex flex-col items-center gap-2">
+                <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                No entities found
+              </div>
+            )
+            : entities.map((entity) => (
+              <div
+                key={entity.id}
+                onClick={() => navigate(`/catalog/${entity.id}`)}
+                className="p-4 cursor-pointer hover:bg-indigo-50 transition-colors"
               >
-                {col}
-              </th>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-indigo-600 text-sm">{entity.name}</span>
+                      <Badge label={entity.kind} variant="kind" />
+                      {entity.lifecycle && <Badge label={entity.lifecycle} variant="lifecycle" />}
+                    </div>
+                    {entity.description && (
+                      <p className="mt-0.5 text-xs text-gray-400 line-clamp-1">{entity.description}</p>
+                    )}
+                    {entity.owner_ref && (
+                      <p className="mt-0.5 text-xs text-gray-400">{entity.owner_ref}</p>
+                    )}
+                  </div>
+                  <svg className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+                {entity.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {entity.tags.slice(0, 4).map((tag) => (
+                      <Badge key={tag} label={tag} variant="tag" />
+                    ))}
+                    {entity.tags.length > 4 && (
+                      <span className="text-xs text-gray-400">+{entity.tags.length - 4}</span>
+                    )}
+                  </div>
+                )}
+              </div>
             ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
-          {isLoading
-            ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-            : entities.length === 0
-              ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-sm text-gray-400">
-                    <div className="flex flex-col items-center gap-2">
-                      <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                      </svg>
-                      No entities found
-                    </div>
-                  </td>
-                </tr>
-              )
-              : entities.map((entity) => (
-                <tr
-                  key={entity.id}
-                  onClick={() => navigate(`/catalog/${entity.id}`)}
-                  className="cursor-pointer hover:bg-indigo-50 transition-colors"
+      </div>
+
+      {/* ── Desktop table (≥ md) ────────────────────────────────────────────── */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              {['Name', 'Kind', 'Owner', 'Lifecycle', 'Tags'].map((col) => (
+                <th
+                  key={col}
+                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap"
                 >
-                  <td className="px-4 py-3">
-                    <div>
-                      <span className="font-medium text-indigo-600 hover:text-indigo-800 text-sm">
-                        {entity.name}
-                      </span>
-                      {entity.description && (
-                        <p className="mt-0.5 text-xs text-gray-400 line-clamp-1">
-                          {entity.description}
-                        </p>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge label={entity.kind} variant="kind" />
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {entity.owner_ref ?? <span className="text-gray-300">—</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    {entity.lifecycle
-                      ? <Badge label={entity.lifecycle} variant="lifecycle" />
-                      : <span className="text-gray-300 text-sm">—</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {entity.tags.slice(0, 3).map((tag) => (
-                        <Badge key={tag} label={tag} variant="tag" />
-                      ))}
-                      {entity.tags.length > 3 && (
-                        <span className="text-xs text-gray-400">+{entity.tags.length - 3}</span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                  {col}
+                </th>
               ))}
-        </tbody>
-      </table>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 bg-white">
+            {isLoading
+              ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+              : empty
+                ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-sm text-gray-400">
+                      <div className="flex flex-col items-center gap-2">
+                        <svg className="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                        No entities found
+                      </div>
+                    </td>
+                  </tr>
+                )
+                : entities.map((entity) => (
+                  <tr
+                    key={entity.id}
+                    onClick={() => navigate(`/catalog/${entity.id}`)}
+                    className="cursor-pointer hover:bg-indigo-50 transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <div>
+                        <span className="font-medium text-indigo-600 hover:text-indigo-800 text-sm">
+                          {entity.name}
+                        </span>
+                        {entity.description && (
+                          <p className="mt-0.5 text-xs text-gray-400 line-clamp-1">
+                            {entity.description}
+                          </p>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge label={entity.kind} variant="kind" />
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                      {entity.owner_ref ?? <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      {entity.lifecycle
+                        ? <Badge label={entity.lifecycle} variant="lifecycle" />
+                        : <span className="text-gray-300 text-sm">—</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {entity.tags.slice(0, 3).map((tag) => (
+                          <Badge key={tag} label={tag} variant="tag" />
+                        ))}
+                        {entity.tags.length > 3 && (
+                          <span className="text-xs text-gray-400">+{entity.tags.length - 3}</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

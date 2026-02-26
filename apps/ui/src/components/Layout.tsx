@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useCurrentUser } from '../hooks/useCurrentUser.js';
 import { usePlugins }     from '../plugins/PluginContext.js';
 import { useSearch }      from '../hooks/useSearch.js';
@@ -8,11 +8,12 @@ import Spinner            from './Spinner.js';
 
 // ─── NavItem ─────────────────────────────────────────────────────────────────
 
-function NavItem({ to, label }: { to: string; label: string }) {
+function NavItem({ to, label, onClick }: { to: string; label: string; onClick?: () => void }) {
   return (
     <NavLink
       to={to}
       end={to === '/'}
+      onClick={onClick}
       className={({ isActive }) =>
         `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
           isActive
@@ -26,9 +27,29 @@ function NavItem({ to, label }: { to: string; label: string }) {
   );
 }
 
+// Mobile-specific nav item (full-width, larger touch target)
+function MobileNavItem({ to, label, onClick }: { to: string; label: string; onClick: () => void }) {
+  return (
+    <NavLink
+      to={to}
+      end={to === '/'}
+      onClick={onClick}
+      className={({ isActive }) =>
+        `block w-full px-4 py-3 text-sm font-medium rounded-md transition-colors ${
+          isActive
+            ? 'bg-indigo-700 text-white'
+            : 'text-indigo-100 hover:bg-indigo-700 hover:text-white'
+        }`
+      }
+    >
+      {label}
+    </NavLink>
+  );
+}
+
 // ─── GlobalSearch ─────────────────────────────────────────────────────────────
 
-function GlobalSearch() {
+function GlobalSearch({ onNavigate }: { onNavigate?: () => void }) {
   const [query,      setQuery]      = useState('');
   const [debouncedQ, setDebouncedQ] = useState('');
   const [open,       setOpen]       = useState(false);
@@ -37,6 +58,14 @@ function GlobalSearch() {
   const inputRef     = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate     = useNavigate();
+  const location     = useLocation();
+
+  // Close on route change
+  useEffect(() => {
+    setOpen(false);
+    setQuery('');
+    setDebouncedQ('');
+  }, [location.pathname]);
 
   // Cmd+K / Ctrl+K + Escape
   useEffect(() => {
@@ -63,7 +92,6 @@ function GlobalSearch() {
     return () => clearTimeout(t);
   }, [query]);
 
-  // Reset active index when results change
   useEffect(() => { setActiveIdx(-1); }, [debouncedQ]);
 
   // Click outside to close
@@ -80,7 +108,6 @@ function GlobalSearch() {
   const searchQ = debouncedQ.length >= 2 ? debouncedQ : '';
   const { data, isLoading } = useSearch(searchQ);
   const results = data?.data.slice(0, 6) ?? [];
-
   const shouldShow = open && debouncedQ.length >= 2;
 
   const selectResult = useCallback((url: string) => {
@@ -89,25 +116,20 @@ function GlobalSearch() {
     setQuery('');
     setDebouncedQ('');
     inputRef.current?.blur();
-  }, [navigate]);
+    onNavigate?.();
+  }, [navigate, onNavigate]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!shouldShow) return;
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setActiveIdx((i) => Math.min(i + 1, results.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setActiveIdx((i) => Math.max(i - 1, 0));
-    } else if (e.key === 'Enter') {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx((i) => Math.min(i + 1, results.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx((i) => Math.max(i - 1, 0)); }
+    else if (e.key === 'Enter') {
       e.preventDefault();
       const target = results[activeIdx] ?? results[0];
       if (target) selectResult(target.url);
     }
   };
 
-  // Truncate excerpt to 60 chars
   const excerpt = (html: string) => {
     const plain = html.replace(/<[^>]+>/g, '');
     return plain.length > 60 ? plain.slice(0, 57) + '…' : plain;
@@ -115,7 +137,6 @@ function GlobalSearch() {
 
   return (
     <div ref={containerRef} className="relative">
-      {/* Input */}
       <div className="relative">
         <input
           ref={inputRef}
@@ -129,8 +150,8 @@ function GlobalSearch() {
           aria-expanded={shouldShow}
           aria-haspopup="listbox"
           aria-autocomplete="list"
-          className={`bg-indigo-700/50 border border-indigo-500 text-white placeholder-indigo-300 rounded-md px-3 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-300 transition-all duration-200 ${
-            open && query ? 'w-72' : 'w-48'
+          className={`bg-indigo-700/50 border border-indigo-500 text-white placeholder-indigo-300 rounded-md px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-300 transition-all duration-200 ${
+            open && query ? 'w-64 sm:w-72' : 'w-40 sm:w-48'
           }`}
         />
         {isLoading && (
@@ -140,12 +161,11 @@ function GlobalSearch() {
         )}
       </div>
 
-      {/* Dropdown */}
       {shouldShow && (
         <div
           role="listbox"
           aria-label="Search results"
-          className="absolute right-0 top-full mt-2 w-96 rounded-lg border border-gray-200 bg-white shadow-xl z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-lg border border-gray-200 bg-white shadow-xl z-50 overflow-hidden"
         >
           {isLoading ? (
             <div className="px-4 py-3 text-sm text-gray-400">Searching…</div>
@@ -166,10 +186,7 @@ function GlobalSearch() {
                 } ${i < results.length - 1 ? 'border-b border-gray-100' : ''}`}
               >
                 <span className="shrink-0 mt-0.5">
-                  <Badge
-                    label={item.type}
-                    variant={item.type === 'entity' ? 'kind' : 'tag'}
-                  />
+                  <Badge label={item.type} variant={item.type === 'entity' ? 'kind' : 'tag'} />
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
@@ -192,56 +209,103 @@ export default function Layout() {
   const { data: meData } = useCurrentUser();
   const { getRoutes }    = usePlugins();
   const user             = meData?.user;
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const pluginNavRoutes = getRoutes().filter((r) => r.navLabel);
+
+  const navLinks = [
+    { to: '/',          label: 'Home' },
+    { to: '/catalog',   label: 'Catalog' },
+    { to: '/templates', label: 'Templates' },
+    { to: '/actions',   label: 'Actions' },
+    { to: '/scorecards', label: 'Scorecards' },
+    ...(user?.role === 'platform-admin' ? [{ to: '/admin', label: 'Admin' }] : []),
+    ...pluginNavRoutes.map((r) => ({ to: r.path, label: r.navLabel! })),
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-indigo-600 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between gap-4">
-            <div className="flex items-center gap-6 min-w-0">
+          <div className="flex h-14 items-center justify-between gap-3">
+
+            {/* Logo + desktop nav */}
+            <div className="flex items-center gap-4 min-w-0 flex-1">
               <span className="text-lg font-bold text-white tracking-tight shrink-0">
                 ⚡ ForgePortal
               </span>
-              <div className="flex items-center gap-1">
-                <NavItem to="/"          label="Home" />
-                <NavItem to="/catalog"   label="Catalog" />
-                <NavItem to="/templates" label="Templates" />
-                <NavItem to="/actions"   label="Actions" />
-                <NavItem to="/scorecards" label="Scorecards" />
-                {user?.role === 'platform-admin' && (
-                  <NavItem to="/admin" label="Admin" />
-                )}
-                {pluginNavRoutes.map((route) => (
-                  <NavItem
-                    key={route.path}
-                    to={route.path}
-                    label={route.navLabel!}
-                  />
+
+              {/* Desktop nav — hidden on mobile */}
+              <div className="hidden md:flex items-center gap-1 overflow-x-auto scrollbar-hide">
+                {navLinks.map((link) => (
+                  <NavItem key={link.to} to={link.to} label={link.label} />
                 ))}
               </div>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0">
-              <GlobalSearch />
+            {/* Right side: search + avatar + hamburger */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Search — hidden on smallest screens to save space */}
+              <div className="hidden sm:block">
+                <GlobalSearch onNavigate={() => setMobileOpen(false)} />
+              </div>
 
+              {/* User avatar */}
               {user ? (
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-300 text-xs font-semibold text-indigo-800">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-300 text-xs font-semibold text-indigo-800 shrink-0">
                     {(user.name ?? user.email ?? '?')[0]?.toUpperCase()}
                   </div>
-                  <span className="text-sm text-indigo-100 hidden sm:block">
+                  <span className="text-sm text-indigo-100 hidden lg:block">
                     {user.name ?? user.email}
                   </span>
                 </div>
               ) : (
                 <div className="h-7 w-7 rounded-full bg-indigo-400 animate-pulse" />
               )}
+
+              {/* Hamburger button — mobile only */}
+              <button
+                onClick={() => setMobileOpen((v) => !v)}
+                className="md:hidden flex items-center justify-center h-9 w-9 rounded-md text-indigo-100 hover:bg-indigo-700 transition-colors"
+                aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={mobileOpen}
+              >
+                {mobileOpen ? (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile drawer */}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-indigo-700 bg-indigo-600">
+            <div className="px-4 py-3 space-y-1">
+              {/* Mobile search */}
+              <div className="pb-2">
+                <GlobalSearch onNavigate={() => setMobileOpen(false)} />
+              </div>
+              {navLinks.map((link) => (
+                <MobileNavItem
+                  key={link.to}
+                  to={link.to}
+                  label={link.label}
+                  onClick={() => setMobileOpen(false)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
+
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <Outlet />
       </main>

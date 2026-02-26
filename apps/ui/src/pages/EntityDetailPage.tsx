@@ -175,7 +175,7 @@ export default function EntityDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white px-4 py-4 sm:px-6 sm:py-6 shadow-sm">
         <Tabs tabs={tabs} defaultTab="overview" />
       </div>
     </div>

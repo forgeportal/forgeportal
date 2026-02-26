@@ -267,7 +267,8 @@ export default function HomePage() {
 
         {/* Quick Actions */}
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider px-1">Quick Actions</h2>
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Quick Actions</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
           <QuickAction
             to="/catalog"
             label="Browse Catalog"
@@ -304,6 +305,7 @@ export default function HomePage() {
               </svg>
             }
           />
+          </div>
         </div>
       </div>
     </div>
