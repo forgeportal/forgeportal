@@ -246,6 +246,10 @@ Internal design specs (PRD, architecture, threat model) are in [`docs/`](docs/).
 
 ---
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a full list of changes per release, or browse [GitHub Releases](https://github.com/forgeportal/forgeportal/releases).
+
 ## Security
 
 Please report security issues privately — see [SECURITY.md](SECURITY.md).

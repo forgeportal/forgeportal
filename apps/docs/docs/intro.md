@@ -58,4 +58,10 @@ love and drew inspiration from), ForgePortal is designed to be:
   → [Deployment Guide](/docs/deployment/docker-compose)
 
   </div>
+  <div className="col col--6">
+
+  ### I want to see available plugins
+  → [Available Plugins](/docs/plugins)
+
+  </div>
 </div>
