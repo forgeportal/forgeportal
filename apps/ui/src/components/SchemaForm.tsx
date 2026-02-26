@@ -27,6 +27,17 @@ const ENUM_LABELS: Record<string, string> = {
   java:            'Java',
   go:              'Go',
   rust:            'Rust',
+  postgres:        'PostgreSQL',
+  mysql:           'MySQL',
+  'local-docker':  'Local Docker',
+  'docker-compose': 'Docker Compose',
+  kubernetes:      'Kubernetes (Helm)',
+  'aws-rds':       'AWS RDS (Terraform)',
+  'db.t3.micro':   'db.t3.micro (2 vCPU, 1 GB)',
+  'db.t3.small':   'db.t3.small (2 vCPU, 2 GB)',
+  'db.t3.medium':  'db.t3.medium (2 vCPU, 4 GB)',
+  'db.m5.large':   'db.m5.large (2 vCPU, 8 GB)',
+  'db.m5.xlarge':  'db.m5.xlarge (4 vCPU, 16 GB)',
 };
 
 function humanLabel(value: string): string {
@@ -120,6 +131,11 @@ interface SchemaFormProps {
   submitLabel?: string;
 }
 
+function isVisible(param: TemplateParameter, values: Record<string, unknown>): boolean {
+  if (!param.dependsOn) return true;
+  return Object.entries(param.dependsOn).every(([fieldId, expected]) => values[fieldId] === expected);
+}
+
 export default function SchemaForm({
   parameters,
   onSubmit,
@@ -157,7 +173,7 @@ export default function SchemaForm({
     const errors: Record<string, string> = {};
     const allTouched: Record<string, boolean> = {};
 
-    for (const param of parameters) {
+    for (const param of parameters.filter((p) => isVisible(p, values))) {
       allTouched[param.id] = true;
       const err = validateField(param, values[param.id]);
       if (err) errors[param.id] = err;
@@ -174,8 +190,9 @@ export default function SchemaForm({
     onSubmit(values);
   }
 
-  const requiredCount  = parameters.filter((p) => p.required).length;
-  const filledRequired = parameters
+  const visibleParams     = parameters.filter((p) => isVisible(p, values));
+  const requiredCount     = visibleParams.filter((p) => p.required).length;
+  const filledRequired    = visibleParams
     .filter((p) => p.required)
     .filter((p) => {
       const v = values[p.id];
@@ -187,7 +204,7 @@ export default function SchemaForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {parameters.map((param) => {
+      {visibleParams.map((param) => {
         const isTouched = Boolean(touched[param.id]);
         const error     = fieldErrors[param.id];
         return (

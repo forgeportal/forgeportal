@@ -587,4 +587,169 @@ VALUES (
 )
 ON CONFLICT (name, version) DO UPDATE SET schema = EXCLUDED.schema;
 
+-- -------------------------
+-- Template: Create Database (multi-destination wizard)
+-- Supports: local-docker, docker-compose, kubernetes, aws-rds
+-- -------------------------
+INSERT INTO templates (id, name, version, schema, created_at)
+VALUES (
+  gen_random_uuid(),
+  'create-database',
+  'v1',
+  '{
+    "apiVersion": "forgeportal/v1",
+    "kind": "Template",
+    "metadata": {
+      "name": "create-database",
+      "title": "Create Database",
+      "description": "Provision a PostgreSQL or MySQL database for local-docker, Kubernetes, AWS RDS, or docker-compose — then register it in the catalog.",
+      "tags": ["database", "infrastructure", "postgres", "mysql"]
+    },
+    "spec": {
+      "parameters": [
+        { "id": "engine",      "title": "Database engine",        "type": "string",  "required": true,  "enum": ["postgres", "mysql"],                                                                          "description": "The database engine to provision" },
+        { "id": "dbName",      "title": "Database name",          "type": "string",  "required": true,  "pattern": "^[a-z][a-z0-9_]{1,30}$",                                                                   "description": "Lowercase, letters/numbers/underscores (e.g. payments_db)" },
+        { "id": "destination", "title": "Where to deploy",        "type": "string",  "required": true,  "enum": ["local-docker", "docker-compose", "kubernetes", "aws-rds"],                                    "description": "Choose your deployment target" },
+        { "id": "owner",       "title": "Owning team",            "type": "string",  "required": true,  "ui": "team-picker",                                                                                    "description": "e.g. team:platform" },
+        { "id": "version",     "title": "Engine version",         "type": "string",  "required": false, "default": "16",                                                                                        "description": "PostgreSQL: 15/16. MySQL: 8.0/8.4" },
+        { "id": "provider",    "title": "SCM provider",           "type": "string",  "required": true,  "enum": ["github", "gitlab"],                                                                           "description": "Where to create the config repo" },
+        { "id": "ownerGroup",  "title": "Org / Group",            "type": "string",  "required": true,                                                                                                          "description": "GitHub org or GitLab group" },
+        { "id": "dockerPort",  "title": "Local port",             "type": "number",  "required": false, "default": 5432,   "dependsOn": { "destination": "local-docker" },                                     "description": "Host port to bind (local-docker only)" },
+        { "id": "composeProvider", "title": "SCM provider (compose repo)", "type": "string", "required": false, "enum": ["github", "gitlab"], "dependsOn": { "destination": "docker-compose" } },
+        { "id": "composeRepo", "title": "Repository (org/repo)",  "type": "string",  "required": false, "dependsOn": { "destination": "docker-compose" },                                                       "description": "Repo containing your docker-compose.yml" },
+        { "id": "k8sNamespace","title": "Kubernetes namespace",   "type": "string",  "required": false, "default": "default", "dependsOn": { "destination": "kubernetes" } },
+        { "id": "k8sStorageClass", "title": "Storage class",      "type": "string",  "required": false, "default": "standard", "dependsOn": { "destination": "kubernetes" } },
+        { "id": "k8sPvcSize",  "title": "PVC size",               "type": "string",  "required": false, "default": "10Gi", "dependsOn": { "destination": "kubernetes" } },
+        { "id": "k8sReplicas", "title": "Replicas (HA)",          "type": "number",  "required": false, "default": 1,      "dependsOn": { "destination": "kubernetes" },                                        "description": "Set to 3 for high-availability with read replicas" },
+        { "id": "rdsInstanceClass", "title": "RDS instance class","type": "string",  "required": false, "default": "db.t3.micro", "enum": ["db.t3.micro","db.t3.small","db.t3.medium","db.m5.large","db.m5.xlarge"], "dependsOn": { "destination": "aws-rds" } },
+        { "id": "rdsMultiAz",  "title": "Multi-AZ deployment",    "type": "boolean", "required": false, "default": false,  "dependsOn": { "destination": "aws-rds" } },
+        { "id": "rdsBackupRetention", "title": "Backup retention (days)", "type": "number", "required": false, "default": 7, "dependsOn": { "destination": "aws-rds" } },
+        { "id": "infraProvider","title": "SCM provider (infra repo)", "type": "string", "required": false, "enum": ["github", "gitlab"], "dependsOn": { "destination": "aws-rds" } },
+        { "id": "infraRepo",   "title": "Infrastructure repo (org/repo)", "type": "string", "required": false, "dependsOn": { "destination": "aws-rds" }, "description": "Repo where Terraform modules live" }
+      ],
+      "steps": [
+        {
+          "id": "create-repo",
+          "action": "scm.createRepo@v1",
+          "input": {
+            "provider": "{{provider}}",
+            "owner": "{{ownerGroup}}",
+            "repo": "{{dbName}}-db",
+            "visibility": "private",
+            "description": "{{engine}} database config — {{dbName}} ({{destination}})"
+          }
+        },
+        {
+          "id": "push-skeleton",
+          "action": "scm.pushSkeleton@v1",
+          "input": {
+            "provider": "{{provider}}",
+            "owner": "{{ownerGroup}}",
+            "repo": "{{dbName}}-db",
+            "branch": "main",
+            "message": "feat: provision {{dbName}} ({{engine}} on {{destination}})",
+            "files": [
+              { "path": "README.md",                           "contentBase64": "IyB7e2RiTmFtZX19Cgo+IHt7ZW5naW5lfX0ge3t2ZXJzaW9ufX0gZGF0YWJhc2Ug4oCUIGRlcGxveWVkIG9uIHt7ZGVzdGluYXRpb259fQoKIyMgU2V0dXAKCkNob29zZSB0aGUgc2VjdGlvbiBtYXRjaGluZyB5b3VyIGRlcGxveW1lbnQgdGFyZ2V0LgoKIyMjIExvY2FsIERvY2tlcgoKYGBgYmFzaApjaG1vZCAreCBsb2NhbC1kb2NrZXIvcnVuLnNoCi4vbG9jYWwtZG9ja2VyL3J1bi5zaApgYGAKCiMjIyBLdWJlcm5ldGVzIChIZWxtIC8gQml0bmFtaSkKCmBgYGJhc2gKY2htb2QgK3gga3ViZXJuZXRlcy9oZWxtL2luc3RhbGwuc2gKLi9rdWJlcm5ldGVzL2hlbG0vaW5zdGFsbC5zaApgYGAKCiMjIyBBV1MgUkRTIChUZXJyYWZvcm0pCgpgYGBiYXNoCmNkIHRlcnJhZm9ybQp0ZXJyYWZvcm0gaW5pdCAmJiB0ZXJyYWZvcm0gcGxhbiAmJiB0ZXJyYWZvcm0gYXBwbHkKYGBgCgojIyMgRG9ja2VyIENvbXBvc2UKClNlZSB0aGUgYGRvY2tlci1jb21wb3NlYCBzbmlwcGV0IGJlbG93IGFuZCBhZGQgaXQgdG8geW91ciBleGlzdGluZyBgZG9ja2VyLWNvbXBvc2UueW1sYC4KCiMjIENvbm5lY3Rpb24KCmBgYApwb3N0Z3JlczovL3t7ZGJOYW1lfX1fdXNlcjo8cGFzc3dvcmQ+QDxob3N0Pjo1NDMyL3t7ZGJOYW1lfX0KYGBgCgojIyBGb3JnZVBvcnRhbAoKVGhpcyByZXNvdXJjZSBpcyB0cmFja2VkIGluIHRoZSBjYXRhbG9nOiBbVmlldyBlbnRpdHldKGh0dHA6Ly9sb2NhbGhvc3Q6MzAwMC9jYXRhbG9nKQ==" },
+              { "path": "entity.yaml",                         "contentBase64": "YXBpVmVyc2lvbjogZm9yZ2Vwb3J0YWwvdjEKa2luZDogcmVzb3VyY2UKbWV0YWRhdGE6CiAgbmFtZToge3tkYk5hbWV9fQogIG5hbWVzcGFjZTogZGVmYXVsdAogIGFubm90YXRpb25zOgogICAgZm9yZ2Vwb3J0YWwuZGV2L2RiLWVuZ2luZTogInt7ZW5naW5lfX0iCiAgICBmb3JnZXBvcnRhbC5kZXYvZGItZGVzdGluYXRpb246ICJ7e2Rlc3RpbmF0aW9ufX0iCnNwZWM6CiAgb3duZXI6IHt7b3duZXJ9fQogIGxpZmVjeWNsZTogcHJvZHVjdGlvbgogIHR5cGU6IGRhdGFiYXNlCiAgZGVzY3JpcHRpb246ICJ7e2VuZ2luZX19IHt7dmVyc2lvbn19IGRhdGFiYXNlIGRlcGxveWVkIG9uIHt7ZGVzdGluYXRpb259fSIKICB0YWdzOgogICAgLSBkYXRhYmFzZQogICAgLSAie3tlbmdpbmV9fSI=" },
+              { "path": "local-docker/run-postgres.sh",        "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIFN0YXJ0IHt7ZGJOYW1lfX0gKFBvc3RncmVTUUwge3t2ZXJzaW9ufX0pCnNldCAtZXVvIHBpcGVmYWlsClBBU1NXT1JEPSQob3BlbnNzbCByYW5kIC1oZXggMTYpCmRvY2tlciBydW4gLWQgXAogIC0tbmFtZSB7e2RiTmFtZX19IFwKICAtZSBQT1NUR1JFU19EQj17e2RiTmFtZX19IFwKICAtZSBQT1NUR1JFU19VU0VSPXt7ZGJOYW1lfX1fdXNlciBcCiAgLWUgUE9TVEdSRVNfUEFTU1dPUkQ9IiR7UEFTU1dPUkR9IiBcCiAgLXAge3tkb2NrZXJQb3J0fX06NTQzMiBcCiAgLXYge3tkYk5hbWV9fV9kYXRhOi92YXIvbGliL3Bvc3RncmVzcWwvZGF0YSBcCiAgcG9zdGdyZXM6e3t2ZXJzaW9ufX0tYWxwaW5lCmVjaG8gIuKchSB7e2RiTmFtZX19IHJ1bm5pbmcgb24gbG9jYWxob3N0Ont7ZG9ja2VyUG9ydH19IgplY2hvICIgICBDb25uZWN0aW9uOiBwb3N0Z3JlczovL3t7ZGJOYW1lfX1fdXNlcjoke1BBU1NXT1JEfUBsb2NhbGhvc3Q6e3tkb2NrZXJQb3J0fX0ve3tkYk5hbWV9fSIKZWNobyAiICAgU2F2ZSB5b3VyIHBhc3N3b3JkIOKAlCBpdCB3b24ndCBiZSBzaG93biBhZ2FpbiEi" },
+              { "path": "local-docker/run-mysql.sh",           "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIFN0YXJ0IHt7ZGJOYW1lfX0gKE15U1FMIHt7dmVyc2lvbn19KQpzZXQgLWV1byBwaXBlZmFpbApQQVNTV09SRD0kKG9wZW5zc2wgcmFuZCAtaGV4IDE2KQpkb2NrZXIgcnVuIC1kIFwKICAtLW5hbWUge3tkYk5hbWV9fSBcCiAgLWUgTVlTUUxfREFUQUJBU0U9e3tkYk5hbWV9fSBcCiAgLWUgTVlTUUxfVVNFUj17e2RiTmFtZX19X3VzZXIgXAogIC1lIE1ZU1FMX1BBU1NXT1JEPSIke1BBU1NXT1JEfSIgXAogIC1lIE1ZU1FMX1JBTkRPTV9ST09UX1BBU1NXT1JEPXllcyBcCiAgLXAge3tkb2NrZXJQb3J0fX06MzMwNiBcCiAgLXYge3tkYk5hbWV9fV9kYXRhOi92YXIvbGliL215c3FsIFwKICBteXNxbDp7e3ZlcnNpb259fQplY2hvICLinIUge3tkYk5hbWV9fSBNeVNRTCBydW5uaW5nIG9uIGxvY2FsaG9zdDp7e2RvY2tlclBvcnR9fSIKZWNobyAiICAgQ29ubmVjdGlvbjogbXlzcWw6Ly97e2RiTmFtZX19X3VzZXI6JHtQQVNTV09SRH1AbG9jYWxob3N0Ont7ZG9ja2VyUG9ydH19L3t7ZGJOYW1lfX0i" },
+              { "path": "kubernetes/helm/values-postgres.yaml", "contentBase64": "Z2xvYmFsOgogIHBvc3RncmVzcWw6CiAgICBhdXRoOgogICAgICBkYXRhYmFzZToge3tkYk5hbWV9fQogICAgICB1c2VybmFtZToge3tkYk5hbWV9fV91c2VyCiAgICAgIGV4aXN0aW5nU2VjcmV0OiB7e2RiTmFtZX19LXNlY3JldAoKcHJpbWFyeToKICBwZXJzaXN0ZW5jZToKICAgIGVuYWJsZWQ6IHRydWUKICAgIHN0b3JhZ2VDbGFzczoge3trOHNTdG9yYWdlQ2xhc3N9fQogICAgc2l6ZToge3trOHNQdmNTaXplfX0KICByZXNvdXJjZXM6CiAgICByZXF1ZXN0czoKICAgICAgbWVtb3J5OiAyNTZNaQogICAgICBjcHU6IDI1MG0=" },
+              { "path": "kubernetes/helm/values-mysql.yaml",   "contentBase64": "YXV0aDoKICBkYXRhYmFzZToge3tkYk5hbWV9fQogIHVzZXJuYW1lOiB7e2RiTmFtZX19X3VzZXIKICBleGlzdGluZ1NlY3JldDoge3tkYk5hbWV9fS1zZWNyZXQKCnByaW1hcnk6CiAgcGVyc2lzdGVuY2U6CiAgICBlbmFibGVkOiB0cnVlCiAgICBzdG9yYWdlQ2xhc3M6IHt7azhzU3RvcmFnZUNsYXNzfX0KICAgIHNpemU6IHt7azhzUHZjU2l6ZX19CiAgcmVzb3VyY2VzOgogICAgcmVxdWVzdHM6CiAgICAgIG1lbW9yeTogMjU2TWkKICAgICAgY3B1OiAyNTBt" },
+              { "path": "kubernetes/helm/install.sh",          "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIEluc3RhbGwge3tkYk5hbWV9fSB2aWEgSGVsbSAoQml0bmFtaSkKc2V0IC1ldW8gcGlwZWZhaWwKRU5HSU5FPXt7ZW5naW5lfX0KQ0hBUlQ9ImJpdG5hbWkvJHtFTkdJTkV9IgpoZWxtIHJlcG8gYWRkIGJpdG5hbWkgaHR0cHM6Ly9jaGFydHMuYml0bmFtaS5jb20vYml0bmFtaQpoZWxtIHJlcG8gdXBkYXRlCmt1YmVjdGwgY3JlYXRlIHNlY3JldCBnZW5lcmljIHt7ZGJOYW1lfX0tc2VjcmV0IFwKICAtLW5hbWVzcGFjZSB7e2s4c05hbWVzcGFjZX19IFwKICAtLWZyb20tbGl0ZXJhbD1wYXNzd29yZD0iJChvcGVuc3NsIHJhbmQgLWhleCAxNikiIFwKICAtLWRyeS1ydW49Y2xpZW50IC1vIHlhbWwgfCBrdWJlY3RsIGFwcGx5IC1mIC0KaGVsbSB1cGdyYWRlIC0taW5zdGFsbCB7e2RiTmFtZX19ICIke0NIQVJUfSIgXAogIC0tbmFtZXNwYWNlIHt7azhzTmFtZXNwYWNlfX0gXAogIC0tY3JlYXRlLW5hbWVzcGFjZSBcCiAgLWYgImt1YmVybmV0ZXMvaGVsbS92YWx1ZXMtJHtFTkdJTkV9LnlhbWwiCmVjaG8gIuKchSB7e2RiTmFtZX19IGRlcGxveWVkIGluIG5hbWVzcGFjZSB7e2s4c05hbWVzcGFjZX19Ig==" },
+              { "path": "kubernetes/k8s-secret.yaml",          "contentBase64": "IyBBcHBseSB3aXRoOiBrdWJlY3RsIGFwcGx5IC1mIGt1YmVybmV0ZXMvazhzLXNlY3JldC55YW1sIC1uIHt7azhzTmFtZXNwYWNlfX0KIyBSZXBsYWNlIDxCQVNFNjRfUEFTU1dPUkQ+IHdpdGg6IGVjaG8gLW4gInlvdXJwYXNzd29yZCIgfCBiYXNlNjQKYXBpVmVyc2lvbjogdjEKa2luZDogU2VjcmV0Cm1ldGFkYXRhOgogIG5hbWU6IHt7ZGJOYW1lfX0tc2VjcmV0CiAgbmFtZXNwYWNlOiB7e2s4c05hbWVzcGFjZX19CnR5cGU6IE9wYXF1ZQpkYXRhOgogIHBhc3N3b3JkOiA8QkFTRTY0X1BBU1NXT1JEPg==" },
+              { "path": "terraform/main.tf",                   "contentBase64": "bW9kdWxlICJkYiIgewogIHNvdXJjZSAgPSAidGVycmFmb3JtLWF3cy1tb2R1bGVzL3Jkcy9hd3MiCiAgdmVyc2lvbiA9ICJ+PiA2LjAiCgogIGlkZW50aWZpZXIgICAgICAgID0gInt7ZGJOYW1lfX0iCiAgZW5naW5lICAgICAgICAgICAgPSAie3tlbmdpbmV9fSIKICBlbmdpbmVfdmVyc2lvbiAgICA9ICJ7e3ZlcnNpb259fSIKICBpbnN0YW5jZV9jbGFzcyAgICA9ICJ7e3Jkc0luc3RhbmNlQ2xhc3N9fSIKICBhbGxvY2F0ZWRfc3RvcmFnZSA9IDIwCgogIGRiX25hbWUgID0gInt7ZGJOYW1lfX0iCiAgdXNlcm5hbWUgPSAie3tkYk5hbWV9fV9hZG1pbiIKICBwb3J0ICAgICA9ICI1NDMyIgoKICBtdWx0aV9heiAgICAgICAgICAgICAgICA9IHt7cmRzTXVsdGlBen19CiAgYmFja3VwX3JldGVudGlvbl9wZXJpb2QgPSB7e3Jkc0JhY2t1cFJldGVudGlvbn19CgogIHZwY19zZWN1cml0eV9ncm91cF9pZHMgPSB2YXIudnBjX3NlY3VyaXR5X2dyb3VwX2lkcwogIHN1Ym5ldF9pZHMgICAgICAgICAgICAgPSB2YXIuc3VibmV0X2lkcwoKICB0YWdzID0gewogICAgT3duZXIgICAgICAgPSAie3tvd25lcn19IgogICAgTWFuYWdlZEJ5ICAgPSAiZm9yZ2Vwb3J0YWwiCiAgICBFbnZpcm9ubWVudCA9ICJwcm9kdWN0aW9uIgogIH0KfQoKb3V0cHV0ICJkYl9lbmRwb2ludCIgewogIHZhbHVlID0gbW9kdWxlLmRiLmRiX2luc3RhbmNlX2VuZHBvaW50Cn0=" },
+              { "path": "terraform/variables.tf",              "contentBase64": "dmFyaWFibGUgInZwY19zZWN1cml0eV9ncm91cF9pZHMiIHsKICB0eXBlICAgICAgICA9IGxpc3Qoc3RyaW5nKQogIGRlc2NyaXB0aW9uID0gIkxpc3Qgb2YgVlBDIHNlY3VyaXR5IGdyb3VwIElEcyBmb3IgdGhlIFJEUyBpbnN0YW5jZSIKfQoKdmFyaWFibGUgInN1Ym5ldF9pZHMiIHsKICB0eXBlICAgICAgICA9IGxpc3Qoc3RyaW5nKQogIGRlc2NyaXB0aW9uID0gIkxpc3Qgb2Ygc3VibmV0IElEcyBmb3IgdGhlIFJEUyBzdWJuZXQgZ3JvdXAiCn0=" }
+            ]
+          }
+        },
+        {
+          "id": "register",
+          "action": "catalog.registerEntity@v1",
+          "input": {
+            "entity": {
+              "kind": "resource",
+              "name": "{{dbName}}",
+              "ownerRef": "{{owner}}",
+              "lifecycle": "production",
+              "tags": ["database", "{{engine}}"],
+              "scm": { "provider": "{{provider}}", "owner": "{{ownerGroup}}", "repo": "{{dbName}}-db", "defaultBranch": "main" },
+              "spec": { "type": "database", "description": "{{engine}} {{version}} database deployed on {{destination}}" }
+            },
+            "source": { "provider": "{{provider}}", "repoUrl": "{{steps.create-repo.outputs.repoUrl}}", "path": "/" }
+          }
+        }
+      ],
+      "outputs": {
+        "repoUrl":                "{{steps.create-repo.outputs.repoUrl}}",
+        "entityId":               "{{steps.register.outputs.entityId}}",
+        "connectionStringFormat": "{{engine}}://{{dbName}}_user:<password>@<host>:5432/{{dbName}}"
+      }
+    }
+  }'::jsonb,
+  now()
+)
+ON CONFLICT (name, version) DO UPDATE SET schema = EXCLUDED.schema;
+
+-- -------------------------
+-- Scorecard: resource-maturity
+-- Applies to: resource kind entities
+-- -------------------------
+INSERT INTO scorecards (id, name, applies_to_kind, enabled, version, definition, created_at)
+VALUES (
+  gen_random_uuid(),
+  'resource-maturity',
+  'resource',
+  true,
+  'v1',
+  '{
+    "rules": [
+      {
+        "id":          "has-owner",
+        "title":       "Resource has an owner",
+        "level":       "Bronze",
+        "type":        "metadata",
+        "field":       "owner_ref",
+        "operator":    "notEmpty"
+      },
+      {
+        "id":          "has-description",
+        "title":       "Resource has a description",
+        "level":       "Bronze",
+        "type":        "metadata",
+        "field":       "description",
+        "operator":    "notEmpty"
+      },
+      {
+        "id":          "has-lifecycle-tag",
+        "title":       "Resource lifecycle is set",
+        "level":       "Silver",
+        "type":        "metadata",
+        "field":       "lifecycle",
+        "operator":    "notEmpty"
+      },
+      {
+        "id":          "has-db-engine-annotation",
+        "title":       "DB engine annotation is set",
+        "level":       "Silver",
+        "type":        "annotation",
+        "annotation":  "forgeportal.dev/db-engine",
+        "operator":    "notEmpty"
+      },
+      {
+        "id":          "has-db-destination-annotation",
+        "title":       "DB destination annotation is set",
+        "level":       "Gold",
+        "type":        "annotation",
+        "annotation":  "forgeportal.dev/db-destination",
+        "operator":    "notEmpty"
+      }
+    ]
+  }'::jsonb,
+  now()
+)
+ON CONFLICT (name) DO UPDATE
+  SET definition = EXCLUDED.definition,
+      enabled    = EXCLUDED.enabled,
+      version    = EXCLUDED.version;
+
 COMMIT;

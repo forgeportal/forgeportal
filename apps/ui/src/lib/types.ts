@@ -78,6 +78,8 @@ export interface TemplateParameter {
   pattern?:     string;
   required?:    boolean;
   ui?:          string;
+  /** Hide this field unless the given sibling field equals the given value */
+  dependsOn?:   Record<string, string>;
 }
 
 export interface TemplateSummary {
