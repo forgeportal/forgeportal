@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout            from './components/Layout.js';
+import HomePage          from './pages/HomePage.js';
 import CatalogListPage   from './pages/CatalogListPage.js';
 import EntityDetailPage  from './pages/EntityDetailPage.js';
 import TemplatesListPage  from './pages/TemplatesListPage.js';
@@ -24,7 +25,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<Navigate to="/catalog" replace />} />
+          <Route index element={<HomePage />} />
           <Route path="/catalog"     element={<CatalogListPage />} />
           <Route path="/catalog/:id" element={<EntityDetailPage />} />
 

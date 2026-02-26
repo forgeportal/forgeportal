@@ -36,7 +36,8 @@ export default function Layout() {
                 ⚡ ForgePortal
               </span>
               <div className="flex items-center gap-1">
-                <NavItem to="/catalog"    label="Catalog" />
+                <NavItem to="/"          label="Home" />
+                <NavItem to="/catalog"   label="Catalog" />
                 <NavItem to="/templates"  label="Templates" />
                 <NavItem to="/actions"    label="Actions" />
                 <NavItem to="/scorecards" label="Scorecards" />
