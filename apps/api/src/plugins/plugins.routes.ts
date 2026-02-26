@@ -12,7 +12,7 @@ export interface PluginsRoutesOptions {
  * Registers the plugins status API and admin PATCH for enable/disable.
  * - GET /api/v1/plugins        — full list (requires admin:plugins)
  * - GET /api/v1/plugins/status — enabled IDs + public configs (any authenticated user)
- * - PATCH /api/v1/admin/plugins/:id — set enabled (requires admin:plugins); takes effect after restart.
+ * - PATCH /api/v1/admin/plugins/:id — set enabled (requires admin:plugins); takes effect immediately (in-memory + DB).
  */
 export async function pluginsRoutes(
   app:  FastifyInstance,
@@ -75,10 +75,18 @@ export async function pluginsRoutes(
         [pluginId, body.enabled],
       );
 
+      // Update in-memory state immediately so GET /api/v1/plugins/status reflects
+      // the change without requiring a server restart.
+      const plugin = loadedPlugins.find((p) => p.id === pluginId);
+      if (plugin) {
+        plugin.status = body.enabled ? 'enabled' : 'disabled';
+      }
+
       return reply.send({
-        id: pluginId,
+        id:      pluginId,
         enabled: body.enabled,
-        message: 'Override saved. Restart the server for the change to take effect.',
+        status:  body.enabled ? 'enabled' : 'disabled',
+        message: 'Plugin override applied immediately.',
       });
     },
   );

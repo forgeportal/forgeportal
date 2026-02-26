@@ -21,9 +21,12 @@ export default function AdminPluginsPage() {
 
   const patchMutation = useMutation({
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
-      api.patch<{ id: string; enabled: boolean; message: string }>(`/admin/plugins/${id}`, { enabled }),
+      api.patch<{ id: string; enabled: boolean; status: string; message: string }>(`/admin/plugins/${id}`, { enabled }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-plugins'] });
+      // Invalidate both the admin list AND the plugin-status query that drives
+      // entity page tabs — so changes are reflected everywhere immediately.
+      void queryClient.invalidateQueries({ queryKey: ['admin-plugins'] });
+      void queryClient.invalidateQueries({ queryKey: ['plugin-status'] });
     },
   });
 
@@ -51,7 +54,7 @@ export default function AdminPluginsPage() {
         </div>
       )}
       <p className="px-6 py-2 text-xs text-gray-500 border-b border-gray-100">
-        Un redémarrage du serveur est nécessaire pour que l’activation/désactivation prenne effet.
+        L’activation/désactivation prend effet immédiatement sur les onglets. Les nouvelles routes backend nécessitent un redémarrage.
       </p>
       {list.length === 0 ? (
         <p className="px-6 py-4 text-sm text-gray-500">Aucun plugin chargé.</p>
