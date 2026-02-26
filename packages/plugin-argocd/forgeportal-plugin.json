@@ -1,0 +1,32 @@
+{
+  "name": "@forgeportal/plugin-argocd",
+  "version": "1.0.0",
+  "forgeportal": {
+    "engineVersion": "^1.0.0",
+    "type": "fullstack",
+    "capabilities": {
+      "ui": {
+        "entityTabs": ["argocd-tab"]
+      },
+      "backend": {
+        "routes": ["/api/v1/plugins/argocd"],
+        "actionProviders": [
+          "argocd.syncApp@v1",
+          "argocd.rollbackApp@v1"
+        ]
+      }
+    },
+    "config": {
+      "url": {
+        "type":        "string",
+        "description": "ArgoCD server URL, e.g. https://argocd.internal",
+        "required":    true
+      },
+      "insecure": {
+        "type":        "boolean",
+        "description": "Skip TLS verification (not recommended in production).",
+        "required":    false
+      }
+    }
+  }
+}

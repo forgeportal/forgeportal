@@ -14,6 +14,7 @@
 
 import { registerPluginById } from './plugin-registry-ui.js';
 import { registerPlugin as registerKubernetes } from '@forgeportal/plugin-kubernetes/ui';
+import { registerPlugin as registerArgocd }     from '@forgeportal/plugin-argocd/ui';
 
 // ── Installed plugins ─────────────────────────────────────────────────────────
 
@@ -21,6 +22,11 @@ import { registerPlugin as registerKubernetes } from '@forgeportal/plugin-kubern
 // for entities that have the annotation forgeportal.dev/k8s-label-selector.
 // Configure clusters in forgeportal.yaml → plugins.kubernetes.config.clusters.
 registerPluginById('kubernetes', registerKubernetes);
+
+// ArgoCD plugin — shows sync status, health, revision, and sync history
+// for entities that have the annotation forgeportal.dev/argocd-app-name.
+// Configure server URL in forgeportal.yaml → plugins.argocd.config.url.
+registerPluginById('argocd', registerArgocd);
 
 // Example (uncomment when @myorg/forge-plugin-pagerduty is installed):
 // import { registerPlugin as registerPagerDuty } from '@myorg/forge-plugin-pagerduty';
