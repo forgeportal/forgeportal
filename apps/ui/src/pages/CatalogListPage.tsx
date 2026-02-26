@@ -119,6 +119,11 @@ function EntityTable({
 }) {
   const navigate = useNavigate();
 
+  if (isError) {
+    const msg = error instanceof Error ? error.message : 'Failed to load entities';
+    return <ErrorMessage message={msg} onRetry={refetch} />;
+  }
+
   const empty = !isLoading && entities.length === 0;
 
   return (
