@@ -672,6 +672,10 @@ VALUES (
               "ownerRef": "{{owner}}",
               "lifecycle": "production",
               "tags": ["database", "{{engine}}"],
+              "annotations": {
+                "forgeportal.dev/db-engine": "{{engine}}",
+                "forgeportal.dev/db-destination": "{{destination}}"
+              },
               "scm": { "provider": "{{provider}}", "owner": "{{ownerGroup}}", "repo": "{{dbName}}-db", "defaultBranch": "main" },
               "spec": { "type": "database", "description": "{{engine}} {{version}} database deployed on {{destination}}" }
             },

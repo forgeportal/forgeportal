@@ -22,6 +22,7 @@ const registerEntityInputSchema = z.object({
     links: z
       .array(z.object({ title: z.string(), url: z.string() }))
       .default([]),
+    annotations: z.record(z.string()).default({}),
     scm: z.record(z.unknown()).default({}),
     spec: z.record(z.unknown()).default({}),
     relations: z
@@ -70,7 +71,7 @@ export class RegisterEntityHandler implements ActionHandler {
       lifecycle: entity.lifecycle,
       tags: entity.tags,
       links: entity.links,
-      annotations: {},
+      annotations: entity.annotations,
       scm: entity.scm,
       spec: entity.spec,
       relations: entity.relations,
