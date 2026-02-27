@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api.js';
-import type { ActionRunsResponse } from '../lib/types.js';
+import type { EntityActionRunsResponse } from '../lib/types.js';
 import RunStatusBadge from '../components/RunStatusBadge.js';
 import { formatRelativeTime, formatDuration } from '../lib/utils.js';
 
@@ -24,7 +24,7 @@ function SkeletonRow() {
 export default function EntityActionsTab({ entityId }: EntityActionsTabProps) {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey:        ['entity-action-runs', entityId],
-    queryFn:         () => api.get<ActionRunsResponse>(`/actions/runs?entityId=${entityId}&limit=50`),
+    queryFn:         () => api.get<EntityActionRunsResponse>(`/actions/runs?entityId=${entityId}&limit=50`),
     staleTime:       15_000,
     refetchInterval: 30_000,
   });

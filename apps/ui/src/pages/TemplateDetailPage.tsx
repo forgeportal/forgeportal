@@ -124,7 +124,7 @@ export default function TemplateDetailPage() {
         parameters={template.parameters}
         onSubmit={handleSubmit}
         loading={submitting}
-        submitLabel={`Créer ${template.title ?? template.name}`}
+        submitLabel={`${template.title ?? template.name}`}
       />
     </div>
   );

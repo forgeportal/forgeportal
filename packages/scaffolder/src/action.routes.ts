@@ -239,7 +239,10 @@ export async function actionRoutes(
         finishedAt:    r.finished_at,
         createdAt:     r.created_at,
       }));
-      return reply.send({ data: { runs: serialized, total } });
+      return reply.send({
+        data:       serialized,
+        pagination: { limit, offset, total },
+      });
     },
   );
 

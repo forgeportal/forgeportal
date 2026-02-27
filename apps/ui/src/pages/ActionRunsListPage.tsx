@@ -27,7 +27,7 @@ export default function ActionRunsListPage() {
     refetch,
   } = useActionRuns({ status: statusFilter || undefined, limit: 50 });
 
-  const runs = data?.data.runs ?? [];
+  const runs = data?.data ?? [];
 
   return (
     <div>

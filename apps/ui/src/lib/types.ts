@@ -231,8 +231,10 @@ export interface ActionRunSummary {
 }
 
 export interface ActionRunsResponse {
-  data: {
-    runs:  ActionRunSummary[];
-    total: number;
-  };
+  data:       ActionRunSummary[];
+  pagination: { limit: number; offset: number; total: number };
+}
+
+export interface EntityActionRunsResponse {
+  data: { runs: ActionRunSummary[]; total: number };
 }
