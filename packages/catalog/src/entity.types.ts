@@ -15,6 +15,8 @@ export type EntityKind = (typeof ENTITY_KINDS)[number];
 
 export const ENTITY_LIFECYCLES = [
   'experimental',
+  'development',
+  'staging',
   'production',
   'deprecated',
 ] as const;
