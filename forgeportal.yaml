@@ -160,3 +160,6 @@ plugins: {
 #   logoUrl:    "https://cdn.acme.com/logo.svg"  # Replaces text with an <img> in navbar
 #   faviconUrl: "https://cdn.acme.com/fav.ico"  # Browser tab favicon
 #   primaryColor: "#e11d48"                      # Navbar + brand accent color (hex #rrggbb)
+#   announcement:                                # Optional banner displayed above the navbar
+#     message: "🚧 Scheduled maintenance Saturday 02:00–04:00 UTC — catalog scans will be paused"
+#     variant: "warning"                         # info | warning | error

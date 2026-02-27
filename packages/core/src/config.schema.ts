@@ -151,12 +151,18 @@ const navLinkSchema = z.object({
   icon:  z.string().max(8).optional(),
 });
 
+const announcementSchema = z.object({
+  message: z.string().min(1).max(500),
+  variant: z.enum(['info', 'warning', 'error']).default('info'),
+}).optional();
+
 export const uiBrandingSchema = z.object({
   portalName:   z.string().min(1).max(80).optional().default('ForgePortal'),
   logoUrl:      z.string().url().optional(),
   faviconUrl:   z.string().url().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   navLinks:     z.array(navLinkSchema).max(10).optional().default([]),
+  announcement: announcementSchema,
 }).optional().default({});
 
 export const appConfigSchema = z.object({

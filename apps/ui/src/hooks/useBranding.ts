@@ -6,12 +6,18 @@ export interface NavLink {
   icon?: string;
 }
 
+export interface Announcement {
+  message: string;
+  variant: 'info' | 'warning' | 'error';
+}
+
 export interface BrandingConfig {
   portalName:   string;
   logoUrl:      string | null;
   faviconUrl:   string | null;
   primaryColor: string | null;
   navLinks:     NavLink[];
+  announcement: Announcement | null;
 }
 
 const DEFAULTS: BrandingConfig = {
@@ -20,6 +26,7 @@ const DEFAULTS: BrandingConfig = {
   faviconUrl:   null,
   primaryColor: null,
   navLinks:     [],
+  announcement: null,
 };
 
 export function useBranding(): BrandingConfig {

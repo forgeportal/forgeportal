@@ -3,8 +3,9 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useCurrentUser } from '../hooks/useCurrentUser.js';
 import { usePlugins }     from '../plugins/PluginContext.js';
 import { useSearch }      from '../hooks/useSearch.js';
-import { useBranding }   from '../hooks/useBranding.js';
-import Badge              from './Badge.js';
+import { useBranding }        from '../hooks/useBranding.js';
+import { AnnouncementBanner } from './AnnouncementBanner.js';
+import Badge                  from './Badge.js';
 import Spinner            from './Spinner.js';
 
 // ─── NavItem ─────────────────────────────────────────────────────────────────
@@ -239,6 +240,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <AnnouncementBanner />
       <nav className="shadow-sm" style={{ backgroundColor: branding.primaryColor ?? '#6366f1' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-3">
