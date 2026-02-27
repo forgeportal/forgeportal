@@ -262,6 +262,29 @@ export default function Layout() {
                 {navLinks.map((link) => (
                   <NavItem key={link.to} to={link.to} label={link.label} />
                 ))}
+
+                {/* Custom nav links from forgeportal.yaml ui.navLinks */}
+                {branding.navLinks.length > 0 && (
+                  <>
+                    <span className="mx-1 h-4 w-px bg-indigo-400 shrink-0" aria-hidden />
+                    {branding.navLinks.map((link) => (
+                      <a
+                        key={link.url}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium text-indigo-100 hover:bg-indigo-700 hover:text-white transition-colors shrink-0"
+                      >
+                        {link.icon && <span aria-hidden>{link.icon}</span>}
+                        {link.label}
+                        <svg className="h-3 w-3 opacity-50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    ))}
+                  </>
+                )}
               </div>
             </div>
 
@@ -323,6 +346,30 @@ export default function Layout() {
                   onClick={() => setMobileOpen(false)}
                 />
               ))}
+
+              {/* Custom nav links — mobile */}
+              {branding.navLinks.length > 0 && (
+                <>
+                  <div className="my-1 h-px bg-indigo-700" />
+                  {branding.navLinks.map((link) => (
+                    <a
+                      key={link.url}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2 w-full px-4 py-3 text-sm font-medium rounded-md text-indigo-100 hover:bg-indigo-700 hover:text-white transition-colors"
+                    >
+                      {link.icon && <span aria-hidden>{link.icon}</span>}
+                      {link.label}
+                      <svg className="h-3 w-3 opacity-50 ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         )}

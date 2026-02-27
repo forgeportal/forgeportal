@@ -1,10 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 
+export interface NavLink {
+  label: string;
+  url:   string;
+  icon?: string;
+}
+
 export interface BrandingConfig {
   portalName:   string;
   logoUrl:      string | null;
   faviconUrl:   string | null;
   primaryColor: string | null;
+  navLinks:     NavLink[];
 }
 
 const DEFAULTS: BrandingConfig = {
@@ -12,6 +19,7 @@ const DEFAULTS: BrandingConfig = {
   logoUrl:      null,
   faviconUrl:   null,
   primaryColor: null,
+  navLinks:     [],
 };
 
 export function useBranding(): BrandingConfig {

@@ -145,11 +145,18 @@ export const pluginPackagesSchema = z.object({
   packages: z.array(z.string()).default([]),
 }).default({});
 
+const navLinkSchema = z.object({
+  label: z.string().min(1).max(40),
+  url:   z.string().url(),
+  icon:  z.string().max(8).optional(),
+});
+
 export const uiBrandingSchema = z.object({
   portalName:   z.string().min(1).max(80).optional().default('ForgePortal'),
   logoUrl:      z.string().url().optional(),
   faviconUrl:   z.string().url().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  navLinks:     z.array(navLinkSchema).max(10).optional().default([]),
 }).optional().default({});
 
 export const appConfigSchema = z.object({

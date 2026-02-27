@@ -9,6 +9,7 @@ export async function configRoutes(app: FastifyInstance) {
       logoUrl:      cfg.ui?.logoUrl      ?? null,
       faviconUrl:   cfg.ui?.faviconUrl   ?? null,
       primaryColor: cfg.ui?.primaryColor ?? null,
+      navLinks:     cfg.ui?.navLinks     ?? [],
     });
   });
 }
