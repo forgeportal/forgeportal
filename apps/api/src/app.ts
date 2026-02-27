@@ -196,7 +196,7 @@ export function buildApp(
   });
 
   // --- Public config/branding route (no auth) ---
-  app.register(configRoutes, { config });
+  app.register(configRoutes);
 
   // --- Auth routes ---
   app.register(authRoutes, { config, oidcConfig: oidcConfig ?? null });

@@ -17,6 +17,7 @@ const SKIP_PATHS = new Set([
   '/livez',
   '/api/v1/auth/login',
   '/api/v1/auth/callback',
+  '/api/v1/config/branding',
 ]);
 
 const SKIP_PREFIXES = ['/api/v1/webhooks/'];

@@ -22,7 +22,7 @@ export function useBranding(): BrandingConfig {
         if (!r.ok) throw new Error('branding fetch failed');
         return r.json() as Promise<BrandingConfig>;
       }),
-    staleTime: 1000 * 60 * 10,  // 10 min
+    staleTime: 1000 * 60 * 10,  // 10 min — branding rarely changes
     gcTime:    1000 * 60 * 60,  // 1 hour
     retry:     false,
   });

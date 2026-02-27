@@ -1,18 +1,14 @@
 import type { FastifyInstance } from 'fastify';
-import type { AppConfig } from '@forgeportal/core';
 
-export async function configRoutes(
-  app: FastifyInstance,
-  opts: { config: AppConfig },
-) {
-  // Public — no auth required. Branding info (names, colors, logo URLs) is not sensitive.
+export async function configRoutes(app: FastifyInstance) {
+  // Public — path is in auth SKIP_PATHS. Branding info (logo, name, colors) is not sensitive.
   app.get('/api/v1/config/branding', async (_req, reply) => {
-    const ui = opts.config.ui ?? {};
+    const cfg = app.config;
     return reply.send({
-      portalName:   ui.portalName   ?? 'ForgePortal',
-      logoUrl:      ui.logoUrl      ?? null,
-      faviconUrl:   ui.faviconUrl   ?? null,
-      primaryColor: ui.primaryColor ?? null,
+      portalName:   cfg.ui?.portalName   ?? 'ForgePortal',
+      logoUrl:      cfg.ui?.logoUrl      ?? null,
+      faviconUrl:   cfg.ui?.faviconUrl   ?? null,
+      primaryColor: cfg.ui?.primaryColor ?? null,
     });
   });
 }
