@@ -42,6 +42,12 @@ love and drew inspiration from), ForgePortal is designed to be:
   </div>
   <div className="col col--6">
 
+  ### I want a guided golden path
+  → [Golden Path Guides](/docs/guides/golden-path-overview)
+
+  </div>
+  <div className="col col--6">
+
   ### I want to build a plugin
   → [Plugin Developer Guide](/docs/plugin-development/overview)
 

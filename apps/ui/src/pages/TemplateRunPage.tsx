@@ -95,24 +95,39 @@ function StepCard({ step, index }: { step: TemplateRunStep; index: number }) {
 
         {/* Success outputs */}
         {step.status === 'success' && Object.keys(step.outputs).length > 0 && (
-          <div className="mt-2 rounded border border-gray-200 bg-white p-2 font-mono text-xs text-gray-600">
-            {Object.entries(step.outputs).map(([k, v]) => (
-              <div key={k}>
-                <span className="text-gray-400">{k}:</span>{' '}
-                {typeof v === 'string' && v.startsWith('http') ? (
-                  <a
-                    href={v}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-indigo-600 hover:underline"
-                  >
-                    {v}
-                  </a>
-                ) : (
-                  String(v)
-                )}
-              </div>
-            ))}
+          <div className="mt-2 rounded border border-gray-200 bg-white p-2 font-mono text-xs text-gray-600 overflow-hidden">
+            {Object.entries(step.outputs).map(([k, v]) => {
+              const str = String(v);
+              const isUrl = typeof v === 'string' && v.startsWith('http');
+              // Comma-separated list (commit SHAs or file paths)
+              const items = !isUrl && str.includes(',') ? str.split(',').map((s) => s.trim()).filter(Boolean) : null;
+              // SHA-like: 40 hex chars → truncate to 8
+              const isShaList = items != null && items.every((s) => /^[0-9a-f]{40}$/i.test(s));
+              return (
+                <div key={k} className="mb-1 last:mb-0">
+                  <span className="text-gray-400">{k}:</span>{' '}
+                  {isUrl ? (
+                    <a href={str} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline break-all">
+                      {str}
+                    </a>
+                  ) : items ? (
+                    <span className="ml-1 inline-flex flex-wrap gap-1">
+                      {items.map((item, i) => (
+                        <span
+                          key={i}
+                          title={item}
+                          className="inline-block rounded bg-gray-100 px-1 py-0.5 text-gray-700 break-all"
+                        >
+                          {isShaList ? item.slice(0, 8) : item}
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="break-all">{str}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

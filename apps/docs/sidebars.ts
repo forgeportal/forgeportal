@@ -35,6 +35,21 @@ const sidebars: SidebarsConfig = {
       ],
     },
 
+    // ── Golden Path Guides ────────────────────────────────────────────────────
+    {
+      type:      'category',
+      label:     '🛤️ Golden Path Guides',
+      collapsed: false,
+      items: [
+        'guides/golden-path-overview',
+        'guides/create-service',
+        'guides/available-templates',
+        'guides/create-database',
+        'guides/create-k8s-cluster',
+        'guides/create-monitoring-stack',
+      ],
+    },
+
     // ── User Guide ────────────────────────────────────────────────────────────
     {
       type:  'category',
@@ -82,6 +97,7 @@ const sidebars: SidebarsConfig = {
       label: '⚙️ Configuration',
       items: [
         'configuration/forgeportal-yaml',
+        'configuration/ui-customization',
         'configuration/forge-sync',
         'configuration/oidc-setup',
         'configuration/scm-providers',
