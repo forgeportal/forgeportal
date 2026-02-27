@@ -7,6 +7,7 @@
 Open-source · Self-hosted · Ships in days, not months.
 
 [![CI](https://github.com/forgeportal/forgeportal/actions/workflows/ci.yml/badge.svg)](https://github.com/forgeportal/forgeportal/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/forgeportal/forgeportal?color=6366f1&label=release)](https://github.com/forgeportal/forgeportal/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-indigo.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20.19-brightgreen)](package.json)
 [![pnpm](https://img.shields.io/badge/pnpm-10-orange)](pnpm-workspace.yaml)
@@ -78,14 +79,28 @@ Open this repo in VS Code → install the [Dev Containers](https://marketplace.v
 **Software Catalog**
 Auto-discovers services from GitHub and GitLab via webhooks or scheduled scans. Every entity (`entity.yaml`) is versioned in your repo — ForgePortal just reads it.
 
-**Templates & Scaffolding**
-Golden-path templates with Handlebars interpolation that run multi-step actions: create repo, push skeleton, open PR, register entity, bootstrap CI. Every run is audited.
+**Golden Path Templates**
+Six built-in templates (`create-service`, `create-database`, `create-cache`, `create-message-queue`, `create-k8s-cluster`, `create-monitoring-stack`, `create-helm-chart`) scaffold entire infrastructure stacks with Handlebars templates, push skeleton files to GitHub/GitLab, and register the resulting entity — all in one run.
 
 **Scorecards**
 Bronze / Silver / Gold maturity levels for any service kind. Rules check README existence, CI config, docs, custom fields. Fix actions open PRs automatically — one click, not a ticket.
 
 **Plugin System**
 Three plugin types: UI (entity tab, card, or route), Backend (action handlers + Fastify routes), and Fullstack (both). One manifest file, one CLI command, no forking.
+
+**UI Theming & Branding**
+Fully white-label the portal via `forgeportal.yaml` — rename it, replace the logo, change the brand color, pin external nav links, and display announcement banners. No code changes needed. Built-in dark mode toggle persists user preference in `localStorage`.
+
+---
+
+## Official Plugins
+
+| Plugin | npm | What it adds |
+|--------|-----|--------------|
+| `@forgeportal/plugin-kubernetes` | [![npm](https://img.shields.io/npm/v/@forgeportal/plugin-kubernetes?label=npm)](https://www.npmjs.com/package/@forgeportal/plugin-kubernetes) | Live Deployments, Pods, Services, Ingresses + pod log streaming + restart/scale actions |
+| `@forgeportal/plugin-argocd` | [![npm](https://img.shields.io/npm/v/@forgeportal/plugin-argocd?label=npm)](https://www.npmjs.com/package/@forgeportal/plugin-argocd) | ArgoCD sync status, health, history + `syncApp` / `rollbackApp` template actions |
+| `@forgeportal/plugin-github-insights` | [![npm](https://img.shields.io/npm/v/@forgeportal/plugin-github-insights?label=npm)](https://www.npmjs.com/package/@forgeportal/plugin-github-insights) | PRs, commits, contributors, GitHub Actions workflow runs |
+| `@forgeportal/plugin-grafana` | [![npm](https://img.shields.io/npm/v/@forgeportal/plugin-grafana?label=npm)](https://www.npmjs.com/package/@forgeportal/plugin-grafana) | Grafana dashboard embed with time range controls and variable injection |
 
 ---
 
@@ -204,6 +219,20 @@ Key variables:
 
 Full reference: [`forgeportal.yaml`](forgeportal.yaml) and the [Configuration docs](apps/docs/docs/configuration/forgeportal-yaml.md).
 
+**UI Branding** (all optional — no code changes required):
+```yaml
+ui:
+  portalName: "Acme Developer Portal"
+  primaryColor: "#e11d48"
+  logoUrl: "https://cdn.acme.com/logo.svg"
+  navLinks:
+    - { label: "Runbooks", url: "https://wiki.acme.com", icon: "📖" }
+  announcement:
+    message: "🚧 Maintenance window Saturday 02:00–04:00 UTC"
+    variant: "warning"
+```
+See the [UI Customization guide](apps/docs/docs/configuration/ui-customization.md).
+
 ---
 
 ## Creating a Plugin
@@ -225,6 +254,13 @@ Full guide: [Plugin Developer Guide](apps/docs/docs/plugin-development/overview.
 ---
 
 ## Deployment
+
+**Docker images (GHCR):**
+```bash
+docker pull ghcr.io/forgeportal/forgeportal-api:latest
+docker pull ghcr.io/forgeportal/forgeportal-worker:latest
+docker pull ghcr.io/forgeportal/forgeportal-ui:latest
+```
 
 **Docker Compose (production):**
 See [Deployment Guide — Docker Compose](apps/docs/docs/deployment/docker-compose.md).
