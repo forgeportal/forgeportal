@@ -227,7 +227,19 @@ export async function actionRoutes(
         runRepo.list({ ...filter, limit, offset }),
         runRepo.count(filter),
       ]);
-      return reply.send({ data: runs, pagination: { limit, offset, total } });
+      const serialized = runs.map((r) => ({
+        id:            r.id,
+        actionId:      r.action_id,
+        stepId:        r.step_id,
+        templateRunId: r.template_run_id,
+        requestedBy:   r.requested_by,
+        status:        r.status,
+        retryCount:    r.retry_count,
+        startedAt:     r.started_at,
+        finishedAt:    r.finished_at,
+        createdAt:     r.created_at,
+      }));
+      return reply.send({ data: { runs: serialized, total } });
     },
   );
 
