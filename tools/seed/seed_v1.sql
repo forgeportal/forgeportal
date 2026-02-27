@@ -949,4 +949,114 @@ VALUES (
 )
 ON CONFLICT (name, version) DO UPDATE SET schema = EXCLUDED.schema;
 
+-- -------------------------
+-- Template: create-k8s-cluster (Story 12-4)
+-- -------------------------
+INSERT INTO templates (id, name, version, schema, created_at)
+VALUES (
+  gen_random_uuid(),
+  'create-k8s-cluster',
+  'v1',
+  '{
+    "apiVersion": "forgeportal/v1",
+    "kind": "Template",
+    "metadata": {
+      "name": "create-k8s-cluster",
+      "title": "Create Kubernetes Cluster",
+      "description": "Provision or document a Kubernetes cluster — kind or k3d locally, EKS / GKE / AKS in the cloud — then register it in the catalog.",
+      "tags": ["kubernetes", "cluster", "infrastructure", "eks", "gke", "aks", "kind", "k3d"]
+    },
+    "spec": {
+      "parameters": [
+        { "id": "clusterName",        "title": "Cluster name",               "type": "string",  "required": true,  "pattern": "^[a-z][a-z0-9-]{2,30}$",                                                                  "description": "Lowercase, letters/numbers/hyphens (e.g. platform-dev)" },
+        { "id": "destination",        "title": "Cluster type",               "type": "string",  "required": true,  "enum": ["kind", "k3d", "eks", "gke", "aks"],                                                          "description": "Where to create the cluster" },
+        { "id": "owner",              "title": "Owning team",                "type": "string",  "required": true,  "ui": "team-picker",                                                                                   "description": "e.g. team:platform" },
+        { "id": "environment",        "title": "Environment",                "type": "string",  "required": true,  "enum": ["development", "staging", "production"], "default": "development" },
+        { "id": "kubernetesVersion",  "title": "Kubernetes version",         "type": "string",  "required": false, "default": "1.31",                                                                                     "description": "e.g. 1.29, 1.30, 1.31" },
+        { "id": "nodeCount",          "title": "Node count",                 "type": "number",  "required": false, "default": 1,                                                                                          "description": "Number of worker nodes (local: up to 5; cloud: autoscaling min)" },
+        { "id": "scmProvider",        "title": "SCM provider",               "type": "string",  "required": true,  "enum": ["github", "gitlab"],                                                                          "description": "Where to push generated config files" },
+        { "id": "scmOwner",           "title": "Organisation / Group",       "type": "string",  "required": true,                                                                                                          "description": "GitHub org or GitLab group" },
+
+        { "id": "kindExtraPortMappings", "title": "Expose ports (host:container)", "type": "string",  "required": false, "default": "80:80,443:443", "dependsOn": { "destination": "kind" },                             "description": "Comma-separated host:container port pairs" },
+        { "id": "kindIngressReady",   "title": "Pre-configure for ingress-nginx", "type": "boolean", "required": false, "default": true, "dependsOn": { "destination": "kind" },                                        "description": "Adds kubeadm config and installs ingress-nginx after cluster creation" },
+
+        { "id": "k3dLoadBalancer",    "title": "Enable load balancer",       "type": "boolean", "required": false, "default": true, "dependsOn": { "destination": "k3d" } },
+        { "id": "k3dRegistry",        "title": "Create local registry",      "type": "boolean", "required": false, "default": false, "dependsOn": { "destination": "k3d" },                                             "description": "Creates a local container registry at registry.localhost:5001" },
+
+        { "id": "region",             "title": "Cloud region",               "type": "string",  "required": false, "default": "eu-west-1",                                                                               "description": "AWS: eu-west-1 / GCP: europe-west1 / Azure: westeurope" },
+        { "id": "nodeType",           "title": "Node instance type",         "type": "string",  "required": false, "default": "t3.medium",                                                                               "description": "AWS: t3.medium / GCP: e2-standard-2 / Azure: Standard_D2s_v3" },
+        { "id": "infraRepo",          "title": "Infrastructure repository (org/repo)", "type": "string", "required": false,                                                                                              "description": "Repo where Terraform modules live (cloud destinations only)" }
+      ],
+      "steps": [
+        {
+          "id": "create-repo",
+          "action": "scm.createRepo@v1",
+          "input": {
+            "provider": "{{scmProvider}}",
+            "owner": "{{scmOwner}}",
+            "repo": "{{clusterName}}-cluster",
+            "visibility": "private",
+            "description": "Kubernetes cluster config — {{clusterName}} ({{destination}}, {{environment}})"
+          }
+        },
+        {
+          "id": "push-skeleton",
+          "action": "scm.pushSkeleton@v1",
+          "input": {
+            "provider": "{{scmProvider}}",
+            "owner": "{{scmOwner}}",
+            "repo": "{{clusterName}}-cluster",
+            "branch": "main",
+            "message": "feat: provision {{clusterName}} Kubernetes cluster ({{destination}})",
+            "files": [
+              { "path": "README.md",                         "contentBase64": "IyB7e2NsdXN0ZXJOYW1lfX0KCj4gS3ViZXJuZXRlcyB7e2t1YmVybmV0ZXNWZXJzaW9ufX0gY2x1c3RlciDigJQge3tkZXN0aW5hdGlvbn19ICh7e2Vudmlyb25tZW50fX0pCgojIyBRdWljayBTdGFydAoKIyMjIGtpbmQgLyBrM2QgKGxvY2FsKQpgYGBiYXNoCmNobW9kICt4IHNldHVwLnNoCi4vc2V0dXAuc2gKYGBgCgojIyMgQ2xvdWQgKEVLUyAvIEdLRSAvIEFLUykKYGBgYmFzaApjZCB0ZXJyYWZvcm0KdGVycmFmb3JtIGluaXQKdGVycmFmb3JtIHBsYW4KdGVycmFmb3JtIGFwcGx5CmBgYAoKIyMgVGVhciBEb3duIChsb2NhbCBvbmx5KQpgYGBiYXNoCmNobW9kICt4IHRlYXJkb3duLnNoCi4vdGVhcmRvd24uc2gKYGBgCgojIyBGb3JnZVBvcnRhbApUaGlzIGNsdXN0ZXIgaXMgdHJhY2tlZCBpbiB0aGUgY2F0YWxvZzogW1ZpZXcgZW50aXR5XShodHRwOi8vbG9jYWxob3N0OjMwMDAvY2F0YWxvZyk=" },
+              { "path": "entity.yaml",                       "contentBase64": "YXBpVmVyc2lvbjogZm9yZ2Vwb3J0YWwvdjEKa2luZDogcmVzb3VyY2UKbWV0YWRhdGE6CiAgbmFtZToge3tjbHVzdGVyTmFtZX19CiAgbmFtZXNwYWNlOiBkZWZhdWx0CiAgYW5ub3RhdGlvbnM6CiAgICBmb3JnZXBvcnRhbC5kZXYvY2x1c3Rlci10eXBlOiAie3tkZXN0aW5hdGlvbn19IgogICAgZm9yZ2Vwb3J0YWwuZGV2L2NsdXN0ZXItdmVyc2lvbjogInt7a3ViZXJuZXRlc1ZlcnNpb259fSIKICAgIGZvcmdlcG9ydGFsLmRldi9rOHMtY2x1c3RlcjogInt7Y2x1c3Rlck5hbWV9fSIKc3BlYzoKICBvd25lcjoge3tvd25lcn19CiAgbGlmZWN5Y2xlOiB7e2Vudmlyb25tZW50fX0KICB0eXBlOiBjbHVzdGVyCiAgZGVzY3JpcHRpb246ICJLdWJlcm5ldGVzIHt7a3ViZXJuZXRlc1ZlcnNpb259fSBjbHVzdGVyIOKAlCB7e2Rlc3RpbmF0aW9ufX0gKHt7ZW52aXJvbm1lbnR9fSkiCiAgdGFnczoKICAgIC0ga3ViZXJuZXRlcwogICAgLSBjbHVzdGVyCiAgICAtICJ7e2Rlc3RpbmF0aW9ufX0iCiAgICAtICJ7e2Vudmlyb25tZW50fX0i" },
+              { "path": "kind/kind.yaml",                    "contentBase64": "a2luZDogQ2x1c3RlcgphcGlWZXJzaW9uOiBraW5kLngtazhzLmlvL3YxYWxwaGE0Cm5hbWU6IHt7Y2x1c3Rlck5hbWV9fQpub2RlczoKICAtIHJvbGU6IGNvbnRyb2wtcGxhbmUKICAgIGt1YmVhZG1Db25maWdQYXRjaGVzOgogICAgICAtIHwKICAgICAgICBraW5kOiBJbml0Q29uZmlndXJhdGlvbgogICAgICAgIG5vZGVSZWdpc3RyYXRpb246CiAgICAgICAgICBrdWJlbGV0RXh0cmFBcmdzOgogICAgICAgICAgICBub2RlLWxhYmVsczogImluZ3Jlc3MtcmVhZHk9dHJ1ZSIKICAgIGV4dHJhUG9ydE1hcHBpbmdzOgogICAgICAtIGNvbnRhaW5lclBvcnQ6IDgwCiAgICAgICAgaG9zdFBvcnQ6IDgwCiAgICAgICAgcHJvdG9jb2w6IFRDUAogICAgICAtIGNvbnRhaW5lclBvcnQ6IDQ0MwogICAgICAgIGhvc3RQb3J0OiA0NDMKICAgICAgICBwcm90b2NvbDogVENQCiAgIyBBZGQgd29ya2VyIG5vZGVzIGJ5IGR1cGxpY2F0aW5nIHRoZSBlbnRyeSBiZWxvdwogICMgLSByb2xlOiB3b3JrZXI=" },
+              { "path": "kind/setup.sh",                     "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIENyZWF0ZSBraW5kIGNsdXN0ZXI6IHt7Y2x1c3Rlck5hbWV9fQpzZXQgLWV1byBwaXBlZmFpbAoKZWNobyAi4pqhIENyZWF0aW5nIGtpbmQgY2x1c3Rlcjoge3tjbHVzdGVyTmFtZX19IgpraW5kIGNyZWF0ZSBjbHVzdGVyIC0tY29uZmlnIGtpbmQva2luZC55YW1sIC0tbmFtZSB7e2NsdXN0ZXJOYW1lfX0Ka3ViZWN0bCBjbHVzdGVyLWluZm8gLS1jb250ZXh0IGtpbmQte3tjbHVzdGVyTmFtZX19CgplY2hvICIiCmVjaG8gIuKchSBDbHVzdGVyIHJlYWR5LiBDb250ZXh0OiBraW5kLXt7Y2x1c3Rlck5hbWV9fSIKZWNobyAiIgplY2hvICJJbnN0YWxsaW5nIGluZ3Jlc3MtbmdpbnguLi4iCmt1YmVjdGwgYXBwbHkgLWYgaHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2t1YmVybmV0ZXMvaW5ncmVzcy1uZ2lueC9tYWluL2RlcGxveS9zdGF0aWMvcHJvdmlkZXIva2luZC9kZXBsb3kueWFtbAprdWJlY3RsIHdhaXQgLS1uYW1lc3BhY2UgaW5ncmVzcy1uZ2lueCBcCiAgLS1mb3I9Y29uZGl0aW9uPXJlYWR5IHBvZCBcCiAgLS1zZWxlY3Rvcj1hcHAua3ViZXJuZXRlcy5pby9jb21wb25lbnQ9Y29udHJvbGxlciBcCiAgLS10aW1lb3V0PTkwcwplY2hvICLinIUgaW5ncmVzcy1uZ2lueCByZWFkeSIKZWNobyAiIgplY2hvICJLdWJlY29uZmlnIGNvbnRleHQ6IGtpbmQte3tjbHVzdGVyTmFtZX19IgplY2hvICJTd2l0Y2ggd2l0aDoga3ViZWN0bCBjb25maWcgdXNlLWNvbnRleHQga2luZC17e2NsdXN0ZXJOYW1lfX0i" },
+              { "path": "kind/teardown.sh",                  "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIERlbGV0ZSBraW5kIGNsdXN0ZXI6IHt7Y2x1c3Rlck5hbWV9fQpzZXQgLWV1byBwaXBlZmFpbAoKZWNobyAi8J+Xke+4jyAgRGVsZXRpbmcga2luZCBjbHVzdGVyOiB7e2NsdXN0ZXJOYW1lfX0iCmtpbmQgZGVsZXRlIGNsdXN0ZXIgLS1uYW1lIHt7Y2x1c3Rlck5hbWV9fQplY2hvICLinIUgQ2x1c3RlciB7e2NsdXN0ZXJOYW1lfX0gZGVsZXRlZCI=" },
+              { "path": "k3d/setup.sh",                      "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIENyZWF0ZSBrM2QgY2x1c3Rlcjoge3tjbHVzdGVyTmFtZX19CnNldCAtZXVvIHBpcGVmYWlsCgplY2hvICLimqEgQ3JlYXRpbmcgazNkIGNsdXN0ZXI6IHt7Y2x1c3Rlck5hbWV9fSIKazNkIGNsdXN0ZXIgY3JlYXRlIHt7Y2x1c3Rlck5hbWV9fSBcCiAgLS1hZ2VudHMge3tub2RlQ291bnR9fSBcCiAgLS1wb3J0ICI4MDo4MEBsb2FkYmFsYW5jZXIiIFwKICAtLXBvcnQgIjQ0Mzo0NDNAbG9hZGJhbGFuY2VyIiBcCiAgLS1rM3MtYXJnICItLWRpc2FibGU9dHJhZWZpa0BzZXJ2ZXI6MCIgXAogIC0taW1hZ2UgcmFuY2hlci9rM3M6dnt7a3ViZXJuZXRlc1ZlcnNpb259fS1rM3MxCgplY2hvICIiCmVjaG8gIuKchSBrM2QgY2x1c3RlciB7e2NsdXN0ZXJOYW1lfX0gcmVhZHkiCmt1YmVjdGwgY2x1c3Rlci1pbmZvCmVjaG8gIkt1YmVjb25maWcgY29udGV4dDogazNkLXt7Y2x1c3Rlck5hbWV9fSIKZWNobyAiU3dpdGNoIHdpdGg6IGt1YmVjdGwgY29uZmlnIHVzZS1jb250ZXh0IGszZC17e2NsdXN0ZXJOYW1lfX0iCgojIE9wdGlvbmFsOiBjcmVhdGUgbG9jYWwgcmVnaXN0cnkKIyBrM2QgcmVnaXN0cnkgY3JlYXRlIHJlZ2lzdHJ5LmxvY2FsaG9zdCAtLXBvcnQgNTAwMQ==" },
+              { "path": "k3d/teardown.sh",                   "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaAojIERlbGV0ZSBrM2QgY2x1c3Rlcjoge3tjbHVzdGVyTmFtZX19CnNldCAtZXVvIHBpcGVmYWlsCgplY2hvICLwn5eR77iPICBEZWxldGluZyBrM2QgY2x1c3Rlcjoge3tjbHVzdGVyTmFtZX19IgprM2QgY2x1c3RlciBkZWxldGUge3tjbHVzdGVyTmFtZX19CmVjaG8gIuKchSBDbHVzdGVyIHt7Y2x1c3Rlck5hbWV9fSBkZWxldGVkIg==" },
+              { "path": "eks/terraform/main.tf",              "contentBase64": "bW9kdWxlICJla3MiIHsKICBzb3VyY2UgID0gInRlcnJhZm9ybS1hd3MtbW9kdWxlcy9la3MvYXdzIgogIHZlcnNpb24gPSAifj4gMjAuMCIKCiAgY2x1c3Rlcl9uYW1lICAgID0gInt7Y2x1c3Rlck5hbWV9fSIKICBjbHVzdGVyX3ZlcnNpb24gPSAie3trdWJlcm5ldGVzVmVyc2lvbn19IgoKICBjbHVzdGVyX2VuZHBvaW50X3B1YmxpY19hY2Nlc3MgPSB0cnVlCgogIHZwY19pZCAgICAgPSB2YXIudnBjX2lkCiAgc3VibmV0X2lkcyA9IHZhci5zdWJuZXRfaWRzCgogIGVrc19tYW5hZ2VkX25vZGVfZ3JvdXBzID0gewogICAgZGVmYXVsdCA9IHsKICAgICAgbWluX3NpemUgICAgICAgPSB7e25vZGVDb3VudH19CiAgICAgIG1heF9zaXplICAgICAgID0ge3tub2RlQ291bnR9fQogICAgICBkZXNpcmVkX3NpemUgICA9IHt7bm9kZUNvdW50fX0KICAgICAgaW5zdGFuY2VfdHlwZXMgPSBbInt7bm9kZVR5cGV9fSJdCiAgICB9CiAgfQoKICB0YWdzID0gewogICAgRW52aXJvbm1lbnQgPSAie3tlbnZpcm9ubWVudH19IgogICAgT3duZXIgICAgICAgPSAie3tvd25lcn19IgogICAgTWFuYWdlZEJ5ICAgPSAiZm9yZ2Vwb3J0YWwiCiAgfQp9CgpvdXRwdXQgImNsdXN0ZXJfZW5kcG9pbnQiIHsKICB2YWx1ZSA9IG1vZHVsZS5la3MuY2x1c3Rlcl9lbmRwb2ludAp9CgpvdXRwdXQgImNsdXN0ZXJfbmFtZSIgewogIHZhbHVlID0gbW9kdWxlLmVrcy5jbHVzdGVyX25hbWUKfQ==" },
+              { "path": "eks/terraform/variables.tf",         "contentBase64": "dmFyaWFibGUgInZwY19pZCIgewogIHR5cGUgICAgICAgID0gc3RyaW5nCiAgZGVzY3JpcHRpb24gPSAiVlBDIElEIGZvciB0aGUgRUtTIGNsdXN0ZXIiCn0KCnZhcmlhYmxlICJzdWJuZXRfaWRzIiB7CiAgdHlwZSAgICAgICAgPSBsaXN0KHN0cmluZykKICBkZXNjcmlwdGlvbiA9ICJTdWJuZXQgSURzIGZvciB0aGUgRUtTIG5vZGUgZ3JvdXBzIgp9" },
+              { "path": "gke/terraform/main.tf",              "contentBase64": "bW9kdWxlICJna2UiIHsKICBzb3VyY2UgID0gInRlcnJhZm9ybS1nb29nbGUtbW9kdWxlcy9rdWJlcm5ldGVzLWVuZ2luZS9nb29nbGUiCiAgdmVyc2lvbiA9ICJ+PiAzMS4wIgoKICBwcm9qZWN0X2lkICAgICAgICAgPSB2YXIucHJvamVjdF9pZAogIG5hbWUgICAgICAgICAgICAgICA9ICJ7e2NsdXN0ZXJOYW1lfX0iCiAgcmVnaW9uICAgICAgICAgICAgID0gInt7cmVnaW9ufX0iCiAgem9uZXMgICAgICAgICAgICAgID0gWyJ7e3JlZ2lvbn19LWEiXQogIG5ldHdvcmsgICAgICAgICAgICA9IHZhci5uZXR3b3JrCiAgc3VibmV0d29yayAgICAgICAgID0gdmFyLnN1Ym5ldHdvcmsKICBrdWJlcm5ldGVzX3ZlcnNpb24gPSAie3trdWJlcm5ldGVzVmVyc2lvbn19IgoKICBub2RlX3Bvb2xzID0gW3sKICAgIG5hbWUgICAgICAgICA9ICJkZWZhdWx0LXBvb2wiCiAgICBtYWNoaW5lX3R5cGUgPSAie3tub2RlVHlwZX19IgogICAgbm9kZV9jb3VudCAgID0ge3tub2RlQ291bnR9fQogICAgYXV0b3NjYWxpbmcgID0gdHJ1ZQogICAgbWluX2NvdW50ICAgID0ge3tub2RlQ291bnR9fQogICAgbWF4X2NvdW50ICAgID0ge3tub2RlQ291bnR9fQogIH1dCgogIG5vZGVfcG9vbHNfbGFiZWxzID0gewogICAgZGVmYXVsdC1wb29sID0gewogICAgICBlbnZpcm9ubWVudCA9ICJ7e2Vudmlyb25tZW50fX0iCiAgICAgIG93bmVyICAgICAgID0gInt7b3duZXJ9fSIKICAgICAgbWFuYWdlZC1ieSAgPSAiZm9yZ2Vwb3J0YWwiCiAgICB9CiAgfQp9CgpvdXRwdXQgImNsdXN0ZXJfZW5kcG9pbnQiIHsKICB2YWx1ZSA9IG1vZHVsZS5na2UuZW5kcG9pbnQKfQoKb3V0cHV0ICJjbHVzdGVyX25hbWUiIHsKICB2YWx1ZSA9IG1vZHVsZS5na2UubmFtZQp9" },
+              { "path": "gke/terraform/variables.tf",         "contentBase64": "dmFyaWFibGUgInByb2plY3RfaWQiIHsKICB0eXBlICAgICAgICA9IHN0cmluZwogIGRlc2NyaXB0aW9uID0gIkdDUCBwcm9qZWN0IElEIgp9Cgp2YXJpYWJsZSAibmV0d29yayIgewogIHR5cGUgICAgICAgID0gc3RyaW5nCiAgZGVzY3JpcHRpb24gPSAiVlBDIG5ldHdvcmsgbmFtZSIKICBkZWZhdWx0ICAgICA9ICJkZWZhdWx0Igp9Cgp2YXJpYWJsZSAic3VibmV0d29yayIgewogIHR5cGUgICAgICAgID0gc3RyaW5nCiAgZGVzY3JpcHRpb24gPSAiVlBDIHN1Ym5ldHdvcmsgbmFtZSIKICBkZWZhdWx0ICAgICA9ICJkZWZhdWx0Igp9" },
+              { "path": "aks/terraform/main.tf",              "contentBase64": "cmVzb3VyY2UgImF6dXJlcm1fa3ViZXJuZXRlc19jbHVzdGVyIiAibWFpbiIgewogIG5hbWUgICAgICAgICAgICAgICAgPSAie3tjbHVzdGVyTmFtZX19IgogIGxvY2F0aW9uICAgICAgICAgICAgPSAie3tyZWdpb259fSIKICByZXNvdXJjZV9ncm91cF9uYW1lID0gdmFyLnJlc291cmNlX2dyb3VwX25hbWUKICBkbnNfcHJlZml4ICAgICAgICAgID0gInt7Y2x1c3Rlck5hbWV9fSIKICBrdWJlcm5ldGVzX3ZlcnNpb24gID0gInt7a3ViZXJuZXRlc1ZlcnNpb259fSIKCiAgZGVmYXVsdF9ub2RlX3Bvb2wgewogICAgbmFtZSAgICAgICAgICAgICAgICA9ICJkZWZhdWx0IgogICAgbm9kZV9jb3VudCAgICAgICAgICA9IHt7bm9kZUNvdW50fX0KICAgIHZtX3NpemUgICAgICAgICAgICAgPSAie3tub2RlVHlwZX19IgogICAgZW5hYmxlX2F1dG9fc2NhbGluZyA9IHRydWUKICAgIG1pbl9jb3VudCAgICAgICAgICAgPSB7e25vZGVDb3VudH19CiAgICBtYXhfY291bnQgICAgICAgICAgID0ge3tub2RlQ291bnR9fQogIH0KCiAgaWRlbnRpdHkgewogICAgdHlwZSA9ICJTeXN0ZW1Bc3NpZ25lZCIKICB9CgogIHRhZ3MgPSB7CiAgICBlbnZpcm9ubWVudCA9ICJ7e2Vudmlyb25tZW50fX0iCiAgICBvd25lciAgICAgICA9ICJ7e293bmVyfX0iCiAgICBtYW5hZ2VkX2J5ICA9ICJmb3JnZXBvcnRhbCIKICB9Cn0KCm91dHB1dCAia3ViZV9jb25maWciIHsKICB2YWx1ZSAgICAgPSBhenVyZXJtX2t1YmVybmV0ZXNfY2x1c3Rlci5tYWluLmt1YmVfY29uZmlnX3JhdwogIHNlbnNpdGl2ZSA9IHRydWUKfQoKb3V0cHV0ICJjbHVzdGVyX25hbWUiIHsKICB2YWx1ZSA9IGF6dXJlcm1fa3ViZXJuZXRlc19jbHVzdGVyLm1haW4ubmFtZQp9" },
+              { "path": "aks/terraform/variables.tf",         "contentBase64": "dmFyaWFibGUgInJlc291cmNlX2dyb3VwX25hbWUiIHsKICB0eXBlICAgICAgICA9IHN0cmluZwogIGRlc2NyaXB0aW9uID0gIkF6dXJlIHJlc291cmNlIGdyb3VwIG5hbWUiCn0=" }
+            ]
+          }
+        },
+        {
+          "id": "register",
+          "action": "catalog.registerEntity@v1",
+          "input": {
+            "entity": {
+              "kind": "resource",
+              "name": "{{clusterName}}",
+              "ownerRef": "{{owner}}",
+              "lifecycle": "{{environment}}",
+              "tags": ["kubernetes", "cluster", "{{destination}}", "{{environment}}"],
+              "annotations": {
+                "forgeportal.dev/cluster-type": "{{destination}}",
+                "forgeportal.dev/cluster-version": "{{kubernetesVersion}}",
+                "forgeportal.dev/k8s-cluster": "{{clusterName}}"
+              },
+              "scm": { "provider": "{{scmProvider}}", "owner": "{{scmOwner}}", "repo": "{{clusterName}}-cluster", "defaultBranch": "main" },
+              "spec": { "type": "cluster", "description": "Kubernetes {{kubernetesVersion}} cluster — {{destination}} ({{environment}})" }
+            },
+            "source": { "provider": "{{scmProvider}}", "repoUrl": "{{steps.create-repo.outputs.repoUrl}}", "path": "/" }
+          }
+        }
+      ],
+      "outputs": {
+        "repoUrl":         "{{steps.create-repo.outputs.repoUrl}}",
+        "entityId":        "{{steps.register.outputs.entityId}}",
+        "setupCommand":    "bash kind/setup.sh",
+        "kubeconfigContext": "kind-{{clusterName}}"
+      }
+    }
+  }'::jsonb,
+  now()
+)
+ON CONFLICT (name, version) DO UPDATE SET schema = EXCLUDED.schema;
+
 COMMIT;
