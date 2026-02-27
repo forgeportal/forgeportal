@@ -54,17 +54,17 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon, loading, linkTo, accent = 'text-indigo-600' }: StatCardProps) {
   const inner = (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
-      <div className={`flex h-12 w-12 items-center justify-center rounded-lg bg-gray-50 ${accent}`}>
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+      <div className={`flex h-12 w-12 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-700 ${accent}`}>
         {icon}
       </div>
       <div>
         {loading ? (
-          <div className="h-8 w-16 rounded bg-gray-100 animate-pulse mb-1" />
+          <div className="h-8 w-16 rounded bg-gray-100 dark:bg-gray-700 animate-pulse mb-1" />
         ) : (
-          <p className={`text-3xl font-bold text-gray-900`}>{value ?? '—'}</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{value ?? '—'}</p>
         )}
-        <p className="text-sm text-gray-500">{label}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
       </div>
     </div>
   );
@@ -102,16 +102,16 @@ function QuickAction({ to, label, description, icon, accent }: QuickActionProps)
   return (
     <Link
       to={to}
-      className="group flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all"
+      className="group flex flex-col gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-md transition-all"
     >
       <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${accent}`}>
         {icon}
       </div>
       <div>
-        <p className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{label}</p>
-        <p className="mt-0.5 text-sm text-gray-500">{description}</p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{label}</p>
+        <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{description}</p>
       </div>
-      <svg className="h-4 w-4 text-gray-300 group-hover:text-indigo-400 transition-colors mt-auto self-end"
+      <svg className="h-4 w-4 text-gray-300 dark:text-gray-600 group-hover:text-indigo-400 transition-colors mt-auto self-end"
         fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
       </svg>
@@ -164,8 +164,8 @@ export default function HomePage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Home</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Home</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Welcome to ForgePortal — your internal developer platform.
         </p>
       </div>
@@ -230,12 +230,12 @@ export default function HomePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
-        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="lg:col-span-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Recent Activity</h2>
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Recent Activity</h2>
             <Link
               to="/admin/audit-logs"
-              className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
+              className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline"
             >
               View all →
             </Link>
@@ -246,14 +246,14 @@ export default function HomePage() {
           ) : recentActivity.length === 0 ? (
             <p className="text-sm text-gray-400 py-4 text-center">No activity yet.</p>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {recentActivity.map((entry) => (
                 <div key={entry.id} className="flex items-center gap-3 py-2.5">
                   <ActionBadge action={entry.action} />
-                  <span className="text-sm text-gray-600 truncate flex-1">
+                  <span className="text-sm text-gray-600 dark:text-gray-300 truncate flex-1">
                     {entry.actor}
                     {entry.target_kind && (
-                      <span className="text-gray-400"> · {entry.target_kind}</span>
+                      <span className="text-gray-400 dark:text-gray-500"> · {entry.target_kind}</span>
                     )}
                   </span>
                   <span className="text-xs text-gray-400 shrink-0">
@@ -267,7 +267,7 @@ export default function HomePage() {
 
         {/* Quick Actions */}
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Quick Actions</h2>
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
           <QuickAction
             to="/catalog"

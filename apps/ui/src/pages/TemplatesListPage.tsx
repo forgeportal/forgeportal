@@ -5,10 +5,10 @@ import Badge from '../components/Badge.js';
 
 function SkeletonCard() {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm animate-pulse">
-      <div className="h-4 w-1/2 rounded bg-gray-200" />
-      <div className="mt-2 h-3 w-3/4 rounded bg-gray-100" />
-      <div className="mt-3 h-3 w-1/4 rounded bg-gray-100" />
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm animate-pulse">
+      <div className="h-4 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="mt-2 h-3 w-3/4 rounded bg-gray-100 dark:bg-gray-700" />
+      <div className="mt-3 h-3 w-1/4 rounded bg-gray-100 dark:bg-gray-700" />
     </div>
   );
 }
@@ -26,8 +26,8 @@ export default function TemplatesListPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Templates</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Templates</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Golden path templates to scaffold new services and components.
           </p>
         </div>
@@ -44,9 +44,9 @@ export default function TemplatesListPage() {
           {[0, 1, 2].map((i) => <SkeletonCard key={i} />)}
         </div>
       ) : !templates || templates.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 py-16 text-center">
-          <p className="text-gray-500">No templates configured yet.</p>
-          <p className="mt-1 text-sm text-gray-400">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 dark:border-gray-600 py-16 text-center">
+          <p className="text-gray-500 dark:text-gray-400">No templates configured yet.</p>
+          <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
             Add templates via the seed file or API.
           </p>
         </div>
@@ -55,14 +55,14 @@ export default function TemplatesListPage() {
           {templates.map((template) => (
             <div
               key={template.id}
-              className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="text-base font-semibold text-gray-900 truncate">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
                     {template.title}
                   </h3>
-                  <p className="mt-1 text-sm text-gray-500 line-clamp-2">
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
                     {template.description}
                   </p>
                   {template.tags && template.tags.length > 0 && (
@@ -82,7 +82,7 @@ export default function TemplatesListPage() {
                   </Link>
                 )}
               </div>
-              <div className="mt-3 text-xs text-gray-400">
+              <div className="mt-3 text-xs text-gray-400 dark:text-gray-500">
                 {template.parameters.length} parameter
                 {template.parameters.length !== 1 ? 's' : ''}
               </div>

@@ -2,6 +2,8 @@
 @plugin "@tailwindcss/typography";
 @source "../../../packages/plugin-kubernetes/src/**/*.{ts,tsx}";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-brand: #6366f1;
   --color-brand-dark: #4f46e5;

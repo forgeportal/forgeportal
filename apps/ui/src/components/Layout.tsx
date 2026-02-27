@@ -4,9 +4,10 @@ import { useCurrentUser } from '../hooks/useCurrentUser.js';
 import { usePlugins }     from '../plugins/PluginContext.js';
 import { useSearch }      from '../hooks/useSearch.js';
 import { useBranding }        from '../hooks/useBranding.js';
+import { useTheme }           from '../hooks/useTheme.js';
 import { AnnouncementBanner } from './AnnouncementBanner.js';
 import Badge                  from './Badge.js';
-import Spinner            from './Spinner.js';
+import Spinner                from './Spinner.js';
 
 // ─── NavItem ─────────────────────────────────────────────────────────────────
 
@@ -167,7 +168,7 @@ function GlobalSearch({ onNavigate }: { onNavigate?: () => void }) {
         <div
           role="listbox"
           aria-label="Search results"
-          className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-lg border border-gray-200 bg-white shadow-xl z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl z-50 overflow-hidden"
         >
           {isLoading ? (
             <div className="px-4 py-3 text-sm text-gray-400">Searching…</div>
@@ -184,14 +185,14 @@ function GlobalSearch({ onNavigate }: { onNavigate?: () => void }) {
                 onMouseDown={(e) => { e.preventDefault(); selectResult(item.url); }}
                 onMouseEnter={() => setActiveIdx(i)}
                 className={`w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors ${
-                  i === activeIdx ? 'bg-indigo-50' : 'hover:bg-gray-50'
-                } ${i < results.length - 1 ? 'border-b border-gray-100' : ''}`}
+                  i === activeIdx ? 'bg-indigo-50 dark:bg-indigo-900/40' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                } ${i < results.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}`}
               >
                 <span className="shrink-0 mt-0.5">
                   <Badge label={item.type} variant={item.type === 'entity' ? 'kind' : 'tag'} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{item.title}</p>
                   {item.excerpt && (
                     <p className="text-xs text-gray-400 truncate">{excerpt(item.excerpt)}</p>
                   )}
@@ -211,6 +212,7 @@ export default function Layout() {
   const { data: meData } = useCurrentUser();
   const { getRoutes }    = usePlugins();
   const branding         = useBranding();
+  const { resolved: resolvedTheme, setTheme } = useTheme();
   const user             = meData?.user;
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -239,7 +241,7 @@ export default function Layout() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <AnnouncementBanner />
       <nav className="shadow-sm" style={{ backgroundColor: branding.primaryColor ?? '#6366f1' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -310,6 +312,26 @@ export default function Layout() {
               ) : (
                 <div className="h-7 w-7 rounded-full bg-indigo-400 animate-pulse" />
               )}
+
+              {/* Dark mode toggle */}
+              <button
+                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                className="p-1.5 rounded-md text-indigo-100 hover:bg-indigo-700 transition-colors"
+                aria-label={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
+              >
+                {resolvedTheme === 'dark' ? (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
 
               {/* Hamburger button — mobile only */}
               <button

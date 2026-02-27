@@ -43,11 +43,11 @@ function FilterBar() {
   return (
     <div className="flex flex-nowrap sm:flex-wrap items-end gap-3 mb-4 overflow-x-auto pb-1 scrollbar-hide">
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-gray-500">Kind</label>
+        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Kind</label>
         <select
           value={kind}
           onChange={(e) => set('kind', e.target.value)}
-          className="rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <option value="">All kinds</option>
           {KINDS.map((k) => (
@@ -57,11 +57,11 @@ function FilterBar() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-gray-500">Lifecycle</label>
+        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Lifecycle</label>
         <select
           value={lifecycle}
           onChange={(e) => set('lifecycle', e.target.value)}
-          className="rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           <option value="">All lifecycles</option>
           {LIFECYCLES.map((l) => (
@@ -71,31 +71,31 @@ function FilterBar() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-gray-500">Owner</label>
+        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Owner</label>
         <input
           type="text"
           value={owner}
           onChange={(e) => set('owner', e.target.value)}
           placeholder="team:platform"
-          className="rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-40"
+          className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-40"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-gray-500">Tag</label>
+        <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Tag</label>
         <input
           type="text"
           value={tag}
           onChange={(e) => set('tag', e.target.value)}
           placeholder="payments"
-          className="rounded-md border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-32"
+          className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-32"
         />
       </div>
 
       {hasFilters && (
         <button
           onClick={clearAll}
-          className="self-end rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+          className="self-end rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >
           Clear filters
         </button>
@@ -127,9 +127,9 @@ function EntityTable({
   const empty = !isLoading && entities.length === 0;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
       {/* ── Mobile card list (< md) ─────────────────────────────────────────── */}
-      <div className="md:hidden divide-y divide-gray-100">
+      <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
         {isLoading
           ? Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="p-4 animate-pulse space-y-2">
@@ -153,12 +153,12 @@ function EntityTable({
               <div
                 key={entity.id}
                 onClick={() => navigate(`/catalog/${entity.id}`)}
-                className="p-4 cursor-pointer hover:bg-indigo-50 transition-colors"
+                className="p-4 cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-indigo-600 text-sm">{entity.name}</span>
+                      <span className="font-medium text-indigo-600 dark:text-indigo-400 text-sm">{entity.name}</span>
                       <Badge label={entity.kind} variant="kind" />
                       {entity.lifecycle && <Badge label={entity.lifecycle} variant="lifecycle" />}
                     </div>
@@ -189,20 +189,20 @@ function EntityTable({
 
       {/* ── Desktop table (≥ md) ────────────────────────────────────────────── */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               {['Name', 'Kind', 'Owner', 'Lifecycle', 'Tags'].map((col) => (
                 <th
                   key={col}
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap"
+                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 whitespace-nowrap"
                 >
                   {col}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
             {isLoading
               ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               : empty
@@ -222,15 +222,15 @@ function EntityTable({
                   <tr
                     key={entity.id}
                     onClick={() => navigate(`/catalog/${entity.id}`)}
-                    className="cursor-pointer hover:bg-indigo-50 transition-colors"
+                    className="cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
                   >
                     <td className="px-4 py-3">
                       <div>
-                        <span className="font-medium text-indigo-600 hover:text-indigo-800 text-sm">
+                        <span className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm">
                           {entity.name}
                         </span>
                         {entity.description && (
-                          <p className="mt-0.5 text-xs text-gray-400 line-clamp-1">
+                          <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500 line-clamp-1">
                             {entity.description}
                           </p>
                         )}
@@ -239,8 +239,8 @@ function EntityTable({
                     <td className="px-4 py-3">
                       <Badge label={entity.kind} variant="kind" />
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
-                      {entity.owner_ref ?? <span className="text-gray-300">—</span>}
+                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                      {entity.owner_ref ?? <span className="text-gray-300 dark:text-gray-600">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       {entity.lifecycle
@@ -271,8 +271,8 @@ function SearchResults({ results, query }: { results: SearchResultItem[]; query:
 
   if (results.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-        <p className="text-sm font-medium text-gray-600 mb-1">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center">
+        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
           No results for &ldquo;{query}&rdquo;
         </p>
         {query.length >= 3 && (
@@ -290,7 +290,7 @@ function SearchResults({ results, query }: { results: SearchResultItem[]; query:
         <div
           key={`${item.type}-${item.id}`}
           onClick={() => navigate(item.url)}
-          className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 hover:border-indigo-300 hover:shadow-sm transition-all"
+          className="cursor-pointer rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all"
         >
           <div className="flex items-start gap-3">
             <div className="flex-1 min-w-0">
@@ -299,7 +299,7 @@ function SearchResults({ results, query }: { results: SearchResultItem[]; query:
                   label={item.type}
                   variant={item.type === 'entity' ? 'kind' : 'tag'}
                 />
-                <span className="font-medium text-gray-900 text-sm truncate">{item.title}</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{item.title}</span>
               </div>
               {item.excerpt && (
                 <p
@@ -367,8 +367,8 @@ export default function CatalogListPage() {
       <SetupChecklist />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Catalog</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Catalog</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Browse and discover all services, libraries, and components.
         </p>
       </div>
@@ -386,7 +386,7 @@ export default function CatalogListPage() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Filter by name, tags, owner…"
-            className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           {isSearchLoading && debouncedQ.length > 0 && (
             <div className="absolute inset-y-0 right-3 flex items-center">
@@ -398,7 +398,7 @@ export default function CatalogListPage() {
 
       {isSearchMode ? (
         <>
-          <div className="mb-2 text-sm text-gray-500">
+          <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">
             {searchData ? `${searchData.data.length} result${searchData.data.length !== 1 ? 's' : ''} for "${debouncedQ}"` : null}
           </div>
           <SearchResults results={searchData?.data ?? []} query={debouncedQ} />
@@ -417,7 +417,7 @@ export default function CatalogListPage() {
           {/* Pagination */}
           {!isLoading && total > 0 && (
             <div className="mt-4 flex items-center justify-between">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, total)} of {total}{' '}
                 {total === 1 ? 'entity' : 'entities'}
               </p>
@@ -425,17 +425,17 @@ export default function CatalogListPage() {
                 <button
                   onClick={() => goToPage(Math.max(0, offset - PAGE_SIZE))}
                   disabled={offset === 0}
-                  className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+                  className="rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
                 >
                   Previous
                 </button>
-                <span className="flex items-center px-2 text-sm text-gray-500">
+                <span className="flex items-center px-2 text-sm text-gray-500 dark:text-gray-400">
                   {currentPage + 1} / {totalPages}
                 </span>
                 <button
                   onClick={() => goToPage(offset + PAGE_SIZE)}
                   disabled={offset + PAGE_SIZE >= total}
-                  className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+                  className="rounded-md border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
                 >
                   Next
                 </button>
