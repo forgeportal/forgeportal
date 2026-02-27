@@ -137,7 +137,7 @@ export default function ActionRunsListPage() {
 
       {!isLoading && data && (
         <p className="mt-2 text-right text-xs text-gray-400">
-          {runs.length} of {data.data.total} runs
+          {runs.length} of {data.pagination.total} runs
         </p>
       )}
     </div>
