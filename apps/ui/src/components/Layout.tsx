@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useCurrentUser } from '../hooks/useCurrentUser.js';
 import { usePlugins }     from '../plugins/PluginContext.js';
 import { useSearch }      from '../hooks/useSearch.js';
+import { useBranding }   from '../hooks/useBranding.js';
 import Badge              from './Badge.js';
 import Spinner            from './Spinner.js';
 
@@ -208,8 +209,21 @@ function GlobalSearch({ onNavigate }: { onNavigate?: () => void }) {
 export default function Layout() {
   const { data: meData } = useCurrentUser();
   const { getRoutes }    = usePlugins();
+  const branding         = useBranding();
   const user             = meData?.user;
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Apply brand color + favicon from config at runtime
+  useEffect(() => {
+    if (branding.primaryColor) {
+      document.documentElement.style.setProperty('--color-brand', branding.primaryColor);
+      document.documentElement.style.setProperty('--color-brand-dark', branding.primaryColor);
+    }
+    if (branding.faviconUrl) {
+      const link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+      if (link) link.href = branding.faviconUrl;
+    }
+  }, [branding.primaryColor, branding.faviconUrl]);
 
   const pluginNavRoutes = getRoutes().filter((r) => r.navLabel);
 
@@ -225,15 +239,23 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-indigo-600 shadow-sm">
+      <nav className="shadow-sm" style={{ backgroundColor: branding.primaryColor ?? '#6366f1' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 items-center justify-between gap-3">
 
             {/* Logo + desktop nav */}
             <div className="flex items-center gap-4 min-w-0 flex-1">
-              <span className="text-lg font-bold text-white tracking-tight shrink-0">
-                ⚡ ForgePortal
-              </span>
+              {branding.logoUrl ? (
+                <img
+                  src={branding.logoUrl}
+                  alt={branding.portalName}
+                  className="h-7 w-auto shrink-0 object-contain"
+                />
+              ) : (
+                <span className="text-lg font-bold text-white tracking-tight shrink-0">
+                  ⚡ {branding.portalName}
+                </span>
+              )}
 
               {/* Desktop nav — hidden on mobile */}
               <div className="hidden md:flex items-center gap-1 overflow-x-auto scrollbar-hide">

@@ -150,3 +150,13 @@ plugins: {
   #   config:
   #     defaultChannel: "#platform-alerts"
   #     # webhookUrl: set via FORGEPORTAL_PLUGIN_SLACK_NOTIFY_WEBHOOKURL
+
+# ── UI Branding ────────────────────────────────────────────
+# Fully rebrand the portal without any code changes.
+# All fields are optional — defaults to "ForgePortal" with indigo color.
+#
+# ui:
+#   portalName: "Acme Developer Portal"          # Navbar text and browser tab title
+#   logoUrl:    "https://cdn.acme.com/logo.svg"  # Replaces text with an <img> in navbar
+#   faviconUrl: "https://cdn.acme.com/fav.ico"  # Browser tab favicon
+#   primaryColor: "#e11d48"                      # Navbar + brand accent color (hex #rrggbb)

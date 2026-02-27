@@ -16,11 +16,18 @@ import AdminPluginsPage from './pages/admin/AdminPluginsPage.js';
 import AdminScanPage from './pages/admin/AdminScanPage.js';
 import AdminAuditLogsPage from './pages/admin/AdminAuditLogsPage.js';
 import AdminSetupPage from './pages/admin/AdminSetupPage.js';
+import { useEffect }  from 'react';
 import { usePlugins } from './plugins/PluginContext.js';
+import { useBranding } from './hooks/useBranding.js';
 
 export default function App() {
   const { getRoutes } = usePlugins();
   const pluginRoutes  = getRoutes();
+  const branding      = useBranding();
+
+  useEffect(() => {
+    document.title = branding.portalName;
+  }, [branding.portalName]);
 
   return (
     <BrowserRouter>

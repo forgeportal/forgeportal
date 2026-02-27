@@ -21,6 +21,7 @@ import {
   SESSION_MAX_AGE,
 } from '@forgeportal/auth';
 import { catalogRoutes, scanRoutes, webhookRoutes } from '@forgeportal/catalog';
+import { configRoutes }       from './routes/config.routes.js';
 import { integrationsRoutes } from './admin/integrations.routes.js';
 import { statusRoutes } from './admin/status.routes.js';
 import { setupRoutes } from './admin/setup.routes.js';
@@ -193,6 +194,9 @@ export function buildApp(
     reply.header('X-Frame-Options', 'DENY');
     done(null, payload);
   });
+
+  // --- Public config/branding route (no auth) ---
+  app.register(configRoutes, { config });
 
   // --- Auth routes ---
   app.register(authRoutes, { config, oidcConfig: oidcConfig ?? null });

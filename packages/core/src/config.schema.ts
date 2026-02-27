@@ -145,6 +145,13 @@ export const pluginPackagesSchema = z.object({
   packages: z.array(z.string()).default([]),
 }).default({});
 
+export const uiBrandingSchema = z.object({
+  portalName:   z.string().min(1).max(80).optional().default('ForgePortal'),
+  logoUrl:      z.string().url().optional(),
+  faviconUrl:   z.string().url().optional(),
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+}).optional().default({});
+
 export const appConfigSchema = z.object({
   db: dbConfigSchema.default({}),
   server: serverConfigSchema.default({}),
@@ -156,6 +163,7 @@ export const appConfigSchema = z.object({
   plugins: z.record(pluginEntrySchema).default({}),
   pluginPackages: pluginPackagesSchema,
   scorecards: scorecardsConfigSchema,
+  ui: uiBrandingSchema,
   encryptionKey: z
     .string()
     .min(16)
