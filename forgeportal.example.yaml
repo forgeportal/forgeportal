@@ -77,3 +77,29 @@ plugins: {}
   #     # apiKey: set via FORGEPORTAL_PLUGIN_EXAMPLEPLUGIN_APIKEY
 
 encryptionKey: local-dev-key-change-in-prod-32chars!  # min 16 chars
+
+# ── UI Branding & Customization ────────────────────────────────────────────
+# Fully white-label the portal without any code changes.
+# Full reference: https://docs.forgeportal.dev/docs/configuration/ui-customization
+# ui:
+#   portalName: "Acme Developer Portal"        # Navbar text + browser tab title
+#   logoUrl:    "https://cdn.acme.com/logo.svg" # Replaces text with <img> in navbar
+#   faviconUrl: "https://cdn.acme.com/fav.ico"  # Browser tab favicon
+#   primaryColor: "#e11d48"                     # Navbar + accent color (hex #rrggbb)
+#
+#   # Custom links pinned to the navbar (max 10, open in new tab)
+#   navLinks:
+#     - label: "Runbooks"
+#       url: "https://wiki.acme.com/runbooks"
+#       icon: "📖"
+#     - label: "On-Call"
+#       url: "https://app.pagerduty.com"
+#       icon: "🔔"
+#
+#   # Dismissable banner shown above the navbar (remove block to hide)
+#   announcement:
+#     message: "🚧 Scheduled maintenance Saturday 02:00–04:00 UTC"
+#     variant: "warning"   # info | warning | error
+#
+# Dark mode: always available — users toggle via sun/moon icon in the navbar.
+# No configuration required.

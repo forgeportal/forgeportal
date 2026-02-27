@@ -19,7 +19,7 @@ If the file does not exist, containers start with schema defaults only.
 
 ## Overview
 
-The file has **11 top-level sections**: `db`, `server`, `auth`, `scm`, `discovery`, `migrations`, `docs`, `plugins`, `pluginPackages`, `scorecards`, `encryptionKey`. Omitted sections use schema defaults. Secrets (passwords, client secrets, tokens) should be set via env vars, not committed in the file.
+The file has **12 top-level sections**: `db`, `server`, `auth`, `scm`, `discovery`, `migrations`, `docs`, `plugins`, `pluginPackages`, `scorecards`, `encryptionKey`, `ui`. Omitted sections use schema defaults. Secrets (passwords, client secrets, tokens) should be set via env vars, not committed in the file.
 
 :::tip Plugin dependency sync
 After adding or removing packages in `pluginPackages.packages`, run **`pnpm forge:sync`** to automatically update `apps/api/package.json` and `apps/ui/package.json`. See the [forge sync reference](/docs/configuration/forge-sync).
@@ -272,6 +272,50 @@ Scorecard evaluation schedule.
 
 ---
 
+## `ui`
+
+UI branding and customization. All fields are optional — defaults to the standard ForgePortal look.
+
+For a full walkthrough of each option (with examples, color suggestions, and best-practice tips) see the dedicated **[UI Customization guide](/docs/configuration/ui-customization)**.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `portalName` | string | `ForgePortal` | Navbar text and browser tab title. Max 80 chars. |
+| `logoUrl` | string (URL) | — | Replaces the portal name with an `<img>` in the navbar. |
+| `faviconUrl` | string (URL) | — | Browser tab favicon. |
+| `primaryColor` | string | `#6366f1` | Navbar + brand accent color. Must be a 6-digit hex (e.g. `#e11d48`). |
+| `navLinks` | array | `[]` | Up to 10 custom links pinned to the navbar. Each item: `label` (string), `url` (URL), `icon` (emoji, optional). |
+| `announcement.message` | string | — | Text for the dismissable banner shown above the navbar. Max 500 chars. |
+| `announcement.variant` | string | `info` | Banner color style: `info` (blue), `warning` (amber), `error` (red). |
+
+**Example:**
+
+```yaml
+ui:
+  portalName: "Acme Developer Portal"
+  logoUrl: "https://cdn.acme.com/logo-white.svg"
+  faviconUrl: "https://cdn.acme.com/favicon.ico"
+  primaryColor: "#e11d48"
+
+  navLinks:
+    - label: "Runbooks"
+      url: "https://wiki.acme.com/runbooks"
+      icon: "📖"
+    - label: "On-Call"
+      url: "https://app.pagerduty.com"
+      icon: "🔔"
+
+  announcement:
+    message: "🚧 Scheduled maintenance Saturday 02:00–04:00 UTC — catalog scans will be paused"
+    variant: "warning"
+```
+
+:::tip Dark mode
+ForgePortal includes a built-in **dark mode toggle** (sun/moon icon) in the navbar. User preference is saved in `localStorage` and defaults to OS setting. No configuration required.
+:::
+
+---
+
 ## `encryptionKey`
 
 Key used for encrypting sensitive data (e.g. stored secrets). Min 16 characters. **Never commit a production value**; set via `ENCRYPTION_KEY`.
@@ -337,6 +381,18 @@ scorecards:
 
 # Encryption — set ENCRYPTION_KEY in production
 encryptionKey: local-dev-key-change-in-prod-32chars!
+
+# UI Branding — all fields optional, full guide at /docs/configuration/ui-customization
+# ui:
+#   portalName: "Acme Developer Portal"
+#   logoUrl:    "https://cdn.acme.com/logo.svg"
+#   faviconUrl: "https://cdn.acme.com/fav.ico"
+#   primaryColor: "#e11d48"
+#   navLinks:
+#     - { label: "Runbooks", url: "https://wiki.acme.com", icon: "📖" }
+#   announcement:
+#     message: "🚧 Maintenance Saturday 02:00–04:00 UTC"
+#     variant: "warning"
 ```
 
 For environment variable overrides, see [Environment Variables](/docs/configuration/env-vars).
