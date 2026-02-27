@@ -11,6 +11,39 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
+## [v1.3.0] - 2026-02-27
+
+### Added
+
+**Epic 13 — UI Theming & Branding**
+- Portal white-labeling via `forgeportal.yaml` — rename the portal, replace the logo, change the brand color, set a custom favicon; all without code changes (Story 13-1)
+- Custom navigation links (`ui.navLinks`) — pin up to 10 external links (runbooks, PagerDuty, Grafana, etc.) to the navbar and mobile drawer (Story 13-2)
+- Dismissable announcement banner (`ui.announcement`) — show urgent notices above the navbar with three color variants: `info` (blue), `warning` (amber), `error` (red); dismissed per browser session via `sessionStorage` (Story 13-3)
+- Dark mode toggle — sun/moon icon in the navbar; preference persisted in `localStorage`, defaults to OS `prefers-color-scheme`; anti-flash inline script in `index.html` prevents wrong-theme flash on load (Story 13-4)
+- `GET /api/v1/config/branding` public endpoint — serves all branding config to the UI with no authentication required
+- `useTheme` and `useBranding` React hooks for consuming theme and branding config
+
+**Epic 12 — Golden Path Templates**
+- `create-database` — provisions a PostgreSQL database on a target server via SSH, registers a `resource` entity and opens a GitHub PR (Story 12-1)
+- `create-cache` — provisions a Redis cache instance, registers entity, opens PR (Story 12-2)
+- `create-message-queue` — provisions a RabbitMQ queue, registers entity, opens PR (Story 12-3)
+- `create-k8s-cluster` — generates a full Kubernetes cluster manifest bundle (Namespace, Deployment, Service, HPA, PodDisruptionBudget, NetworkPolicy, ServiceAccount) via `scm.pushSkeleton@v1` (Story 12-4)
+- `create-monitoring-stack` — scaffolds a complete observability stack (Prometheus, Grafana, Alertmanager) with Kubernetes manifests (Story 12-5)
+- `create-helm-chart` — generates a production-ready Helm chart with 11 skeleton files (Chart.yaml, values.yaml, deployment, service, ingress, HPA, ServiceAccount, ConfigMap, NOTES, helpers, tests) (Story 12-6)
+
+### Fixed
+- Action Runs table: corrected camelCase serialization and pagination (`pagination.total` vs `data.total`) for `GET /api/v1/action-runs`
+- Catalog: added `development` and `staging` to `ENTITY_LIFECYCLES` enum
+- Scaffolder: save entity annotations on `create-database` dogfood run; fix `updateStepOutput` type cast and scorecard `ON CONFLICT`
+- Node.js service template: use `npm install` / `npm install --omit=dev` in CI and Dockerfile
+
+### Documentation
+- Added `ui-customization.md` — full reference for all branding and theming options (portal name, logo, favicon, primary color, nav links, announcement banner, dark mode)
+- Updated `forgeportal-yaml.md` — `ui` section added as the 12th top-level key with field table, example, and link to UI Customization guide
+- Updated `forgeportal.example.yaml` — `ui:` block with all options commented
+
+---
+
 ## [v1.0.0] - 2026-02-28
 
 First stable release of ForgePortal — an open-source Internal Developer Portal (IDP) built on Fastify, React, PostgreSQL, and TypeScript.
@@ -87,5 +120,8 @@ First stable release of ForgePortal — an open-source Internal Developer Portal
 
 ---
 
-[Unreleased]: https://github.com/forgeportal/forgeportal/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/forgeportal/forgeportal/compare/v1.3.0...HEAD
+[v1.3.0]: https://github.com/forgeportal/forgeportal/compare/v1.2.0...v1.3.0
+[v1.2.0]: https://github.com/forgeportal/forgeportal/compare/v1.1.0...v1.2.0
+[v1.1.0]: https://github.com/forgeportal/forgeportal/compare/v1.0.0...v1.1.0
 [v1.0.0]: https://github.com/forgeportal/forgeportal/releases/tag/v1.0.0
