@@ -1059,4 +1059,106 @@ VALUES (
 )
 ON CONFLICT (name, version) DO UPDATE SET schema = EXCLUDED.schema;
 
+-- Template: create-monitoring-stack (Story 12-5)
+-- -------------------------
+INSERT INTO templates (id, name, version, schema, created_at)
+VALUES (
+  gen_random_uuid(),
+  'create-monitoring-stack',
+  'v1',
+  '{
+    "apiVersion": "forgeportal/v1",
+    "kind": "Template",
+    "metadata": {
+      "name": "create-monitoring-stack",
+      "title": "Create Monitoring Stack (Prometheus + Grafana)",
+      "description": "Deploy Prometheus + Grafana + Alertmanager on Kubernetes (kube-prometheus-stack Helm) or Docker Compose for local dev — then register it in the catalog.",
+      "tags": ["monitoring", "prometheus", "grafana", "alertmanager", "observability", "infrastructure"]
+    },
+    "spec": {
+      "parameters": [
+        { "id": "stackName",             "title": "Stack name",                      "type": "string",  "required": true,  "default": "monitoring", "pattern": "^[a-z][a-z0-9-]{1,30}$",                                    "description": "e.g. monitoring, observability" },
+        { "id": "destination",           "title": "Destination",                     "type": "string",  "required": true,  "enum": ["kubernetes", "docker-compose"],                                                         "description": "Where to deploy the monitoring stack" },
+        { "id": "owner",                 "title": "Owning team",                     "type": "string",  "required": true,  "ui": "team-picker",                                                                              "description": "e.g. team:platform" },
+        { "id": "scmProvider",           "title": "SCM provider",                    "type": "string",  "required": true,  "enum": ["github", "gitlab"],                                                                     "description": "Where to push generated config files" },
+        { "id": "scmOwner",              "title": "Organisation / Group",            "type": "string",  "required": true,                                                                                                     "description": "GitHub org or GitLab group" },
+
+        { "id": "scrapeForgePortal",     "title": "Scrape ForgePortal metrics",      "type": "boolean", "required": false, "default": true,                                                                                  "description": "Add a scrape config for ForgePortal /metrics endpoint" },
+        { "id": "alertsEnabled",         "title": "Enable default alerts",           "type": "boolean", "required": false, "default": true,                                                                                  "description": "CPU >80%, memory >85%, pod CrashLoopBackOff, PVC >90%" },
+        { "id": "grafanaAdminPassword",  "title": "Grafana admin password",          "type": "string",  "required": false, "default": "admin",                                                                               "description": "Password for the Grafana admin user" },
+
+        { "id": "k8sNamespace",          "title": "Kubernetes namespace",            "type": "string",  "required": false, "default": "monitoring",  "dependsOn": { "destination": "kubernetes" },                          "description": "Namespace to deploy the stack into" },
+        { "id": "persistence",           "title": "Enable persistence (PVC)",        "type": "boolean", "required": false, "default": false,          "dependsOn": { "destination": "kubernetes" },                          "description": "Recommended for production" },
+
+        { "id": "grafanaPort",           "title": "Grafana port (local)",            "type": "number",  "required": false, "default": 3001,           "dependsOn": { "destination": "docker-compose" } },
+        { "id": "prometheusPort",        "title": "Prometheus port (local)",         "type": "number",  "required": false, "default": 9090,           "dependsOn": { "destination": "docker-compose" } }
+      ],
+      "steps": [
+        {
+          "id": "create-repo",
+          "action": "scm.createRepo@v1",
+          "input": {
+            "provider": "{{scmProvider}}",
+            "owner": "{{scmOwner}}",
+            "repo": "{{stackName}}-monitoring",
+            "visibility": "private",
+            "description": "Monitoring stack — {{stackName}} (Prometheus + Grafana, {{destination}})"
+          }
+        },
+        {
+          "id": "push-skeleton",
+          "action": "scm.pushSkeleton@v1",
+          "input": {
+            "provider": "{{scmProvider}}",
+            "owner": "{{scmOwner}}",
+            "repo": "{{stackName}}-monitoring",
+            "branch": "main",
+            "message": "feat: provision {{stackName}} monitoring stack ({{destination}})",
+            "files": [
+              { "path": "README.md",                              "contentBase64": "IyB7e3N0YWNrTmFtZX19IOKAlCBNb25pdG9yaW5nIFN0YWNrCgpQcm9tZXRoZXVzICsgR3JhZmFuYSArIEFsZXJ0bWFuYWdlciBkZXBsb3llZCB2aWEgRm9yZ2VQb3J0YWwgdGVtcGxhdGUuCgoqKkRlc3RpbmF0aW9uOioqIHt7ZGVzdGluYXRpb259fQoqKk93bmVyOioqIHt7b3duZXJ9fQoKIyMgS3ViZXJuZXRlcwoKYGBgYmFzaApiYXNoIGhlbG0vaW5zdGFsbC5zaApgYGAKCkFjY2VzczoKLSBHcmFmYW5hOiBga3ViZWN0bCBwb3J0LWZvcndhcmQgLW4ge3trOHNOYW1lc3BhY2V9fSBzdmMve3tzdGFja05hbWV9fS1ncmFmYW5hIDMwMDA6ODBgCi0gUHJvbWV0aGV1czogYGt1YmVjdGwgcG9ydC1mb3J3YXJkIC1uIHt7azhzTmFtZXNwYWNlfX0gc3ZjL3t7c3RhY2tOYW1lfX0ta3ViZS1wcm9tZXRoZXVzLXByb21ldGhldXMgOTA5MDo5MDkwYAoKIyMgRG9ja2VyIENvbXBvc2UKCmBgYGJhc2gKZG9ja2VyIGNvbXBvc2UgdXAgLWQKYGBgCgpBY2Nlc3M6Ci0gR3JhZmFuYTogICAgaHR0cDovL2xvY2FsaG9zdDp7e2dyYWZhbmFQb3J0fX0KLSBQcm9tZXRoZXVzOiBodHRwOi8vbG9jYWxob3N0Ont7cHJvbWV0aGV1c1BvcnR9fQo=" },
+              { "path": "entity.yaml",                            "contentBase64": "YXBpVmVyc2lvbjogZm9yZ2Vwb3J0YWwuZGV2L3YxYWxwaGExCmtpbmQ6IFJlc291cmNlCm1ldGFkYXRhOgogIG5hbWU6IHt7c3RhY2tOYW1lfX0KICBhbm5vdGF0aW9uczoKICAgIGZvcmdlcG9ydGFsLmRldi9tYW5hZ2VkLWJ5OiBmb3JnZXBvcnRhbC10ZW1wbGF0ZQogICAgZm9yZ2Vwb3J0YWwuZGV2L2dyYWZhbmEtZGFzaGJvYXJkLXVybDogImh0dHA6Ly9sb2NhbGhvc3Q6e3tncmFmYW5hUG9ydH19IgogICAgZm9yZ2Vwb3J0YWwuZGV2L3Byb21ldGhldXMtdXJsOiAiaHR0cDovL2xvY2FsaG9zdDp7e3Byb21ldGhldXNQb3J0fX0iCnNwZWM6CiAgdHlwZTogbW9uaXRvcmluZwogIG93bmVyOiB7e293bmVyfX0KICBsaWZlY3ljbGU6IHByb2R1Y3Rpb24K" },
+              { "path": "helm/values.yaml",                       "contentBase64": "IyBrdWJlLXByb21ldGhldXMtc3RhY2sgSGVsbSB2YWx1ZXMKIyBHZW5lcmF0ZWQgYnkgRm9yZ2VQb3J0YWwgdGVtcGxhdGUgY3JlYXRlLW1vbml0b3Jpbmctc3RhY2sKCmdyYWZhbmE6CiAgYWRtaW5QYXNzd29yZDogInt7Z3JhZmFuYUFkbWluUGFzc3dvcmR9fSIKICBwZXJzaXN0ZW5jZToKICAgIGVuYWJsZWQ6IHt7cGVyc2lzdGVuY2V9fQogIGRhc2hib2FyZFByb3ZpZGVyczoKICAgIGRhc2hib2FyZHByb3ZpZGVycy55YW1sOgogICAgICBhcGlWZXJzaW9uOiAxCiAgICAgIHByb3ZpZGVyczoKICAgICAgICAtIG5hbWU6IGZvcmdlcG9ydGFsCiAgICAgICAgICBvcmdJZDogMQogICAgICAgICAgZm9sZGVyOiBGb3JnZVBvcnRhbAogICAgICAgICAgdHlwZTogZmlsZQogICAgICAgICAgZGlzYWJsZURlbGV0aW9uOiBmYWxzZQogICAgICAgICAgb3B0aW9uczoKICAgICAgICAgICAgcGF0aDogL3Zhci9saWIvZ3JhZmFuYS9kYXNoYm9hcmRzL2ZvcmdlcG9ydGFsCgpwcm9tZXRoZXVzOgogIHByb21ldGhldXNTcGVjOgogICAgcmV0ZW50aW9uOiAxNWQKICAgIHt7I2lmIHNjcmFwZUZvcmdlUG9ydGFsfX0KICAgIGFkZGl0aW9uYWxTY3JhcGVDb25maWdzOgogICAgICAtIGpvYl9uYW1lOiBmb3JnZXBvcnRhbC1hcGkKICAgICAgICBzdGF0aWNfY29uZmlnczoKICAgICAgICAgIC0gdGFyZ2V0czogWyJmb3JnZXBvcnRhbC1hcGk6NDAwMCJdCiAgICAgICAgbWV0cmljc19wYXRoOiAvbWV0cmljcwogICAge3svaWZ9fQoKe3sjaWYgYWxlcnRzRW5hYmxlZH19CmRlZmF1bHRSdWxlczoKICBjcmVhdGU6IHRydWUKICBydWxlczoKICAgIGFsZXJ0bWFuYWdlcjogdHJ1ZQogICAgZXRjZDogZmFsc2UKICAgIGt1YmVBcGlzZXJ2ZXJBdmFpbGFiaWxpdHk6IHRydWUKICAgIG5vZGU6IHRydWUKICAgIGt1YmVQcm9tZXRoZXVzTm9kZUFsZXJ0aW5nOiB0cnVlCnt7L2lmfX0KCmFsZXJ0bWFuYWdlcjoKICBlbmFibGVkOiB7e2FsZXJ0c0VuYWJsZWR9fQo=" },
+              { "path": "helm/install.sh",                        "contentBase64": "IyEvdXNyL2Jpbi9lbnYgYmFzaApzZXQgLWV1byBwaXBlZmFpbAoKU1RBQ0tfTkFNRT0ie3tzdGFja05hbWV9fSIKTkFNRVNQQUNFPSJ7e2s4c05hbWVzcGFjZX19IgoKZWNobyAi8J+TpiBBZGRpbmcgcHJvbWV0aGV1cy1jb21tdW5pdHkgSGVsbSByZXBvLi4uIgpoZWxtIHJlcG8gYWRkIHByb21ldGhldXMtY29tbXVuaXR5IGh0dHBzOi8vcHJvbWV0aGV1cy1jb21tdW5pdHkuZ2l0aHViLmlvL2hlbG0tY2hhcnRzCmhlbG0gcmVwbyB1cGRhdGUKCmVjaG8gIvCfmoAgSW5zdGFsbGluZyBrdWJlLXByb21ldGhldXMtc3RhY2suLi4iCmhlbG0gdXBncmFkZSAtLWluc3RhbGwgIiRTVEFDS19OQU1FIiBwcm9tZXRoZXVzLWNvbW11bml0eS9rdWJlLXByb21ldGhldXMtc3RhY2sgXAogIC0tbmFtZXNwYWNlICIkTkFNRVNQQUNFIiBcCiAgLS1jcmVhdGUtbmFtZXNwYWNlIFwKICAtZiBoZWxtL3ZhbHVlcy55YW1sIFwKICAtLXdhaXQgXAogIC0tdGltZW91dCA1bQoKZWNobyAiIgplY2hvICLinIUgTW9uaXRvcmluZyBzdGFjayByZWFkeSEiCmVjaG8gIiIKZWNobyAiICAgR3JhZmFuYTogICAga3ViZWN0bCBwb3J0LWZvcndhcmQgLW4gJE5BTUVTUEFDRSBzdmMvJFNUQUNLX05BTUUtZ3JhZmFuYSAzMDAwOjgwIgplY2hvICIgICBQcm9tZXRoZXVzOiBrdWJlY3RsIHBvcnQtZm9yd2FyZCAtbiAkTkFNRVNQQUNFIHN2Yy8kU1RBQ0tfTkFNRS1rdWJlLXByb21ldGhldXMtcHJvbWV0aGV1cyA5MDkwOjkwOTAiCg==" },
+              { "path": "docker-compose/docker-compose.yml",      "contentBase64": "dmVyc2lvbjogIjMuOCIKCnNlcnZpY2VzOgogIHByb21ldGhldXM6CiAgICBpbWFnZTogcHJvbS9wcm9tZXRoZXVzOmxhdGVzdAogICAgY29udGFpbmVyX25hbWU6IHt7c3RhY2tOYW1lfX0tcHJvbWV0aGV1cwogICAgcG9ydHM6CiAgICAgIC0gInt7cHJvbWV0aGV1c1BvcnR9fTo5MDkwIgogICAgdm9sdW1lczoKICAgICAgLSAuL3Byb21ldGhldXMueW1sOi9ldGMvcHJvbWV0aGV1cy9wcm9tZXRoZXVzLnltbDpybwogICAgICAtIHByb21ldGhldXNfZGF0YTovcHJvbWV0aGV1cwogICAgY29tbWFuZDoKICAgICAgLSAiLS1jb25maWcuZmlsZT0vZXRjL3Byb21ldGhldXMvcHJvbWV0aGV1cy55bWwiCiAgICAgIC0gIi0tc3RvcmFnZS50c2RiLnJldGVudGlvbi50aW1lPTE1ZCIKICAgIHJlc3RhcnQ6IHVubGVzcy1zdG9wcGVkCgogIGdyYWZhbmE6CiAgICBpbWFnZTogZ3JhZmFuYS9ncmFmYW5hOmxhdGVzdAogICAgY29udGFpbmVyX25hbWU6IHt7c3RhY2tOYW1lfX0tZ3JhZmFuYQogICAgcG9ydHM6CiAgICAgIC0gInt7Z3JhZmFuYVBvcnR9fTozMDAwIgogICAgZW52aXJvbm1lbnQ6CiAgICAgIEdGX1NFQ1VSSVRZX0FETUlOX1BBU1NXT1JEOiAie3tncmFmYW5hQWRtaW5QYXNzd29yZH19IgogICAgICBHRl9VU0VSU19BTExPV19TSUdOX1VQOiAiZmFsc2UiCiAgICB2b2x1bWVzOgogICAgICAtIGdyYWZhbmFfZGF0YTovdmFyL2xpYi9ncmFmYW5hCiAgICBkZXBlbmRzX29uOgogICAgICAtIHByb21ldGhldXMKICAgIHJlc3RhcnQ6IHVubGVzcy1zdG9wcGVkCgogIHt7I2lmIGFsZXJ0c0VuYWJsZWR9fQogIGFsZXJ0bWFuYWdlcjoKICAgIGltYWdlOiBwcm9tL2FsZXJ0bWFuYWdlcjpsYXRlc3QKICAgIGNvbnRhaW5lcl9uYW1lOiB7e3N0YWNrTmFtZX19LWFsZXJ0bWFuYWdlcgogICAgcG9ydHM6CiAgICAgIC0gIjkwOTM6OTA5MyIKICAgIHZvbHVtZXM6CiAgICAgIC0gLi9hbGVydG1hbmFnZXIueW1sOi9ldGMvYWxlcnRtYW5hZ2VyL2FsZXJ0bWFuYWdlci55bWw6cm8KICAgIHJlc3RhcnQ6IHVubGVzcy1zdG9wcGVkCiAge3svaWZ9fQoKdm9sdW1lczoKICBwcm9tZXRoZXVzX2RhdGE6CiAgZ3JhZmFuYV9kYXRhOgo=" },
+              { "path": "docker-compose/prometheus.yml",           "contentBase64": "Z2xvYmFsOgogIHNjcmFwZV9pbnRlcnZhbDogMTVzCiAgZXZhbHVhdGlvbl9pbnRlcnZhbDogMTVzCgpzY3JhcGVfY29uZmlnczoKICAtIGpvYl9uYW1lOiBwcm9tZXRoZXVzCiAgICBzdGF0aWNfY29uZmlnczoKICAgICAgLSB0YXJnZXRzOiBbImxvY2FsaG9zdDo5MDkwIl0KCiAge3sjaWYgc2NyYXBlRm9yZ2VQb3J0YWx9fQogIC0gam9iX25hbWU6IGZvcmdlcG9ydGFsLWFwaQogICAgc3RhdGljX2NvbmZpZ3M6CiAgICAgIC0gdGFyZ2V0czogWyJhcGk6NDAwMCJdCiAgICBtZXRyaWNzX3BhdGg6IC9tZXRyaWNzCiAgICBzY3JhcGVfaW50ZXJ2YWw6IDMwcwogIHt7L2lmfX0KCiAge3sjaWYgYWxlcnRzRW5hYmxlZH19CiAgLSBqb2JfbmFtZTogYWxlcnRtYW5hZ2VyCiAgICBzdGF0aWNfY29uZmlnczoKICAgICAgLSB0YXJnZXRzOiBbImFsZXJ0bWFuYWdlcjo5MDkzIl0KICB7ey9pZn19Cg==" },
+              { "path": "docker-compose/alertmanager.yml",         "contentBase64": "Z2xvYmFsOgogIHJlc29sdmVfdGltZW91dDogNW0KCnJvdXRlOgogIGdyb3VwX2J5OiBbJ2FsZXJ0bmFtZSddCiAgZ3JvdXBfd2FpdDogMzBzCiAgZ3JvdXBfaW50ZXJ2YWw6IDVtCiAgcmVwZWF0X2ludGVydmFsOiAxaAogIHJlY2VpdmVyOiAnbnVsbCcKCnJlY2VpdmVyczoKICAtIG5hbWU6ICdudWxsJwo=" }
+            ]
+          }
+        },
+        {
+          "id": "register",
+          "action": "catalog.registerEntity@v1",
+          "input": {
+            "entity": {
+              "kind": "resource",
+              "name": "{{stackName}}",
+              "ownerRef": "{{owner}}",
+              "lifecycle": "production",
+              "tags": ["monitoring", "prometheus", "grafana", "{{destination}}"],
+              "annotations": {
+                "forgeportal.dev/grafana-dashboard-url": "http://localhost:{{grafanaPort}}",
+                "forgeportal.dev/prometheus-url": "http://localhost:{{prometheusPort}}",
+                "forgeportal.dev/managed-by": "forgeportal-template"
+              },
+              "scm": { "provider": "{{scmProvider}}", "owner": "{{scmOwner}}", "repo": "{{stackName}}-monitoring", "defaultBranch": "main" },
+              "spec": { "type": "monitoring", "description": "Prometheus + Grafana monitoring stack — {{destination}}" }
+            },
+            "source": { "provider": "{{scmProvider}}", "repoUrl": "{{steps.create-repo.outputs.repoUrl}}", "path": "/" }
+          }
+        }
+      ],
+      "outputs": {
+        "repoUrl":            "{{steps.create-repo.outputs.repoUrl}}",
+        "entityId":           "{{steps.register.outputs.entityId}}",
+        "grafanaDashboardUrl": "http://localhost:{{grafanaPort}}",
+        "prometheusUrl":      "http://localhost:{{prometheusPort}}",
+        "grafanaAdminUser":   "admin",
+        "helmInstallCommand": "bash helm/install.sh"
+      }
+    }
+  }'::jsonb,
+  now()
+)
+ON CONFLICT (name, version) DO UPDATE SET schema = EXCLUDED.schema;
+
 COMMIT;
