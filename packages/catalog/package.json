@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^22.15.0",
+    "@types/node": "^22.19.13",
     "@types/pg": "^8.15.0",
     "fastify": "^5.3.3",
     "pg": "^8.16.0",

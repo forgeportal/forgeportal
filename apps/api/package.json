@@ -32,7 +32,7 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@types/node": "^22.15.0",
+    "@types/node": "^22.19.13",
     "@types/pg": "^8.15.0",
     "@types/semver": "^7.7.1",
     "vitest": "^3.2.1"

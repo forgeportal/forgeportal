@@ -22,7 +22,7 @@
     "@forgeportal/docs": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^22.15.0",
+    "@types/node": "^22.19.13",
     "@types/pg": "^8.11.11",
     "vitest": "^3.2.1"
   }
