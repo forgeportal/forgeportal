@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "@types/pg": "^8.11.11",
+    "@types/pg": "^8.18.0",
     "vitest": "^3.2.1"
   }
 }
