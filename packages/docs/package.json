@@ -25,7 +25,7 @@
     "zod": "^3.25.28"
   },
   "devDependencies": {
-    "@types/node": "^22.15.0",
+    "@types/node": "^22.19.17",
     "@types/pg": "^8.11.11",
     "fastify": "^5.3.3",
     "vitest": "^3.2.1"
