@@ -12,8 +12,8 @@
     "clean": "rm -rf dist"
   },
   "devDependencies": {
-    "@types/pg": "^8.11.11",
-    "fastify": "^5.3.3",
+    "@types/pg": "^8.20.0",
+    "fastify": "^5.8.5",
     "vitest": "^3.2.1"
   },
   "dependencies": {
