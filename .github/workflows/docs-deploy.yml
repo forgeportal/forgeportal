@@ -84,7 +84,7 @@ jobs:
 
       - name: Fix permissions on VPS
         if: steps.docs-changed.outputs.changed == 'true'
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host:     ${{ secrets.VPS_HOST }}
           username: root
