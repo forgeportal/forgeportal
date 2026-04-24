@@ -41,7 +41,8 @@
       "sodium-native"
     ],
     "overrides": {
-      "handlebars": "^4.7.9"
+      "handlebars": "^4.7.9",
+      "webpackbar": "^7.0.0"
     }
   }
 }
