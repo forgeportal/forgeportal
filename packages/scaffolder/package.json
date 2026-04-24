@@ -19,7 +19,7 @@
     "@forgeportal/catalog": "workspace:*",
     "@forgeportal/docs": "workspace:*",
     "@forgeportal/scorecards": "workspace:*",
-    "handlebars": "^4.7.8",
+    "handlebars": "^4.7.9",
     "js-yaml": "^4.1.0",
     "zod": "^3.24.2"
   },

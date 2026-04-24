@@ -39,6 +39,9 @@
       "esbuild",
       "@esbuild/*",
       "sodium-native"
-    ]
+    ],
+    "overrides": {
+      "handlebars": "^4.7.9"
+    }
   }
 }

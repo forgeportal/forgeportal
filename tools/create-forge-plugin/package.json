@@ -26,7 +26,7 @@
   "devDependencies": {
     "@types/node": "^22",
     "tsx":         "*",
-    "vitest":      "*"
+    "vitest":      "^3.2.4"
   },
   "engines": {
     "node": ">=20"

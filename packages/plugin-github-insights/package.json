@@ -34,7 +34,7 @@
     "@types/react":          "*",
     "fastify":               "^5.3.3",
     "react":                 "*",
-    "vitest":                "*"
+    "vitest":                "^3.2.4"
   },
   "peerDependencies": {
     "@tanstack/react-query": ">=5",
