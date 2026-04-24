@@ -28,10 +28,6 @@ const config: Config = {
     locales:       ['en'],
   },
 
-  markdown: {
-    mermaid: true,
-  },
-
   themes: ['@docusaurus/theme-mermaid'],
 
   presets: [
@@ -40,7 +36,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath:          './sidebars.ts',
-          editUrl:              'https://github.com/forgeportal/forgeportal/tree/main/apps/docs/',
+          editUrl:              'https://github.com/forgeportal/forgeportal/tree/master/apps/docs/',
           showLastUpdateTime:   true,
           showLastUpdateAuthor: true,
         },
@@ -104,16 +100,16 @@ const config: Config = {
         {
           title: 'Community',
           items: [
-            { label: 'GitHub',  href: 'https://github.com/forgeportal/forgeportal' },
-            { label: 'Discord', href: 'https://discord.gg/forgeportal' },
-            { label: 'Issues',  href: 'https://github.com/forgeportal/forgeportal/issues' },
+            { label: 'GitHub',     href: 'https://github.com/forgeportal/forgeportal' },
+            { label: 'Issues',     href: 'https://github.com/forgeportal/forgeportal/issues' },
+            { label: 'Discussions', href: 'https://github.com/forgeportal/forgeportal/discussions' },
           ],
         },
         {
           title: 'More',
           items: [
-            { label: 'Changelog',     href: 'https://github.com/forgeportal/forgeportal/blob/main/CHANGELOG.md' },
-            { label: 'License (MIT)', href: 'https://github.com/forgeportal/forgeportal/blob/main/LICENSE' },
+            { label: 'Changelog',     href: 'https://github.com/forgeportal/forgeportal/blob/master/CHANGELOG.md' },
+            { label: 'License (MIT)', href: 'https://github.com/forgeportal/forgeportal/blob/master/LICENSE' },
           ],
         },
       ],
