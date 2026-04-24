@@ -26,14 +26,14 @@
     "@forgeportal/scm": "workspace:*",
     "@forgeportal/scorecards": "workspace:*",
     "@forgeportal/search": "workspace:*",
-    "fastify": "^5.3.3",
-    "pg": "^8.16.0",
+    "fastify": "^5.8.5",
+    "pg": "^8.20.0",
     "semver": "^7.7.4",
     "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/node": "^22.19.17",
-    "@types/pg": "^8.15.0",
+    "@types/pg": "^8.20.0",
     "@types/semver": "^7.7.1",
     "vitest": "^3.2.1"
   }
