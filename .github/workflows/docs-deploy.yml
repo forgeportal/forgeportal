@@ -72,7 +72,7 @@ jobs:
       # ── Deploy ────────────────────────────────────────────────────────────
       - name: Deploy to VPS via rsync
         if: steps.docs-changed.outputs.changed == 'true'
-        uses: burnett01/rsync-deployments@7.0.1
+        uses: burnett01/rsync-deployments@8.0.5
         with:
           switches:    -avz --delete --exclude='__server'
           path:        apps/docs/build/
