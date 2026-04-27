@@ -152,7 +152,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
 
       - name: Package Helm chart
         run: helm package deployments/helm -d /tmp/helm-pkg
