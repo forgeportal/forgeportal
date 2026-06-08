@@ -35,6 +35,6 @@
     "@types/node": "^22.19.17",
     "@types/pg": "^8.20.0",
     "@types/semver": "^7.7.1",
-    "vitest": "^3.2.1"
+    "vitest": "^3.2.6"
   }
 }
