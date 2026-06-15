@@ -19,9 +19,9 @@
     "@fastify/csrf-protection": "^7.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.19.17",
+    "@types/node": "^22.19.21",
     "@types/pg": "^8.20.0",
-    "vitest": "^3.2.1",
+    "vitest": "^3.2.6",
     "fastify": "^5.8.5",
     "pg": "^8.20.0"
   }
