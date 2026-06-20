@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@forgeportal/plugin-sdk": "workspace:*",
-    "undici": "^7.25.0"
+    "undici": "^7.28.0"
   },
   "devDependencies": {
     "@tanstack/react-query": "*",
