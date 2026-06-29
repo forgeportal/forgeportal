@@ -20,14 +20,14 @@
     "@forgeportal/docs": "workspace:*",
     "@forgeportal/scorecards": "workspace:*",
     "handlebars": "^4.7.9",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.3.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.19.17",
     "@types/pg": "^8.20.0",
-    "fastify": "^5.8.5",
+    "fastify": "^5.9.0",
     "vitest": "^3.2.1"
   }
 }

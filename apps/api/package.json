@@ -26,9 +26,9 @@
     "@forgeportal/scm": "workspace:*",
     "@forgeportal/scorecards": "workspace:*",
     "@forgeportal/search": "workspace:*",
-    "fastify": "^5.8.5",
-    "pg": "^8.20.0",
-    "semver": "^7.7.4",
+    "fastify": "^5.9.0",
+    "pg": "^8.22.0",
+    "semver": "^7.8.5",
     "zod": "^3.24.0"
   },
   "devDependencies": {
